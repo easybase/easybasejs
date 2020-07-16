@@ -1,0 +1,33 @@
+{
+  "name": "easybasejs",
+  "version": "1.0.0",
+  "description": "Broswer and Node.js package for use with EasyBase.io",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "buildBrowser": "npx webpack",
+    "buildNode": "npx babel src --out-dir dist"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/easybase/easybasejs.git"
+  },
+  "author": "EasyBase",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/easybase/easybasejs/issues"
+  },
+  "homepage": "https://github.com/easybase/easybasejs#readme",
+  "devDependencies": {
+    "@babel/cli": "^7.10.5",
+    "@babel/core": "^7.10.5",
+    "@babel/preset-env": "^7.10.4",
+    "eslint": "^7.4.0",
+    "webpack": "^4.43.0",
+    "webpack-cli": "^3.3.12"
+  },
+  "dependencies": {
+    "@glidejs/glide": "^3.4.1",
+    "axios": "^0.19.2"
+  }
+}
