@@ -1,5 +1,5 @@
-var axios = require('axios/dist/axios.min.js');
-var Glide = require('@glidejs/glide/dist/glide.min.js');
+import axios from 'axios';
+import Glide from '@glidejs/glide';
 
 const generateBareUrl = (type, integrationID) => `https://api.easybase.io/${type}/${integrationID}`;
 
@@ -13,7 +13,7 @@ const generateBareUrl = (type, integrationID) => `https://api.easybase.io/${type
  * @returns {Array} Array of records.
  *
  */
-function get(integrationID, offset, limit, authentication, customQuery) {
+export function get(integrationID, offset, limit, authentication, customQuery) {
     if (integrationID === undefined || typeof integrationID !== "string") throw new Error("integrationID is required and must be a string");
     if (offset !== undefined && !Number.isInteger(offset)) throw new Error("offset must be an integer");
     if (limit !== undefined && !Number.isInteger(limit)) throw new Error("limit must be an integer");
@@ -44,7 +44,7 @@ function get(integrationID, offset, limit, authentication, customQuery) {
  * @param {String} authentication Custom authentication string. Can be set in integration menu. If it is set, it is required to access integration. This acts as an extra layer of security and extensibility.
  * @param {Boolean} insertAtEnd If true, record will be inserted at the end of the collection rather than the front.
  */
-function post(integrationID, newRecord, authentication, insertAtEnd) {
+export function post(integrationID, newRecord, authentication, insertAtEnd) {
     if (integrationID === undefined || typeof integrationID !== "string") throw new Error("integrationID is required and must be a string");
     if (newRecord === undefined || typeof newRecord !== "object") throw new Error("newRecord is required and must be a string");
     if (authentication !== undefined && authentication !== null && typeof authentication !== "string") throw new Error("authentication must be a string or null");
@@ -72,7 +72,7 @@ function post(integrationID, newRecord, authentication, insertAtEnd) {
  * @param {String} authentication Custom authentication string. Can be set in integration menu. If it is set, it is required to access integration. This acts as an extra layer of security and extensibility.
  * @param {Object} customQuery This object can be set to overwrite the query values as set in the integration menu. If your query is setup to find records where 'age' >= 0, passing in { age: 50 } will query where 'age' >= 50.
  */
-function update(integrationID, updateValues, authentication, customQuery = {}) {
+export function update(integrationID, updateValues, authentication, customQuery = {}) {
     if (integrationID === undefined || typeof integrationID !== "string") throw new Error("integrationID is required and must be a string");
     if (updateValues === undefined || typeof updateValues !== "object") throw new Error("updateValues is required and must be a string");
     if (authentication !== undefined && authentication !== null && typeof authentication !== "string") throw new Error("authentication must be a string or null");
@@ -98,7 +98,7 @@ function update(integrationID, updateValues, authentication, customQuery = {}) {
  * @param {String} authentication Custom authentication string. Can be set in integration menu. If it is set, it is required to access integration. This acts as an extra layer of security and extensibility.
  * @param {Object} customQuery This object can be set to overwrite the query values as set in the integration menu. If your query is setup to find records where 'age' >= 0, passing in { age: 50 } will query where 'age' >= 50.
  */
-function Delete(integrationID, authentication, customQuery = {}) {
+export function Delete(integrationID, authentication, customQuery = {}) {
     if (integrationID === undefined || typeof integrationID !== "string") throw new Error("integrationID is required and must be a string");
     if (authentication !== undefined && authentication !== null && typeof authentication !== "string") throw new Error("authentication must be a string or null");
     if (customQuery !== undefined && null !== undefined && typeof customQuery !== "object") throw new Error("customQuery must be an object or null");
@@ -124,7 +124,7 @@ function Delete(integrationID, authentication, customQuery = {}) {
  * @param {String} authentication Custom authentication string. Can be set in integration menu. If it is set, it is required to access integration. This acts as an extra layer of security and extensibility.
  * @param {Object} glideOptions Custom options for Glide.js carousel. Options can be found at https://glidejs.com/docs/options/. This element is highly configurable and can be tailored to your needs.
  */
-function custom(integrationID, nodeID, authentication, glideOptions = {}) {
+export function custom(integrationID, nodeID, authentication, glideOptions = {}) {
     if (integrationID === undefined || typeof integrationID !== "string") throw new Error("integrationID is required and must be a string");
     if (nodeID === undefined || typeof nodeID !== "string") throw new Error("nodeID is required and must be a string. This is the HTML element where the elements are to be placed.");
     if (authentication !== undefined && authentication !== null && typeof authentication !== "string") throw new Error("authentication must be a string or null");
@@ -163,4 +163,3 @@ function custom(integrationID, nodeID, authentication, glideOptions = {}) {
     catch (err) { throw new Error(err); }
 }
 
-module.exports = { get, post, update, Delete, custom };

@@ -1,5 +1,25 @@
 "use strict";
 
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.get = get;
+exports.post = post;
+exports.update = update;
+exports.Delete = Delete;
+exports.custom = custom;
+exports.table = table;
+
+var _jquery = _interopRequireDefault(require("jquery"));
+
+var _datatables = _interopRequireDefault(require("datatables.net"));
+
+var _axios = _interopRequireDefault(require("axios"));
+
+var _glide = _interopRequireDefault(require("@glidejs/glide"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
 
 function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
@@ -7,10 +27,6 @@ function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { va
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
 function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
-
-var axios = require('axios/dist/axios.min.js');
-
-var Glide = require('@glidejs/glide/dist/glide.min.js');
 
 var generateBareUrl = function generateBareUrl(type, integrationID) {
   return "https://api.easybase.io/".concat(type, "/").concat(integrationID);
@@ -42,7 +58,8 @@ function get(integrationID, offset, limit, authentication, customQuery) {
       if (offset !== undefined) axios_body.offset = offset;
       if (limit !== undefined) axios_body.limit = limit;
       if (authentication !== undefined) axios_body.authentication = authentication;
-      axios.post(generateBareUrl('get', integrationID), axios_body).then(function (res) {
+
+      _axios["default"].post(generateBareUrl('get', integrationID), axios_body).then(function (res) {
         resolve(res.data);
       });
     } catch (err) {
@@ -70,7 +87,8 @@ function post(integrationID, newRecord, authentication, insertAtEnd) {
 
       if (authentication !== undefined) axios_body.authentication = authentication;
       if (insertAtEnd !== undefined) axios_body.insertAtEnd = insertAtEnd;
-      axios.post(generateBareUrl('post', integrationID), axios_body).then(function (res) {
+
+      _axios["default"].post(generateBareUrl('post', integrationID), axios_body).then(function (res) {
         resolve(res.data.message);
       });
     } catch (err) {
@@ -100,7 +118,8 @@ function update(integrationID, updateValues, authentication) {
       }, customQuery);
 
       if (authentication !== undefined) axios_body.authentication = authentication;
-      axios.post(generateBareUrl('update', integrationID), axios_body).then(function (res) {
+
+      _axios["default"].post(generateBareUrl('update', integrationID), axios_body).then(function (res) {
         resolve(res.data.message);
       });
     } catch (err) {
@@ -126,7 +145,8 @@ function Delete(integrationID, authentication) {
       var axios_body = _objectSpread({}, customQuery);
 
       if (authentication !== undefined) axios_body.authentication = authentication;
-      axios.post(generateBareUrl('delete', integrationID), axios_body).then(function (res) {
+
+      _axios["default"].post(generateBareUrl('delete', integrationID), axios_body).then(function (res) {
         resolve(res.data.message);
       });
     } catch (err) {
@@ -153,13 +173,14 @@ function custom(integrationID, nodeID, authentication) {
   try {
     var axios_body = {};
     if (authentication !== undefined) axios_body.authentication = authentication;
-    axios.post(generateBareUrl('custom', integrationID), axios_body).then(function (res) {
+
+    _axios["default"].post(generateBareUrl('custom', integrationID), axios_body).then(function (res) {
       document.getElementById(nodeID).innerHTML = res.data.html;
       var styleNode = document.createElement('style');
       styleNode.type = "text/css";
       styleNode.textContent = res.data.css;
       document.head.append(styleNode);
-      new Glide('.easybase-glide', _objectSpread({
+      new _glide["default"]('.easybase-glide', _objectSpread({
         type: 'carousel',
         perView: 4,
         focusAt: 'center',
@@ -180,10 +201,46 @@ function custom(integrationID, nodeID, authentication) {
   }
 }
 
-module.exports = {
-  get: get,
-  post: post,
-  update: update,
-  Delete: Delete,
-  custom: custom
-};
+function table(integrationID, nodeID, authentication) {
+  var datatableOptions = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : {};
+  var customQuery = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : {};
+  if (integrationID === undefined || typeof integrationID !== "string") throw new Error("integrationID is required and must be a string");
+  if (nodeID === undefined || typeof nodeID !== "string") throw new Error("nodeID is required and must be a string. This is the HTML element where the elements are to be placed.");
+  if (authentication !== undefined && authentication !== null && typeof authentication !== "string") throw new Error("authentication must be a string or null");
+  if (datatableOptions !== undefined && datatableOptions !== null && _typeof(datatableOptions) !== "object") throw new Error("datatableOptions must be an object or null");
+  if (customQuery !== undefined && customQuery !== null && _typeof(customQuery) !== "object") throw new Error("customQuery must be an object or null");
+
+  var axios_body = _objectSpread({}, customQuery);
+
+  if (authentication !== undefined) axios_body.authentication = authentication;
+
+  _axios["default"].post(generateBareUrl('table', integrationID), axios_body).then(function (res) {
+    console.log(res.data);
+    (0, _jquery["default"])("#".concat(nodeID)).DataTable({
+      data: [{
+        "name": "Tiger Nixon",
+        "position": "System Architect",
+        "salary": "$3,120",
+        "start_date": "2011/04/25",
+        "office": "Edinburgh",
+        "extn": "5421"
+      }, {
+        "name": "Garrett Winters",
+        "position": "Director",
+        "salary": "$5,300",
+        "start_date": "2011/07/25",
+        "office": "Edinburgh",
+        "extn": "8422"
+      }],
+      columns: [{
+        data: 'name'
+      }, {
+        data: 'position'
+      }, {
+        data: 'salary'
+      }, {
+        data: 'office'
+      }]
+    });
+  });
+} // module.exports = { get, post, update, Delete, custom, table, dt };
