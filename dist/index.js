@@ -7,16 +7,8 @@ exports.get = get;
 exports.post = post;
 exports.update = update;
 exports.Delete = Delete;
-exports.custom = custom;
-exports.table = table;
-
-var _jquery = _interopRequireDefault(require("jquery"));
-
-var _datatables = _interopRequireDefault(require("datatables.net"));
 
 var _axios = _interopRequireDefault(require("axios"));
-
-var _glide = _interopRequireDefault(require("@glidejs/glide"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
@@ -154,93 +146,3 @@ function Delete(integrationID, authentication) {
     }
   });
 }
-/**
- * 
- * @param {String} integrationID EasyBase integration ID. Can be found by expanding the integration menu. This id is automatically generated.
- * @param {String} nodeID HTML element id to place the carousel. E.g. <div id="easybase-carousel"></div>. Carousel will be centered within the parent.
- * @param {String} authentication Custom authentication string. Can be set in integration menu. If it is set, it is required to access integration. This acts as an extra layer of security and extensibility.
- * @param {Object} glideOptions Custom options for Glide.js carousel. Options can be found at https://glidejs.com/docs/options/. This element is highly configurable and can be tailored to your needs.
- */
-
-
-function custom(integrationID, nodeID, authentication) {
-  var glideOptions = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : {};
-  if (integrationID === undefined || typeof integrationID !== "string") throw new Error("integrationID is required and must be a string");
-  if (nodeID === undefined || typeof nodeID !== "string") throw new Error("nodeID is required and must be a string. This is the HTML element where the elements are to be placed.");
-  if (authentication !== undefined && authentication !== null && typeof authentication !== "string") throw new Error("authentication must be a string or null");
-  if (glideOptions !== undefined && glideOptions !== null && _typeof(glideOptions) !== "object") throw new Error("glideOptions must be an object or null");
-
-  try {
-    var axios_body = {};
-    if (authentication !== undefined) axios_body.authentication = authentication;
-
-    _axios["default"].post(generateBareUrl('custom', integrationID), axios_body).then(function (res) {
-      document.getElementById(nodeID).innerHTML = res.data.html;
-      var styleNode = document.createElement('style');
-      styleNode.type = "text/css";
-      styleNode.textContent = res.data.css;
-      document.head.append(styleNode);
-      new _glide["default"]('.easybase-glide', _objectSpread({
-        type: 'carousel',
-        perView: 4,
-        focusAt: 'center',
-        breakpoints: {
-          800: {
-            perView: 2
-          },
-          480: {
-            perView: 1
-          }
-        },
-        autoplay: 4000,
-        hoverpause: false
-      }, glideOptions)).mount();
-    });
-  } catch (err) {
-    throw new Error(err);
-  }
-}
-
-function table(integrationID, nodeID, authentication) {
-  var datatableOptions = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : {};
-  var customQuery = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : {};
-  if (integrationID === undefined || typeof integrationID !== "string") throw new Error("integrationID is required and must be a string");
-  if (nodeID === undefined || typeof nodeID !== "string") throw new Error("nodeID is required and must be a string. This is the HTML element where the elements are to be placed.");
-  if (authentication !== undefined && authentication !== null && typeof authentication !== "string") throw new Error("authentication must be a string or null");
-  if (datatableOptions !== undefined && datatableOptions !== null && _typeof(datatableOptions) !== "object") throw new Error("datatableOptions must be an object or null");
-  if (customQuery !== undefined && customQuery !== null && _typeof(customQuery) !== "object") throw new Error("customQuery must be an object or null");
-
-  var axios_body = _objectSpread({}, customQuery);
-
-  if (authentication !== undefined) axios_body.authentication = authentication;
-
-  _axios["default"].post(generateBareUrl('table', integrationID), axios_body).then(function (res) {
-    console.log(res.data);
-    (0, _jquery["default"])("#".concat(nodeID)).DataTable({
-      data: [{
-        "name": "Tiger Nixon",
-        "position": "System Architect",
-        "salary": "$3,120",
-        "start_date": "2011/04/25",
-        "office": "Edinburgh",
-        "extn": "5421"
-      }, {
-        "name": "Garrett Winters",
-        "position": "Director",
-        "salary": "$5,300",
-        "start_date": "2011/07/25",
-        "office": "Edinburgh",
-        "extn": "8422"
-      }],
-      columns: [{
-        data: 'name'
-      }, {
-        data: 'position'
-      }, {
-        data: 'salary'
-      }, {
-        data: 'office'
-      }]
-    });
-  });
-} // module.exports = { get, post, update, Delete, custom, table, dt };

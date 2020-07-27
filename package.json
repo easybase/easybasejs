@@ -2,12 +2,16 @@
   "name": "easybasejs",
   "version": "1.0.0",
   "description": "Broswer and Node.js package for use with EasyBase.io",
-  "main": "src/index.js",
+  "main": "dist/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "buildBrowser": "npx webpack",
     "buildNode": "npx babel src --out-dir dist"
   },
+  "files": [
+    "dist/index.js",
+    "src/index.js"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/easybase/easybasejs.git"

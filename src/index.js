@@ -1,5 +1,4 @@
 import axios from 'axios';
-import Glide from '@glidejs/glide';
 
 const generateBareUrl = (type, integrationID) => `https://api.easybase.io/${type}/${integrationID}`;
 
@@ -116,50 +115,3 @@ export function Delete(integrationID, authentication, customQuery = {}) {
         catch (err) { reject(err); }
     });
 }
-
-/**
- * 
- * @param {String} integrationID EasyBase integration ID. Can be found by expanding the integration menu. This id is automatically generated.
- * @param {String} nodeID HTML element id to place the carousel. E.g. <div id="easybase-carousel"></div>. Carousel will be centered within the parent.
- * @param {String} authentication Custom authentication string. Can be set in integration menu. If it is set, it is required to access integration. This acts as an extra layer of security and extensibility.
- * @param {Object} glideOptions Custom options for Glide.js carousel. Options can be found at https://glidejs.com/docs/options/. This element is highly configurable and can be tailored to your needs.
- */
-export function custom(integrationID, nodeID, authentication, glideOptions = {}) {
-    if (integrationID === undefined || typeof integrationID !== "string") throw new Error("integrationID is required and must be a string");
-    if (nodeID === undefined || typeof nodeID !== "string") throw new Error("nodeID is required and must be a string. This is the HTML element where the elements are to be placed.");
-    if (authentication !== undefined && authentication !== null && typeof authentication !== "string") throw new Error("authentication must be a string or null");
-    if (glideOptions !== undefined && glideOptions !== null && typeof glideOptions !== "object") throw new Error("glideOptions must be an object or null");
-
-    try {
-        let axios_body = {};
-        if (authentication !== undefined) axios_body.authentication = authentication;
-
-        axios.post(generateBareUrl('custom', integrationID), axios_body)
-            .then(res => {
-                document.getElementById(nodeID).innerHTML = res.data.html;
-                var styleNode = document.createElement('style');
-                styleNode.type = "text/css";
-                styleNode.textContent = res.data.css;
-                document.head.append(styleNode);
-                new Glide('.easybase-glide', {
-                    type: 'carousel',
-                    perView: 4,
-                    focusAt: 'center',
-                    breakpoints: {
-                        800: {
-                            perView: 2
-                        },
-                        480: {
-                            perView: 1
-                        }
-                    },
-                    autoplay: 4000,
-                    hoverpause: false,
-                    ...glideOptions
-                }).mount();
-
-            })
-    }
-    catch (err) { throw new Error(err); }
-}
-
