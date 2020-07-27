@@ -10,6 +10,7 @@
   },
   "files": [
     "dist/index.js",
+    "dist/bundle.js",
     "src/index.js"
   ],
   "repository": {
