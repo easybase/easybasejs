@@ -1,6 +1,11 @@
 import axios from 'axios';
 
 const generateBareUrl = (type, integrationID) => `https://api.easybase.io/${type}/${integrationID}`;
+const isBadInt = (my_int) => my_int !== undefined && my_int !== null && !Number.isInteger(my_int);
+const isBadString = (my_string) => my_string !== undefined && my_string !== null && typeof my_string !== "string";
+const isBadIntegrationID = (my_string) => my_string === undefined || my_string === null || typeof integrationID !== "string";
+const isBadObject = (my_obj) => my_obj !== undefined && my_obj !== null && typeof my_obj !== "object";
+const isBadBool = (my_bool) => my_bool !== undefined && my_bool !== null && typeof my_bool !== "boolean";
 
 /**
  * 
@@ -10,19 +15,19 @@ const generateBareUrl = (type, integrationID) => `https://api.easybase.io/${type
  * @param {String} authentication Custom authentication string. Can be set in integration menu. If it is set, it is required to access integration. This acts as an extra layer of security and extensibility.
  * @param {Object} customQuery This object can be set to overwrite the query values as set in the integration menu. If your query is setup to find records where 'age' >= 0, passing in { age: 50 } will query where 'age' >= 50.
  * @returns {Array} Array of records.
- *
+ * 
  */
 export function get(integrationID, offset, limit, authentication, customQuery) {
-    if (integrationID === undefined || typeof integrationID !== "string") throw new Error("integrationID is required and must be a string");
-    if (offset !== undefined && !Number.isInteger(offset)) throw new Error("offset must be an integer");
-    if (limit !== undefined && !Number.isInteger(limit)) throw new Error("limit must be an integer");
-    if (authentication !== undefined && authentication !== null && typeof authentication !== "string") throw new Error("authentication must be a string or null");
-    if (customQuery !== undefined && null !== undefined && typeof customQuery !== "object") throw new Error("customQuery must be an object or null");
+    if (isBadIntegrationID(integrationID)) throw new Error("integrationID is required and must be a string");
+    if (isBadInt(offset)) throw new Error("offset must be an integer");
+    if (isBadInt(limit)) throw new Error("limit must be an integer");
+    if (isBadString(authentication)) throw new Error("authentication must be a string or null");
+    if (isBadObject(customQuery)) throw new Error("customQuery must be an object or null");
 
     return new Promise((resolve, reject) => {
         try {
             let axios_body = {};
-            if (typeof customQuery === "object") axios_body = { ...axios_body, customQuery };
+            if (typeof customQuery === "object") axios_body = { ...customQuery };
             if (offset !== undefined) axios_body.offset = offset;
             if (limit !== undefined) axios_body.limit = limit;
             if (authentication !== undefined) axios_body.authentication = authentication;
@@ -42,12 +47,13 @@ export function get(integrationID, offset, limit, authentication, customQuery) {
  * @param {Object} newRecord Values to post to EasyBase collection. Format is { column name: value }
  * @param {String} authentication Custom authentication string. Can be set in integration menu. If it is set, it is required to access integration. This acts as an extra layer of security and extensibility.
  * @param {Boolean} insertAtEnd If true, record will be inserted at the end of the collection rather than the front.
+ * @returns {String} Post status.
  */
 export function post(integrationID, newRecord, authentication, insertAtEnd) {
-    if (integrationID === undefined || typeof integrationID !== "string") throw new Error("integrationID is required and must be a string");
-    if (newRecord === undefined || typeof newRecord !== "object") throw new Error("newRecord is required and must be a string");
-    if (authentication !== undefined && authentication !== null && typeof authentication !== "string") throw new Error("authentication must be a string or null");
-    if (insertAtEnd !== undefined && insertAtEnd !== null && typeof insertAtEnd !== "boolean") throw new Error("insertAtEnd must be a boolean or null");
+    if (isBadIntegrationID(integrationID)) throw new Error("integrationID is required and must be a string");
+    if (isBadObject(newRecord)) throw new Error("newRecord is required and must be a string");
+    if (isBadString(authentication)) throw new Error("authentication must be a string or null");
+    if (isBadBool(insertAtEnd)) throw new Error("insertAtEnd must be a boolean or null");
 
     return new Promise((resolve, reject) => {
         try {
@@ -67,15 +73,16 @@ export function post(integrationID, newRecord, authentication, insertAtEnd) {
 /**
  * 
  * @param {String} integrationID EasyBase integration ID. Can be found by expanding the integration menu. This id is automatically generated.
- * @param {Object} updateValues Values to update records with. Format is { column name: new value }
+ * @param {Object} updateValues Values to update records with. Format is { column_name: new value }
  * @param {String} authentication Custom authentication string. Can be set in integration menu. If it is set, it is required to access integration. This acts as an extra layer of security and extensibility.
  * @param {Object} customQuery This object can be set to overwrite the query values as set in the integration menu. If your query is setup to find records where 'age' >= 0, passing in { age: 50 } will query where 'age' >= 50.
+ * @returns {String} Update status.
  */
 export function update(integrationID, updateValues, authentication, customQuery = {}) {
-    if (integrationID === undefined || typeof integrationID !== "string") throw new Error("integrationID is required and must be a string");
-    if (updateValues === undefined || typeof updateValues !== "object") throw new Error("updateValues is required and must be a string");
-    if (authentication !== undefined && authentication !== null && typeof authentication !== "string") throw new Error("authentication must be a string or null");
-    if (customQuery !== undefined && null !== undefined && typeof customQuery !== "object") throw new Error("customQuery must be an object or null");
+    if (isBadIntegrationID(integrationID)) throw new Error("integrationID is required and must be a string");
+    if (isBadObject(updateValues) || updateValues === undefined) throw new Error("updateValues is required and must be a string");
+    if (isBadString(authentication)) throw new Error("authentication must be a string or null");
+    if (isBadObject(customQuery)) throw new Error("customQuery must be an object or null");
 
     return new Promise((resolve, reject) => {
         try {
@@ -96,11 +103,12 @@ export function update(integrationID, updateValues, authentication, customQuery 
  * @param {String} integrationID EasyBase integration ID. Can be found by expanding the integration menu. This id is automatically generated.
  * @param {String} authentication Custom authentication string. Can be set in integration menu. If it is set, it is required to access integration. This acts as an extra layer of security and extensibility.
  * @param {Object} customQuery This object can be set to overwrite the query values as set in the integration menu. If your query is setup to find records where 'age' >= 0, passing in { age: 50 } will query where 'age' >= 50.
+ * @return {String} Delete status.
  */
 export function Delete(integrationID, authentication, customQuery = {}) {
-    if (integrationID === undefined || typeof integrationID !== "string") throw new Error("integrationID is required and must be a string");
-    if (authentication !== undefined && authentication !== null && typeof authentication !== "string") throw new Error("authentication must be a string or null");
-    if (customQuery !== undefined && null !== undefined && typeof customQuery !== "object") throw new Error("customQuery must be an object or null");
+    if (isBadIntegrationID(integrationID)) throw new Error("integrationID is required and must be a string");
+    if (isBadString(authentication)) throw new Error("authentication must be a string or null");
+    if (isBadObject(customQuery)) throw new Error("customQuery must be an object or null");
 
     return new Promise((resolve, reject) => {
         try {

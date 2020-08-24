@@ -1,16 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.21/css/jquery.dataTables.min.css">
-
+    <script src="https://cdn.jsdelivr.net/npm/easybasejs@1.0.2/dist/bundle.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
     <script src="dist/bundle.js"></script>
 </head>
 <body>
-    <table id="cus" class="display"></table>
-    <script>
-    </script>
+    <div id="capo">
+
+    </div>
 </body>
+<script>
+    EasyBase.get("vkZu86aGqr49iDEp").then(res => {
+        document.getElementById("capo").innerText = JSON.stringify(res);
+    });
+</script>
 </html>
