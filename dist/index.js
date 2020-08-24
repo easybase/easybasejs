@@ -33,7 +33,7 @@ var isBadString = function isBadString(my_string) {
 };
 
 var isBadIntegrationID = function isBadIntegrationID(my_string) {
-  return my_string === undefined || my_string === null || typeof integrationID !== "string";
+  return my_string === undefined || my_string === null || typeof my_string !== "string";
 };
 
 var isBadObject = function isBadObject(my_obj) {

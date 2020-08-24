@@ -3,7 +3,7 @@ import axios from 'axios';
 const generateBareUrl = (type, integrationID) => `https://api.easybase.io/${type}/${integrationID}`;
 const isBadInt = (my_int) => my_int !== undefined && my_int !== null && !Number.isInteger(my_int);
 const isBadString = (my_string) => my_string !== undefined && my_string !== null && typeof my_string !== "string";
-const isBadIntegrationID = (my_string) => my_string === undefined || my_string === null || typeof integrationID !== "string";
+const isBadIntegrationID = (my_string) => my_string === undefined || my_string === null || typeof my_string !== "string";
 const isBadObject = (my_obj) => my_obj !== undefined && my_obj !== null && typeof my_obj !== "object";
 const isBadBool = (my_bool) => my_bool !== undefined && my_bool !== null && typeof my_bool !== "boolean";
 
