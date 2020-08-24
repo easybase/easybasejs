@@ -40,7 +40,6 @@
 * [Contributing](#contributing)
 * [License](#license)
 * [Contact](#contact)
-* [Acknowledgements](#acknowledgements)
 
 
 
@@ -63,7 +62,8 @@ Browser and Node.js compatible library for EasyBase. Although this library is no
 
 ### Prerequisites
 
-* npm
+* npm for node projects
+* *There are no prerequisites for usage in browser*
 
 ### Installation
 * Node:
@@ -86,21 +86,23 @@ npm install easybasejs
 ## Usage
 ### Node
 * ES5:
-```js
+```javascript
 var { get, post, update, Delete } = require('easybasejs');
 
 const offset = null;
 const limit = 10;
+
 EasyBase.get("s5aF3-8ne-DaG7K5x", offset, limit)
     .then(data => {
         console.log(data); // [ { profile_picture, home, meeting_time }, { profile_picture, home, meeting_time }, ... ]
     });
 ```
+
 * ES6:
-```js
+```javascript
 import { get, post, update, Delete } from 'easybasejs';
 
-const offset = null;
+let offset = null;
 const limit = 10;
 
 (async  () => {
@@ -109,6 +111,17 @@ const limit = 10;
     console.log(data); // [ { profile_picture, home, meeting_time }, { profile_picture, home, meeting_time }, ... ]
 
 })();
+```
+
+* Browser:
+```javascript
+var offset = null;
+var limit = 10;
+
+EasyBase.get("s5aF3-8ne-DaG7K5x", offset, limit)
+    .then(data => {
+        document.body.innerText = JSON.stringify(data);
+    });
 ```
 
 
