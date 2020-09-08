@@ -70,7 +70,10 @@ function get(integrationID, offset, limit, authentication, customQuery) {
       if (authentication !== undefined) axios_body.authentication = authentication;
 
       _axios["default"].post(generateBareUrl('get', integrationID), axios_body).then(function (res) {
-        resolve(res.data);
+        if ({}.hasOwnProperty.call(res.data, 'ErrorCode')) {
+          console.error(res.data.message);
+          resolve([res.data.message]);
+        } else resolve(res.data);
       });
     } catch (err) {
       reject(err);
@@ -100,6 +103,7 @@ function post(integrationID, newRecord, authentication, insertAtEnd) {
       if (insertAtEnd !== undefined) axios_body.insertAtEnd = insertAtEnd;
 
       _axios["default"].post(generateBareUrl('post', integrationID), axios_body).then(function (res) {
+        if ({}.hasOwnProperty.call(res.data, 'ErrorCode')) console.error(res.data.message);
         resolve(res.data.message);
       });
     } catch (err) {
@@ -132,6 +136,7 @@ function update(integrationID, updateValues, authentication) {
       if (authentication !== undefined) axios_body.authentication = authentication;
 
       _axios["default"].post(generateBareUrl('update', integrationID), axios_body).then(function (res) {
+        if ({}.hasOwnProperty.call(res.data, 'ErrorCode')) console.error(res.data.message);
         resolve(res.data.message);
       });
     } catch (err) {
@@ -160,6 +165,7 @@ function Delete(integrationID, authentication) {
       if (authentication !== undefined) axios_body.authentication = authentication;
 
       _axios["default"].post(generateBareUrl('delete', integrationID), axios_body).then(function (res) {
+        if ({}.hasOwnProperty.call(res.data, 'ErrorCode')) console.error(res.data.message);
         resolve(res.data.message);
       });
     } catch (err) {

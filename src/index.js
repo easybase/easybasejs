@@ -34,7 +34,10 @@ export function get(integrationID, offset, limit, authentication, customQuery) {
 
             axios.post(generateBareUrl('get', integrationID), axios_body)
                 .then(res => {
-                    resolve(res.data);
+                    if ({}.hasOwnProperty.call(res.data, 'ErrorCode')) {
+                        console.error(res.data.message);
+                        resolve([ res.data.message ]);
+                    } else resolve(res.data);
                 })
         }
         catch (err) { reject(err); }
@@ -63,6 +66,7 @@ export function post(integrationID, newRecord, authentication, insertAtEnd) {
 
             axios.post(generateBareUrl('post', integrationID), axios_body)
                 .then(res => {
+                    if ({}.hasOwnProperty.call(res.data, 'ErrorCode')) console.error(res.data.message);
                     resolve(res.data.message);
                 })
         }
@@ -91,6 +95,7 @@ export function update(integrationID, updateValues, authentication, customQuery 
 
             axios.post(generateBareUrl('update', integrationID), axios_body)
                 .then(res => {
+                    if ({}.hasOwnProperty.call(res.data, 'ErrorCode')) console.error(res.data.message);
                     resolve(res.data.message);
                 })
         }
@@ -117,6 +122,7 @@ export function Delete(integrationID, authentication, customQuery = {}) {
 
             axios.post(generateBareUrl('delete', integrationID), axios_body)
                 .then(res => {
+                    if ({}.hasOwnProperty.call(res.data, 'ErrorCode')) console.error(res.data.message);
                     resolve(res.data.message);
                 })
         }
