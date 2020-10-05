@@ -50,7 +50,7 @@ var isBadBool = function isBadBool(my_bool) {
  * @param {Number} limit Limit the amount of records to be retrieved. Can be used in combination with offset.
  * @param {String} authentication Custom authentication string. Can be set in integration menu. If it is set, it is required to access integration. This acts as an extra layer of security and extensibility.
  * @param {Object} customQuery This object can be set to overwrite the query values as set in the integration menu. If your query is setup to find records where 'age' >= 0, passing in { age: 50 } will query where 'age' >= 50.
- * @returns {Array} Array of records.
+ * @returns {Promise<Array>} Array of records.
  * 
  */
 
@@ -86,7 +86,7 @@ function get(integrationID, offset, limit, authentication, customQuery) {
  * @param {Object} newRecord Values to post to EasyBase collection. Format is { column name: value }
  * @param {String} authentication Custom authentication string. Can be set in integration menu. If it is set, it is required to access integration. This acts as an extra layer of security and extensibility.
  * @param {Boolean} insertAtEnd If true, record will be inserted at the end of the collection rather than the front.
- * @returns {String} Post status.
+ * @returns {Promise<String>} Post status.
  */
 
 
@@ -117,7 +117,7 @@ function post(integrationID, newRecord, authentication, insertAtEnd) {
  * @param {Object} updateValues Values to update records with. Format is { column_name: new value }
  * @param {String} authentication Custom authentication string. Can be set in integration menu. If it is set, it is required to access integration. This acts as an extra layer of security and extensibility.
  * @param {Object} customQuery This object can be set to overwrite the query values as set in the integration menu. If your query is setup to find records where 'age' >= 0, passing in { age: 50 } will query where 'age' >= 50.
- * @returns {String} Update status.
+ * @returns {Promise<String>} Update status.
  */
 
 
@@ -149,7 +149,7 @@ function update(integrationID, updateValues, authentication) {
  * @param {String} integrationID EasyBase integration ID. Can be found by expanding the integration menu. This id is automatically generated.
  * @param {String} authentication Custom authentication string. Can be set in integration menu. If it is set, it is required to access integration. This acts as an extra layer of security and extensibility.
  * @param {Object} customQuery This object can be set to overwrite the query values as set in the integration menu. If your query is setup to find records where 'age' >= 0, passing in { age: 50 } will query where 'age' >= 50.
- * @return {String} Delete status.
+ * @return {Promise<String>} Delete status.
  */
 
 
