@@ -20,8 +20,8 @@
 <!-- PROJECT LOGO -->
 <br />
 <p align="center">
-  <a href="https://github.com/easybase/easybasejs">
-    <img src="https://easybase.io/assets/images/logo_black.png" alt="Logo" width="80" height="80">
+  <a href="https://easybase.io">
+    <img src="https://easybase.io/assets/images/logo_black.png" alt="Logo" width="80" height="80" href="easybase logo black">
   </a>
 </p>
 
@@ -53,6 +53,7 @@
 * [babel](https://babeljs.io/)
 * [webpack](https://webpack.js.org/)
 * [axios](https://github.com/axios/axios)
+* [Easybase.io](https://easybase.io)
 
 
 
