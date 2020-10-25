@@ -1,7 +1,7 @@
 {
   "name": "easybasejs",
   "version": "2.0.1",
-  "description": "Broswer and Node.js package for use with EasyBase.io",
+  "description": "Browser and Node.js package for use with EasyBase.io",
   "main": "dist/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\"",
@@ -21,7 +21,7 @@
     "url": "git+https://github.com/easybase/easybasejs.git"
   },
   "author": "EasyBase",
-  "license": "ISC",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/easybase/easybasejs/issues"
   },
