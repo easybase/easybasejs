@@ -1,6 +1,6 @@
 {
   "name": "easybasejs",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Broswer and Node.js package for use with EasyBase.io",
   "main": "dist/index.js",
   "scripts": {
