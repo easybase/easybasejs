@@ -1,27 +1,1831 @@
-"use strict";
+function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
 
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.get = get;
-exports.post = post;
-exports.update = update;
-exports.Delete = Delete;
+var axios = _interopDefault(require('axios'));
+var deepEqual = _interopDefault(require('fast-deep-equal'));
 
-var _axios = _interopRequireDefault(require("axios"));
+function _extends() {
+  _extends = Object.assign || function (target) {
+    for (var i = 1; i < arguments.length; i++) {
+      var source = arguments[i];
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+      for (var key in source) {
+        if (Object.prototype.hasOwnProperty.call(source, key)) {
+          target[key] = source[key];
+        }
+      }
+    }
 
-function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
+    return target;
+  };
 
-function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+  return _extends.apply(this, arguments);
+}
 
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+function _inheritsLoose(subClass, superClass) {
+  subClass.prototype = Object.create(superClass.prototype);
+  subClass.prototype.constructor = subClass;
+  subClass.__proto__ = superClass;
+}
 
-function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+function _unsupportedIterableToArray(o, minLen) {
+  if (!o) return;
+  if (typeof o === "string") return _arrayLikeToArray(o, minLen);
+  var n = Object.prototype.toString.call(o).slice(8, -1);
+  if (n === "Object" && o.constructor) n = o.constructor.name;
+  if (n === "Map" || n === "Set") return Array.from(o);
+  if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);
+}
+
+function _arrayLikeToArray(arr, len) {
+  if (len == null || len > arr.length) len = arr.length;
+
+  for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i];
+
+  return arr2;
+}
+
+function _createForOfIteratorHelperLoose(o, allowArrayLike) {
+  var it;
+
+  if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) {
+    if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") {
+      if (it) o = it;
+      var i = 0;
+      return function () {
+        if (i >= o.length) return {
+          done: true
+        };
+        return {
+          done: false,
+          value: o[i++]
+        };
+      };
+    }
+
+    throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
+  }
+
+  it = o[Symbol.iterator]();
+  return it.next.bind(it);
+}
+
+var POST_TYPES;
+
+(function (POST_TYPES) {
+  POST_TYPES["UPLOAD_ATTACHMENT"] = "upload_attachment";
+  POST_TYPES["HANDSHAKE"] = "handshake";
+  POST_TYPES["VALID_TOKEN"] = "valid_token";
+  POST_TYPES["GET_FRAME"] = "get_frame";
+  POST_TYPES["TABLE_SIZE"] = "table_size";
+  POST_TYPES["COLUMN_TYPES"] = "column_types";
+  POST_TYPES["SYNC_STACK"] = "sync_stack";
+  POST_TYPES["SYNC_DELETE"] = "sync_delete";
+  POST_TYPES["SYNC_INSERT"] = "sync_insert";
+  POST_TYPES["GET_QUERY"] = "get_query";
+})(POST_TYPES || (POST_TYPES = {}));
+
+var GlobalNamespace;
+
+(function (GlobalNamespace) {})(GlobalNamespace || (GlobalNamespace = {}));
+
+var _g = _extends({}, GlobalNamespace);
+function gFactory() {
+  return _extends({}, GlobalNamespace);
+}
+
+var _propertiesBluePrint;
+
+var INSERT = 'insert',
+    UPDATE = 'update',
+    DELETE = 'delete',
+    REVERSE = 'reverse',
+    SHUFFLE = 'shuffle',
+    oMetaKey = Symbol('observable-meta-key'),
+    validObservableOptionKeys = {
+  async: 1
+},
+    validObserverOptionKeys = {
+  path: 1,
+  pathsOf: 1,
+  pathsFrom: 1
+},
+    processObserveOptions = function processObserveOptions(options) {
+  var result = {};
+
+  if (options.path !== undefined) {
+    if (typeof options.path !== 'string' || options.path === '') {
+      throw new Error('"path" option, if/when provided, MUST be a non-empty string');
+    }
+
+    result.path = options.path;
+  }
+
+  if (options.pathsOf !== undefined) {
+    if (options.path) {
+      throw new Error('"pathsOf" option MAY NOT be specified together with "path" option');
+    }
+
+    if (typeof options.pathsOf !== 'string') {
+      throw new Error('"pathsOf" option, if/when provided, MUST be a string (MAY be empty)');
+    }
+
+    result.pathsOf = options.pathsOf.split('.').filter(function (n) {
+      return n;
+    });
+  }
+
+  if (options.pathsFrom !== undefined) {
+    if (options.path || options.pathsOf) {
+      throw new Error('"pathsFrom" option MAY NOT be specified together with "path"/"pathsOf"  option/s');
+    }
+
+    if (typeof options.pathsFrom !== 'string' || options.pathsFrom === '') {
+      throw new Error('"pathsFrom" option, if/when provided, MUST be a non-empty string');
+    }
+
+    result.pathsFrom = options.pathsFrom;
+  }
+
+  var invalidOptions = Object.keys(options).filter(function (option) {
+    return !validObserverOptionKeys.hasOwnProperty(option);
+  });
+
+  if (invalidOptions.length) {
+    throw new Error("'" + invalidOptions.join(', ') + "' is/are not a valid observer option/s");
+  }
+
+  return result;
+},
+    observe = function observe(observer, options) {
+  if (typeof observer !== 'function') {
+    throw new Error("observer MUST be a function, got '" + observer + "'");
+  }
+
+  var oMeta = this[oMetaKey],
+      observers = oMeta.observers;
+
+  if (!observers.some(function (o) {
+    return o[0] === observer;
+  })) {
+    var opts;
+
+    if (options) {
+      opts = processObserveOptions(options);
+    } else {
+      opts = {};
+    }
+
+    observers.push([observer, opts]);
+  } else {
+    console.warn('observer may be bound to an observable only once; will NOT rebind');
+  }
+},
+    unobserve = function unobserve() {
+  var oMeta = this[oMetaKey];
+  var observers = oMeta.observers;
+  var ol = observers.length;
+
+  if (ol) {
+    var al = arguments.length;
+
+    if (al) {
+      while (al--) {
+        var i = ol;
+
+        while (i--) {
+          if (observers[i][0] === arguments[al]) {
+            observers.splice(i, 1);
+            ol--;
+          }
+        }
+      }
+    } else {
+      observers.splice(0);
+    }
+  }
+},
+    propertiesBluePrint = (_propertiesBluePrint = {}, _propertiesBluePrint[oMetaKey] = {
+  value: null
+}, _propertiesBluePrint.observe = {
+  value: observe
+}, _propertiesBluePrint.unobserve = {
+  value: unobserve
+}, _propertiesBluePrint),
+    prepareObject = function prepareObject(source, oMeta) {
+  propertiesBluePrint[oMetaKey].value = oMeta;
+  var target = Object.defineProperties({}, propertiesBluePrint);
+
+  for (var _i = 0, _Object$keys = Object.keys(source); _i < _Object$keys.length; _i++) {
+    var key = _Object$keys[_i];
+    target[key] = getObservedOf(source[key], key, oMeta);
+  }
+
+  return target;
+},
+    prepareArray = function prepareArray(source, oMeta) {
+  var i = 0,
+      l = source.length;
+  propertiesBluePrint[oMetaKey].value = oMeta;
+  var target = Object.defineProperties(new Array(l), propertiesBluePrint);
+
+  for (; i < l; i++) {
+    target[i] = getObservedOf(source[i], i, oMeta);
+  }
+
+  return target;
+},
+    prepareTypedArray = function prepareTypedArray(source, oMeta) {
+  propertiesBluePrint[oMetaKey].value = oMeta;
+  Object.defineProperties(source, propertiesBluePrint);
+  return source;
+},
+    filterChanges = function filterChanges(options, changes) {
+  var result = changes;
+
+  if (options.path) {
+    var oPath = options.path;
+    result = changes.filter(function (change) {
+      return change.path.join('.') === oPath;
+    });
+  } else if (options.pathsOf) {
+    var oPathsOf = options.pathsOf;
+    result = changes.filter(function (change) {
+      return change.path.length === oPathsOf.length + 1 || change.path.length === oPathsOf.length && (change.type === REVERSE || change.type === SHUFFLE);
+    });
+  } else if (options.pathsFrom) {
+    var oPathsFrom = options.pathsFrom;
+    result = changes.filter(function (change) {
+      return change.path.join('.').startsWith(oPathsFrom);
+    });
+  }
+
+  return result;
+},
+    callObserverSafe = function callObserverSafe(listener, changes) {
+  try {
+    listener(changes);
+  } catch (e) {
+    console.error("failed to notify listener " + listener + " with " + changes, e);
+  }
+},
+    callObserversFromMT = function callObserversFromMT() {
+  var batches = this.batches;
+  this.batches = null;
+
+  for (var _iterator = _createForOfIteratorHelperLoose(batches), _step; !(_step = _iterator()).done;) {
+    var _step$value = _step.value,
+        listener = _step$value[0],
+        options = _step$value[1];
+    callObserverSafe(listener, options);
+  }
+},
+    callObservers = function callObservers(oMeta, changes) {
+  var currentObservable = oMeta;
+  var observers, target, options, relevantChanges, i, newPath, tmp;
+  var l = changes.length;
+
+  do {
+    observers = currentObservable.observers;
+    i = observers.length;
+
+    while (i--) {
+      var _observers$i = observers[i];
+      target = _observers$i[0];
+      options = _observers$i[1];
+      relevantChanges = filterChanges(options, changes);
+
+      if (relevantChanges.length) {
+        if (currentObservable.options.async) {
+          //	this is the async dispatch handling
+          if (!currentObservable.batches) {
+            currentObservable.batches = [];
+            queueMicrotask(callObserversFromMT.bind(currentObservable));
+          }
+
+          var rb = currentObservable.batches.find(function (b) {
+            return b[0] === target;
+          });
+
+          if (!rb) {
+            rb = [target, []];
+            currentObservable.batches.push(rb);
+          }
+
+          Array.prototype.push.apply(rb[1], relevantChanges);
+        } else {
+          //	this is the naive straight forward synchronous dispatch
+          callObserverSafe(target, relevantChanges);
+        }
+      }
+    }
+
+    var tmpa = void 0;
+
+    if (currentObservable.parent) {
+      tmpa = new Array(l);
+
+      for (var _i2 = 0; _i2 < l; _i2++) {
+        tmp = changes[_i2];
+        newPath = [currentObservable.ownKey].concat(tmp.path);
+        tmpa[_i2] = {
+          type: tmp.type,
+          path: newPath,
+          value: tmp.value,
+          oldValue: tmp.oldValue,
+          object: tmp.object
+        };
+      }
+
+      changes = tmpa;
+      currentObservable = currentObservable.parent;
+    } else {
+      currentObservable = null;
+    }
+  } while (currentObservable);
+},
+    getObservedOf = function getObservedOf(item, key, parent) {
+  if (!item || typeof item !== 'object') {
+    return item;
+  } else if (Array.isArray(item)) {
+    return new ArrayOMeta({
+      target: item,
+      ownKey: key,
+      parent: parent
+    }).proxy;
+  } else if (ArrayBuffer.isView(item)) {
+    return new TypedArrayOMeta({
+      target: item,
+      ownKey: key,
+      parent: parent
+    }).proxy;
+  } else if (item instanceof Date || item instanceof Error) {
+    return item;
+  } else {
+    return new ObjectOMeta({
+      target: item,
+      ownKey: key,
+      parent: parent
+    }).proxy;
+  }
+},
+    proxiedPop = function proxiedPop() {
+  var oMeta = this[oMetaKey],
+      target = oMeta.target,
+      poppedIndex = target.length - 1;
+  var popResult = target.pop();
+
+  if (popResult && typeof popResult === 'object') {
+    var tmpObserved = popResult[oMetaKey];
+
+    if (tmpObserved) {
+      popResult = tmpObserved.detach();
+    }
+  }
+
+  var changes = [{
+    type: DELETE,
+    path: [poppedIndex],
+    oldValue: popResult,
+    object: this
+  }];
+  callObservers(oMeta, changes);
+  return popResult;
+},
+    proxiedPush = function proxiedPush() {
+  var oMeta = this[oMetaKey],
+      target = oMeta.target,
+      l = arguments.length,
+      pushContent = new Array(l),
+      initialLength = target.length;
+
+  for (var i = 0; i < l; i++) {
+    pushContent[i] = getObservedOf(arguments[i], initialLength + i, oMeta);
+  }
+
+  var pushResult = Reflect.apply(target.push, target, pushContent);
+  var changes = [];
+
+  for (var _i3 = initialLength, _l = target.length; _i3 < _l; _i3++) {
+    changes[_i3 - initialLength] = {
+      type: INSERT,
+      path: [_i3],
+      value: target[_i3],
+      object: this
+    };
+  }
+
+  callObservers(oMeta, changes);
+  return pushResult;
+},
+    proxiedShift = function proxiedShift() {
+  var oMeta = this[oMetaKey],
+      target = oMeta.target;
+  var shiftResult, i, l, item, tmpObserved;
+  shiftResult = target.shift();
+
+  if (shiftResult && typeof shiftResult === 'object') {
+    tmpObserved = shiftResult[oMetaKey];
+
+    if (tmpObserved) {
+      shiftResult = tmpObserved.detach();
+    }
+  } //	update indices of the remaining items
+
+
+  for (i = 0, l = target.length; i < l; i++) {
+    item = target[i];
+
+    if (item && typeof item === 'object') {
+      tmpObserved = item[oMetaKey];
+
+      if (tmpObserved) {
+        tmpObserved.ownKey = i;
+      }
+    }
+  }
+
+  var changes = [{
+    type: DELETE,
+    path: [0],
+    oldValue: shiftResult,
+    object: this
+  }];
+  callObservers(oMeta, changes);
+  return shiftResult;
+},
+    proxiedUnshift = function proxiedUnshift() {
+  var oMeta = this[oMetaKey],
+      target = oMeta.target,
+      al = arguments.length,
+      unshiftContent = new Array(al);
+
+  for (var i = 0; i < al; i++) {
+    unshiftContent[i] = getObservedOf(arguments[i], i, oMeta);
+  }
+
+  var unshiftResult = Reflect.apply(target.unshift, target, unshiftContent);
+
+  for (var _i4 = 0, _l2 = target.length, item; _i4 < _l2; _i4++) {
+    item = target[_i4];
+
+    if (item && typeof item === 'object') {
+      var tmpObserved = item[oMetaKey];
+
+      if (tmpObserved) {
+        tmpObserved.ownKey = _i4;
+      }
+    }
+  } //	publish changes
+
+
+  var l = unshiftContent.length;
+  var changes = new Array(l);
+
+  for (var _i5 = 0; _i5 < l; _i5++) {
+    changes[_i5] = {
+      type: INSERT,
+      path: [_i5],
+      value: target[_i5],
+      object: this
+    };
+  }
+
+  callObservers(oMeta, changes);
+  return unshiftResult;
+},
+    proxiedReverse = function proxiedReverse() {
+  var oMeta = this[oMetaKey],
+      target = oMeta.target;
+  var i, l, item;
+  target.reverse();
+
+  for (i = 0, l = target.length; i < l; i++) {
+    item = target[i];
+
+    if (item && typeof item === 'object') {
+      var tmpObserved = item[oMetaKey];
+
+      if (tmpObserved) {
+        tmpObserved.ownKey = i;
+      }
+    }
+  }
+
+  var changes = [{
+    type: REVERSE,
+    path: [],
+    object: this
+  }];
+  callObservers(oMeta, changes);
+  return this;
+},
+    proxiedSort = function proxiedSort(comparator) {
+  var oMeta = this[oMetaKey],
+      target = oMeta.target;
+  var i, l, item;
+  target.sort(comparator);
+
+  for (i = 0, l = target.length; i < l; i++) {
+    item = target[i];
+
+    if (item && typeof item === 'object') {
+      var tmpObserved = item[oMetaKey];
+
+      if (tmpObserved) {
+        tmpObserved.ownKey = i;
+      }
+    }
+  }
+
+  var changes = [{
+    type: SHUFFLE,
+    path: [],
+    object: this
+  }];
+  callObservers(oMeta, changes);
+  return this;
+},
+    proxiedFill = function proxiedFill(filVal, start, end) {
+  var oMeta = this[oMetaKey],
+      target = oMeta.target,
+      changes = [],
+      tarLen = target.length,
+      prev = target.slice(0);
+  start = start === undefined ? 0 : start < 0 ? Math.max(tarLen + start, 0) : Math.min(start, tarLen);
+  end = end === undefined ? tarLen : end < 0 ? Math.max(tarLen + end, 0) : Math.min(end, tarLen);
+
+  if (start < tarLen && end > start) {
+    target.fill(filVal, start, end);
+    var tmpObserved;
+
+    for (var i = start, item, tmpTarget; i < end; i++) {
+      item = target[i];
+      target[i] = getObservedOf(item, i, oMeta);
+
+      if (prev.hasOwnProperty(i)) {
+        tmpTarget = prev[i];
+
+        if (tmpTarget && typeof tmpTarget === 'object') {
+          tmpObserved = tmpTarget[oMetaKey];
+
+          if (tmpObserved) {
+            tmpTarget = tmpObserved.detach();
+          }
+        }
+
+        changes.push({
+          type: UPDATE,
+          path: [i],
+          value: target[i],
+          oldValue: tmpTarget,
+          object: this
+        });
+      } else {
+        changes.push({
+          type: INSERT,
+          path: [i],
+          value: target[i],
+          object: this
+        });
+      }
+    }
+
+    callObservers(oMeta, changes);
+  }
+
+  return this;
+},
+    proxiedCopyWithin = function proxiedCopyWithin(dest, start, end) {
+  var oMeta = this[oMetaKey],
+      target = oMeta.target,
+      tarLen = target.length;
+  dest = dest < 0 ? Math.max(tarLen + dest, 0) : dest;
+  start = start === undefined ? 0 : start < 0 ? Math.max(tarLen + start, 0) : Math.min(start, tarLen);
+  end = end === undefined ? tarLen : end < 0 ? Math.max(tarLen + end, 0) : Math.min(end, tarLen);
+  var len = Math.min(end - start, tarLen - dest);
+
+  if (dest < tarLen && dest !== start && len > 0) {
+    var prev = target.slice(0),
+        changes = [];
+    target.copyWithin(dest, start, end);
+
+    for (var i = dest, nItem, oItem, tmpObserved; i < dest + len; i++) {
+      //	update newly placed observables, if any
+      nItem = target[i];
+
+      if (nItem && typeof nItem === 'object') {
+        nItem = getObservedOf(nItem, i, oMeta);
+        target[i] = nItem;
+      } //	detach overridden observables, if any
+
+
+      oItem = prev[i];
+
+      if (oItem && typeof oItem === 'object') {
+        tmpObserved = oItem[oMetaKey];
+
+        if (tmpObserved) {
+          oItem = tmpObserved.detach();
+        }
+      }
+
+      if (typeof nItem !== 'object' && nItem === oItem) {
+        continue;
+      }
+
+      changes.push({
+        type: UPDATE,
+        path: [i],
+        value: nItem,
+        oldValue: oItem,
+        object: this
+      });
+    }
+
+    callObservers(oMeta, changes);
+  }
+
+  return this;
+},
+    proxiedSplice = function proxiedSplice() {
+  var oMeta = this[oMetaKey],
+      target = oMeta.target,
+      splLen = arguments.length,
+      spliceContent = new Array(splLen),
+      tarLen = target.length; //	observify the newcomers
+
+  for (var _i6 = 0; _i6 < splLen; _i6++) {
+    spliceContent[_i6] = getObservedOf(arguments[_i6], _i6, oMeta);
+  } //	calculate pointers
+
+
+  var startIndex = splLen === 0 ? 0 : spliceContent[0] < 0 ? tarLen + spliceContent[0] : spliceContent[0],
+      removed = splLen < 2 ? tarLen - startIndex : spliceContent[1],
+      inserted = Math.max(splLen - 2, 0),
+      spliceResult = Reflect.apply(target.splice, target, spliceContent),
+      newTarLen = target.length; //	reindex the paths
+
+  var tmpObserved;
+
+  for (var _i7 = 0, _item; _i7 < newTarLen; _i7++) {
+    _item = target[_i7];
+
+    if (_item && typeof _item === 'object') {
+      tmpObserved = _item[oMetaKey];
+
+      if (tmpObserved) {
+        tmpObserved.ownKey = _i7;
+      }
+    }
+  } //	detach removed objects
+
+
+  var i, l, item;
+
+  for (i = 0, l = spliceResult.length; i < l; i++) {
+    item = spliceResult[i];
+
+    if (item && typeof item === 'object') {
+      tmpObserved = item[oMetaKey];
+
+      if (tmpObserved) {
+        spliceResult[i] = tmpObserved.detach();
+      }
+    }
+  }
+
+  var changes = [];
+  var index;
+
+  for (index = 0; index < removed; index++) {
+    if (index < inserted) {
+      changes.push({
+        type: UPDATE,
+        path: [startIndex + index],
+        value: target[startIndex + index],
+        oldValue: spliceResult[index],
+        object: this
+      });
+    } else {
+      changes.push({
+        type: DELETE,
+        path: [startIndex + index],
+        oldValue: spliceResult[index],
+        object: this
+      });
+    }
+  }
+
+  for (; index < inserted; index++) {
+    changes.push({
+      type: INSERT,
+      path: [startIndex + index],
+      value: target[startIndex + index],
+      object: this
+    });
+  }
+
+  callObservers(oMeta, changes);
+  return spliceResult;
+},
+    proxiedTypedArraySet = function proxiedTypedArraySet(source, offset) {
+  var oMeta = this[oMetaKey],
+      target = oMeta.target,
+      souLen = source.length,
+      prev = target.slice(0);
+  offset = offset || 0;
+  target.set(source, offset);
+  var changes = new Array(souLen);
+
+  for (var i = offset; i < souLen + offset; i++) {
+    changes[i - offset] = {
+      type: UPDATE,
+      path: [i],
+      value: target[i],
+      oldValue: prev[i],
+      object: this
+    };
+  }
+
+  callObservers(oMeta, changes);
+},
+    proxiedArrayMethods = {
+  pop: proxiedPop,
+  push: proxiedPush,
+  shift: proxiedShift,
+  unshift: proxiedUnshift,
+  reverse: proxiedReverse,
+  sort: proxiedSort,
+  fill: proxiedFill,
+  copyWithin: proxiedCopyWithin,
+  splice: proxiedSplice
+},
+    proxiedTypedArrayMethods = {
+  reverse: proxiedReverse,
+  sort: proxiedSort,
+  fill: proxiedFill,
+  copyWithin: proxiedCopyWithin,
+  set: proxiedTypedArraySet
+};
+
+var OMetaBase = /*#__PURE__*/function () {
+  function OMetaBase(properties, cloningFunction) {
+    var target = properties.target,
+        parent = properties.parent,
+        ownKey = properties.ownKey;
+
+    if (parent && ownKey !== undefined) {
+      this.parent = parent;
+      this.ownKey = ownKey;
+    } else {
+      this.parent = null;
+      this.ownKey = null;
+    }
+
+    var targetClone = cloningFunction(target, this);
+    this.observers = [];
+    this.revocable = Proxy.revocable(targetClone, this);
+    this.proxy = this.revocable.proxy;
+    this.target = targetClone;
+    this.options = this.processOptions(properties.options);
+  }
+
+  var _proto = OMetaBase.prototype;
+
+  _proto.processOptions = function processOptions(options) {
+    if (options) {
+      if (typeof options !== 'object') {
+        throw new Error("Observable options if/when provided, MAY only be an object, got '" + options + "'");
+      }
+
+      var invalidOptions = Object.keys(options).filter(function (option) {
+        return !validObservableOptionKeys.hasOwnProperty(option);
+      });
+
+      if (invalidOptions.length) {
+        throw new Error("'" + invalidOptions.join(', ') + "' is/are not a valid Observable option/s");
+      }
+
+      return Object.assign({}, options);
+    } else {
+      return {};
+    }
+  };
+
+  _proto.detach = function detach() {
+    this.parent = null;
+    return this.target;
+  };
+
+  _proto.set = function set(target, key, value) {
+    var oldValue = target[key];
+
+    if (value !== oldValue) {
+      var newValue = getObservedOf(value, key, this);
+      target[key] = newValue;
+
+      if (oldValue && typeof oldValue === 'object') {
+        var tmpObserved = oldValue[oMetaKey];
+
+        if (tmpObserved) {
+          oldValue = tmpObserved.detach();
+        }
+      }
+
+      var changes = oldValue === undefined ? [{
+        type: INSERT,
+        path: [key],
+        value: newValue,
+        object: this.proxy
+      }] : [{
+        type: UPDATE,
+        path: [key],
+        value: newValue,
+        oldValue: oldValue,
+        object: this.proxy
+      }];
+      callObservers(this, changes);
+    }
+
+    return true;
+  };
+
+  _proto.deleteProperty = function deleteProperty(target, key) {
+    var oldValue = target[key];
+    delete target[key];
+
+    if (oldValue && typeof oldValue === 'object') {
+      var tmpObserved = oldValue[oMetaKey];
+
+      if (tmpObserved) {
+        oldValue = tmpObserved.detach();
+      }
+    }
+
+    var changes = [{
+      type: DELETE,
+      path: [key],
+      oldValue: oldValue,
+      object: this.proxy
+    }];
+    callObservers(this, changes);
+    return true;
+  };
+
+  return OMetaBase;
+}();
+
+var ObjectOMeta = /*#__PURE__*/function (_OMetaBase) {
+  _inheritsLoose(ObjectOMeta, _OMetaBase);
+
+  function ObjectOMeta(properties) {
+    return _OMetaBase.call(this, properties, prepareObject) || this;
+  }
+
+  return ObjectOMeta;
+}(OMetaBase);
+
+var ArrayOMeta = /*#__PURE__*/function (_OMetaBase2) {
+  _inheritsLoose(ArrayOMeta, _OMetaBase2);
+
+  function ArrayOMeta(properties) {
+    return _OMetaBase2.call(this, properties, prepareArray) || this;
+  }
+
+  var _proto2 = ArrayOMeta.prototype;
+
+  _proto2.get = function get(target, key) {
+    if (proxiedArrayMethods.hasOwnProperty(key)) {
+      return proxiedArrayMethods[key];
+    } else {
+      return target[key];
+    }
+  };
+
+  return ArrayOMeta;
+}(OMetaBase);
+
+var TypedArrayOMeta = /*#__PURE__*/function (_OMetaBase3) {
+  _inheritsLoose(TypedArrayOMeta, _OMetaBase3);
+
+  function TypedArrayOMeta(properties) {
+    return _OMetaBase3.call(this, properties, prepareTypedArray) || this;
+  }
+
+  var _proto3 = TypedArrayOMeta.prototype;
+
+  _proto3.get = function get(target, key) {
+    if (proxiedTypedArrayMethods.hasOwnProperty(key)) {
+      return proxiedTypedArrayMethods[key];
+    } else {
+      return target[key];
+    }
+  };
+
+  return TypedArrayOMeta;
+}(OMetaBase);
+
+var Observable = /*#__PURE__*/function () {
+  function Observable() {
+    throw new Error('Observable MAY NOT be created via constructor, see "Observable.from" API');
+  }
+
+  Observable.from = function from(target, options) {
+    if (!target || typeof target !== 'object') {
+      throw new Error('observable MAY ONLY be created from a non-null object');
+    } else if (target[oMetaKey]) {
+      return target;
+    } else if (Array.isArray(target)) {
+      return new ArrayOMeta({
+        target: target,
+        ownKey: null,
+        parent: null,
+        options: options
+      }).proxy;
+    } else if (ArrayBuffer.isView(target)) {
+      return new TypedArrayOMeta({
+        target: target,
+        ownKey: null,
+        parent: null,
+        options: options
+      }).proxy;
+    } else if (target instanceof Date || target instanceof Error) {
+      throw new Error(target + " found to be one of a on-observable types");
+    } else {
+      return new ObjectOMeta({
+        target: target,
+        ownKey: null,
+        parent: null,
+        options: options
+      }).proxy;
+    }
+  };
+
+  Observable.isObservable = function isObservable(input) {
+    return !!(input && input[oMetaKey]);
+  };
+
+  return Observable;
+}();
+
+Object.freeze(Observable);
+
+var imageExtensions = [
+	"ase",
+	"art",
+	"bmp",
+	"blp",
+	"cd5",
+	"cit",
+	"cpt",
+	"cr2",
+	"cut",
+	"dds",
+	"dib",
+	"djvu",
+	"egt",
+	"exif",
+	"gif",
+	"gpl",
+	"grf",
+	"icns",
+	"ico",
+	"iff",
+	"jng",
+	"jpeg",
+	"jpg",
+	"jfif",
+	"jp2",
+	"jps",
+	"lbm",
+	"max",
+	"miff",
+	"mng",
+	"msp",
+	"nitf",
+	"ota",
+	"pbm",
+	"pc1",
+	"pc2",
+	"pc3",
+	"pcf",
+	"pcx",
+	"pdn",
+	"pgm",
+	"PI1",
+	"PI2",
+	"PI3",
+	"pict",
+	"pct",
+	"pnm",
+	"pns",
+	"ppm",
+	"psb",
+	"psd",
+	"pdd",
+	"psp",
+	"px",
+	"pxm",
+	"pxr",
+	"qfx",
+	"raw",
+	"rle",
+	"sct",
+	"sgi",
+	"rgb",
+	"int",
+	"bw",
+	"tga",
+	"tiff",
+	"tif",
+	"vtf",
+	"xbm",
+	"xcf",
+	"xpm",
+	"3dv",
+	"amf",
+	"ai",
+	"awg",
+	"cgm",
+	"cdr",
+	"cmx",
+	"dxf",
+	"e2d",
+	"egt",
+	"eps",
+	"fs",
+	"gbr",
+	"odg",
+	"svg",
+	"stl",
+	"vrml",
+	"x3d",
+	"sxd",
+	"v2d",
+	"vnd",
+	"wmf",
+	"emf",
+	"art",
+	"xar",
+	"png",
+	"webp",
+	"jxr",
+	"hdp",
+	"wdp",
+	"cur",
+	"ecw",
+	"iff",
+	"lbm",
+	"liff",
+	"nrrd",
+	"pam",
+	"pcx",
+	"pgf",
+	"sgi",
+	"rgb",
+	"rgba",
+	"bw",
+	"int",
+	"inta",
+	"sid",
+	"ras",
+	"sun",
+	"tga"
+];
+
+var videoExtensions = [
+	"3g2",
+	"3gp",
+	"aaf",
+	"asf",
+	"avchd",
+	"avi",
+	"drc",
+	"flv",
+	"m2v",
+	"m4p",
+	"m4v",
+	"mkv",
+	"mng",
+	"mov",
+	"mp2",
+	"mp4",
+	"mpe",
+	"mpeg",
+	"mpg",
+	"mpv",
+	"mxf",
+	"nsv",
+	"ogg",
+	"ogv",
+	"qt",
+	"rm",
+	"rmvb",
+	"roq",
+	"svi",
+	"vob",
+	"webm",
+	"wmv",
+	"yuv"
+];
+
+function utilsFactory(globals) {
+  var g = globals || _g;
+
+  var generateBareUrl = function generateBareUrl(type, integrationID) {
+    return "https://api.easybase.io/" + type + "/" + integrationID;
+  };
+
+  var generateAuthBody = function generateAuthBody() {
+    var stamp = Date.now();
+    return {
+      token: g.token,
+      token_time: ~~(g.session / (stamp % 64)),
+      now: stamp
+    };
+  };
+
+  function log() {
+    if (g.options.logging) {
+      var _console;
+
+      (_console = console).log.apply(_console, ["EASYBASE — "].concat([].slice.call(arguments)));
+    }
+  }
+
+  return {
+    generateAuthBody: generateAuthBody,
+    generateBareUrl: generateBareUrl,
+    log: log
+  };
+}
+
+function _catch(body, recover) {
+  try {
+    var result = body();
+  } catch (e) {
+    return recover(e);
+  }
+
+  if (result && result.then) {
+    return result.then(void 0, recover);
+  }
+
+  return result;
+}
+
+function authFactory(globals) {
+  var _utilsFactory = utilsFactory(globals),
+      generateBareUrl = _utilsFactory.generateBareUrl,
+      generateAuthBody = _utilsFactory.generateAuthBody,
+      log = _utilsFactory.log;
+
+  var g = globals || _g;
+
+  var initAuth = function initAuth() {
+    try {
+      g.session = Math.floor(100000000 + Math.random() * 900000000);
+      log("Handshaking on instance");
+      return Promise.resolve(_catch(function () {
+        return Promise.resolve(axios.post(generateBareUrl("REACT", g.integrationID), {
+          version: g.ebconfig.version,
+          tt: g.ebconfig.tt,
+          session: g.session,
+          isNode: true
+        }, {
+          headers: {
+            'Eb-Post-Req': POST_TYPES.HANDSHAKE
+          }
+        })).then(function (res) {
+          if (res.data.token) {
+            g.token = res.data.token;
+            return true;
+          } else {
+            return false;
+          }
+        });
+      }, function (error) {
+        console.error(error);
+        return false;
+      }));
+    } catch (e) {
+      return Promise.reject(e);
+    }
+  };
+
+  var tokenPost = function tokenPost(postType, body) {
+    try {
+      return Promise.resolve(_catch(function () {
+        return Promise.resolve(axios.post(generateBareUrl("REACT", g.integrationID), _extends({
+          _auth: generateAuthBody()
+        }, body), {
+          headers: {
+            'Eb-Post-Req': postType
+          }
+        })).then(function (res) {
+          var _exit;
+
+          if ({}.hasOwnProperty.call(res.data, 'ErrorCode') || {}.hasOwnProperty.call(res.data, 'code')) {
+            var _temp3 = function _temp3(_result) {
+              return _exit ? _result : {
+                success: false,
+                data: res.data.body
+              };
+            };
+
+            var _temp4 = function () {
+              if (res.data.code === "JWT EXPIRED") {
+                return Promise.resolve(initAuth()).then(function () {
+                  _exit = 1;
+                  return tokenPost(postType, body);
+                });
+              }
+            }();
+
+            return _temp4 && _temp4.then ? _temp4.then(_temp3) : _temp3(_temp4);
+          } else {
+            return {
+              success: res.data.success,
+              data: res.data.body
+            };
+          }
+        });
+      }, function (error) {
+        return {
+          success: false,
+          data: error
+        };
+      }));
+    } catch (e) {
+      return Promise.reject(e);
+    }
+  };
+
+  var tokenPostAttachment = function tokenPostAttachment(formData, customHeaders) {
+    try {
+      var regularAuthbody = generateAuthBody();
+      var attachmentAuth = {
+        'Eb-token': regularAuthbody.token,
+        'Eb-token-time': regularAuthbody.token_time,
+        'Eb-now': regularAuthbody.now
+      };
+      return Promise.resolve(_catch(function () {
+        return Promise.resolve(axios.post(generateBareUrl("REACT", g.integrationID), formData, {
+          headers: _extends({
+            'Eb-Post-Req': POST_TYPES.UPLOAD_ATTACHMENT,
+            'Content-Type': 'multipart/form-data'
+          }, customHeaders, attachmentAuth)
+        })).then(function (res) {
+          var _exit2;
+
+          if ({}.hasOwnProperty.call(res.data, 'ErrorCode') || {}.hasOwnProperty.call(res.data, 'code')) {
+            var _temp7 = function _temp7(_result2) {
+              return _exit2 ? _result2 : {
+                success: false,
+                data: res.data.body
+              };
+            };
+
+            var _temp8 = function () {
+              if (res.data.code === "JWT EXPIRED") {
+                return Promise.resolve(initAuth()).then(function () {
+                  _exit2 = 1;
+                  return tokenPostAttachment(formData, customHeaders);
+                });
+              }
+            }();
+
+            return _temp8 && _temp8.then ? _temp8.then(_temp7) : _temp7(_temp8);
+          } else {
+            return {
+              success: res.data.success,
+              data: res.data.body
+            };
+          }
+        });
+      }, function (error) {
+        return {
+          success: false,
+          data: error
+        };
+      }));
+    } catch (e) {
+      return Promise.reject(e);
+    }
+  };
+
+  return {
+    initAuth: initAuth,
+    tokenPost: tokenPost,
+    tokenPostAttachment: tokenPostAttachment
+  };
+}
+
+function _catch$1(body, recover) {
+  try {
+    var result = body();
+  } catch (e) {
+    return recover(e);
+  }
+
+  if (result && result.then) {
+    return result.then(void 0, recover);
+  }
+
+  return result;
+}
+
+function EasybaseProvider(_ref) {
+  var ebconfig = _ref.ebconfig,
+      options = _ref.options;
+  var g = gFactory();
+
+  var _authFactory = authFactory(g),
+      initAuth = _authFactory.initAuth,
+      tokenPostGeneric = _authFactory.tokenPost,
+      tokenPostAttachmentGeneric = _authFactory.tokenPostAttachment;
+
+  var tokenPost = function tokenPost(postType, body) {
+    try {
+      var _temp3 = function _temp3() {
+        return tokenPostGeneric(postType, body);
+      };
+
+      var _temp4 = function () {
+        if (!_mounted) {
+          return Promise.resolve(mount()).then(function () {});
+        }
+      }();
+
+      return Promise.resolve(_temp4 && _temp4.then ? _temp4.then(_temp3) : _temp3(_temp4));
+    } catch (e) {
+      return Promise.reject(e);
+    }
+  };
+
+  var tokenPostAttachment = function tokenPostAttachment(formData, customHeaders) {
+    try {
+      var _temp7 = function _temp7() {
+        return tokenPostAttachmentGeneric(formData, customHeaders);
+      };
+
+      var _temp8 = function () {
+        if (!_mounted) {
+          return Promise.resolve(mount()).then(function () {});
+        }
+      }();
+
+      return Promise.resolve(_temp8 && _temp8.then ? _temp8.then(_temp7) : _temp7(_temp8));
+    } catch (e) {
+      return Promise.reject(e);
+    }
+  };
+
+  var _utilsFactory = utilsFactory(g),
+      log = _utilsFactory.log;
+
+  var _mounted = false;
+
+  if (typeof ebconfig !== 'object' || ebconfig === null || ebconfig === undefined) {
+    console.error("No ebconfig object passed. do `import ebconfig from \"ebconfig.json\"` and pass it to the Easybase provider");
+    return;
+  } else if (!ebconfig.integration || !ebconfig.tt) {
+    console.error("Invalid ebconfig object passed. Download ebconfig.json from Easybase.io and try again.");
+    return;
+  } // eslint-disable-next-line dot-notation
+
+
+  var isIE = typeof document !== 'undefined' && !!document['documentMode'];
+
+  if (isIE) {
+    console.error("EASYBASE — easybase-react does not support Internet Explorer. Please use a different browser.");
+  }
+
+  g.options = _extends({}, options);
+  g.integrationID = ebconfig.integration;
+  g.ebconfig = ebconfig;
+
+  var mount = function mount() {
+    try {
+      var t1 = Date.now();
+      log("mounting...");
+      return Promise.resolve(initAuth()).then(function () {
+        _mounted = true;
+        return Promise.resolve(tokenPost(POST_TYPES.VALID_TOKEN)).then(function (res) {
+          var elapsed = Date.now() - t1;
+
+          if (res.success) {
+            log("Valid auth initiation in " + elapsed + "ms");
+          }
+        });
+      });
+    } catch (e) {
+      return Promise.reject(e);
+    }
+  };
+
+  var _isFrameInitialized = true;
+  var _frameConfiguration = {
+    offset: 0,
+    limit: 0
+  };
+  var _observedChangeStack = [];
+
+  var _recordIdMap = new WeakMap();
+
+  var _observableFrame = {
+    observe: function observe(_) {},
+    unobserve: function unobserve() {}
+  };
+  var _frame = [];
+  var isSyncing = false;
+
+  function Frame(index) {
+    if (typeof index === "number") {
+      return _observableFrame[index];
+    } else {
+      return _observableFrame;
+    }
+  }
+
+  var _recordIDExists = function _recordIDExists(record) {
+    return !!_recordIdMap.get(record);
+  };
+
+  var Query = function Query(options) {
+    try {
+      var defaultOptions = {
+        queryName: ""
+      };
+
+      var fullOptions = _extends({}, defaultOptions, options);
+
+      return Promise.resolve(_catch$1(function () {
+        return Promise.resolve(tokenPost(POST_TYPES.GET_QUERY, fullOptions)).then(function (res) {
+          return res.data;
+        });
+      }, function () {
+        return [];
+      }));
+    } catch (e) {
+      return Promise.reject(e);
+    }
+  };
+
+  var configureFrame = function configureFrame(options) {
+    if (options.limit === _frameConfiguration.limit && options.offset === _frameConfiguration.offset) {
+      return {
+        message: "Frame parameters are the same as the previous configuration.",
+        success: true
+      };
+    }
+
+    _frameConfiguration = _extends({}, _frameConfiguration);
+    if (options.limit !== undefined) _frameConfiguration.limit = options.limit;
+    if (options.offset !== undefined && options.offset >= 0) _frameConfiguration.offset = options.offset;
+    _isFrameInitialized = false;
+    return {
+      message: "Successfully configured frame. Run sync() for changes to be shown in frame",
+      success: true
+    };
+  };
+
+  var currentConfiguration = function currentConfiguration() {
+    return _extends({}, _frameConfiguration);
+  };
+
+  var addRecord = function addRecord(options) {
+    try {
+      var defaultValues = {
+        insertAtEnd: false,
+        newRecord: {}
+      };
+
+      var fullOptions = _extends({}, defaultValues, options);
+
+      return Promise.resolve(_catch$1(function () {
+        return Promise.resolve(tokenPost(POST_TYPES.SYNC_INSERT, fullOptions)).then(function (res) {
+          return {
+            message: res.data,
+            success: res.success
+          };
+        });
+      }, function (err) {
+        console.error("Easybase Error: addRecord failed ", err);
+        return {
+          message: "Easybase Error: addRecord failed " + err,
+          success: false,
+          error: err
+        };
+      }));
+    } catch (e) {
+      return Promise.reject(e);
+    }
+  };
+
+  var deleteRecord = function deleteRecord(record) {
+    try {
+      var _frameRecord = _frame.find(function (ele) {
+        return deepEqual(ele, record);
+      });
+
+      if (_frameRecord && _recordIdMap.get(_frameRecord)) {
+        return Promise.resolve(tokenPost(POST_TYPES.SYNC_DELETE, {
+          _id: _recordIdMap.get(_frameRecord)
+        })).then(function (res) {
+          return {
+            success: res.success,
+            message: res.data
+          };
+        });
+      } else {
+        return Promise.resolve(_catch$1(function () {
+          return Promise.resolve(tokenPost(POST_TYPES.SYNC_DELETE, {
+            record: record
+          })).then(function (res) {
+            return {
+              success: res.success,
+              message: res.data
+            };
+          });
+        }, function (err) {
+          console.error("Easybase Error: deleteRecord failed ", err);
+          return {
+            success: false,
+            message: "Easybase Error: deleteRecord failed " + err,
+            error: err
+          };
+        }));
+      }
+    } catch (e) {
+      return Promise.reject(e);
+    }
+  };
+
+  var fullTableSize = function fullTableSize() {
+    try {
+      return Promise.resolve(tokenPost(POST_TYPES.TABLE_SIZE, {})).then(function (res) {
+        if (res.success) {
+          return res.data;
+        } else {
+          return 0;
+        }
+      });
+    } catch (e) {
+      return Promise.reject(e);
+    }
+  };
+
+  var tableTypes = function tableTypes() {
+    try {
+      return Promise.resolve(tokenPost(POST_TYPES.COLUMN_TYPES, {})).then(function (res) {
+        if (res.success) {
+          return res.data;
+        } else {
+          return {};
+        }
+      });
+    } catch (e) {
+      return Promise.reject(e);
+    }
+  }; // Only allow the deletion of one element at a time
+  // First handle shifting of the array size. Then iterate
+
+
+  var sync = function sync() {
+    try {
+      var _temp12 = function _temp12() {
+        return _catch$1(function () {
+          return Promise.resolve(tokenPost(POST_TYPES.GET_FRAME, {
+            offset: offset,
+            limit: limit
+          })).then(function (res) {
+            if (res.success === false) {
+              console.error(res.data);
+              isSyncing = false;
+              return {
+                success: false,
+                message: "" + res.data
+              };
+            } else {
+              _isFrameInitialized = true;
+
+              _realignFrames(res.data);
+
+              isSyncing = false;
+              return {
+                message: 'Success. Call frame for data',
+                success: true
+              };
+            }
+          }); // Check if the array recieved from db is the same as frame
+          // If not, update it and send useFrameEffect
+        }, function (err) {
+          console.error("Easybase Error: get failed ", err);
+          isSyncing = false;
+          return {
+            success: false,
+            message: "Easybase Error: get failed " + err,
+            error: err
+          };
+        });
+      };
+
+      var _realignFrames = function _realignFrames(newData) {
+        var isNewDataTheSame = true;
+
+        if (newData.length !== _frame.length) {
+          isNewDataTheSame = false;
+        } else {
+          for (var i = 0; i < newData.length; i++) {
+            var newDataNoId = _extends({}, newData[i]);
+
+            delete newDataNoId._id;
+
+            if (!deepEqual(newDataNoId, _frame[i])) {
+              isNewDataTheSame = false;
+              break;
+            }
+          }
+        }
+
+        if (!isNewDataTheSame) {
+          var oldframe = [].concat(_frame);
+          oldframe.length = newData.length;
+          _recordIdMap = new WeakMap();
+
+          for (var _i = 0; _i < newData.length; _i++) {
+            var currNewEle = newData[_i];
+
+            _recordIdMap.set(currNewEle, currNewEle._id);
+
+            delete currNewEle._id;
+            oldframe[_i] = currNewEle;
+          }
+
+          _frame = oldframe;
+
+          _observableFrame.unobserve();
+
+          _observableFrame = Observable.from(_frame);
+
+          _observableFrame.observe(function (allChanges) {
+            allChanges.forEach(function (change) {
+              _observedChangeStack.push({
+                type: change.type,
+                path: change.path,
+                value: change.value,
+                _id: _recordIdMap.get(_frame[Number(change.path[0])]) // Not bringing change.object or change.oldValue
+
+              });
+
+              log(JSON.stringify({
+                type: change.type,
+                path: change.path,
+                value: change.value,
+                _id: _recordIdMap.get(_frame[Number(change.path[0])]) // Not bringing change.object or change.oldValue
+
+              }));
+            });
+          });
+        }
+      };
+
+      if (isSyncing) {
+        return Promise.resolve({
+          success: false,
+          message: "Easybase Error: the provider is currently syncing, use 'await sync()' before calling sync() again"
+        });
+      }
+
+      isSyncing = true;
+      var _frameConfiguration2 = _frameConfiguration,
+          offset = _frameConfiguration2.offset,
+          limit = _frameConfiguration2.limit;
+
+      var _temp13 = function () {
+        if (_isFrameInitialized) {
+          var _temp14 = function () {
+            if (_observedChangeStack.length > 0) {
+              log("Stack change: ", _observedChangeStack);
+              return Promise.resolve(tokenPost(POST_TYPES.SYNC_STACK, {
+                stack: _observedChangeStack,
+                limit: limit,
+                offset: offset
+              })).then(function (res) {
+                console.log(res.data);
+
+                if (res.success) {
+                  _observedChangeStack.length = 0;
+                }
+              });
+            }
+          }();
+
+          if (_temp14 && _temp14.then) return _temp14.then(function () {});
+        }
+      }();
+
+      return Promise.resolve(_temp13 && _temp13.then ? _temp13.then(_temp12) : _temp12(_temp13));
+    } catch (e) {
+      return Promise.reject(e);
+    }
+  };
+
+  var updateRecordImage = function updateRecordImage(options) {
+    return Promise.resolve(_updateRecordAttachment(options, "image"));
+  };
+
+  var updateRecordVideo = function updateRecordVideo(options) {
+    return Promise.resolve(_updateRecordAttachment(options, "video"));
+  };
+
+  var updateRecordFile = function updateRecordFile(options) {
+    return Promise.resolve(_updateRecordAttachment(options, "file"));
+  };
+
+  var _updateRecordAttachment = function _updateRecordAttachment(options, type) {
+    try {
+      var isFileFromURI = function isFileFromURI(f) {
+        return f.uri !== undefined;
+      };
+
+      var _frameRecord = _frame.find(function (ele) {
+        return deepEqual(ele, options.record);
+      });
+
+      if (_frameRecord === undefined || !_recordIDExists(_frameRecord)) {
+        log("Attempting to add attachment to a new record that has not been synced. Please sync() before trying to add attachment.");
+        return Promise.resolve({
+          success: false,
+          message: "Attempting to add attachment to a new record that has not been synced. Please sync() before trying to add attachment."
+        });
+      }
+
+      var ext = options.attachment.name.split(".").pop().toLowerCase();
+      log(ext);
+
+      if (type === "image" && !imageExtensions.includes(ext)) {
+        return Promise.resolve({
+          success: false,
+          message: "Image files must have a proper image extension in the file name"
+        });
+      }
+
+      if (type === "video" && !videoExtensions.includes(ext)) {
+        return Promise.resolve({
+          success: false,
+          message: "Video files must have a proper video extension in the file name"
+        });
+      }
+
+      var formData = new FormData();
+
+      if (isFileFromURI(options.attachment)) {
+        formData.append("file", options.attachment);
+        formData.append("name", options.attachment.name);
+      } else {
+        formData.append("file", options.attachment);
+        formData.append("name", options.attachment.name);
+      }
+
+      var customHeaders = {
+        'Eb-upload-type': type,
+        'Eb-column-name': options.columnName,
+        'Eb-record-id': _recordIdMap.get(_frameRecord)
+      };
+      return Promise.resolve(tokenPostAttachment(formData, customHeaders)).then(function (res) {
+        return Promise.resolve(sync()).then(function () {
+          return {
+            message: res.data,
+            success: res.success
+          };
+        });
+      });
+    } catch (e) {
+      return Promise.reject(e);
+    }
+  };
+
+  var c = {
+    configureFrame: configureFrame,
+    addRecord: addRecord,
+    deleteRecord: deleteRecord,
+    sync: sync,
+    updateRecordImage: updateRecordImage,
+    updateRecordVideo: updateRecordVideo,
+    updateRecordFile: updateRecordFile,
+    Frame: Frame,
+    fullTableSize: fullTableSize,
+    tableTypes: tableTypes,
+    currentConfiguration: currentConfiguration,
+    Query: Query
+  };
+  return c;
+}
 
 var generateBareUrl = function generateBareUrl(type, integrationID) {
-  return "https://api.easybase.io/".concat(type, "/").concat(integrationID);
+  return "https://api.easybase.io/" + type + "/" + integrationID;
 };
 
 var isBadInt = function isBadInt(my_int) {
@@ -37,19 +1841,20 @@ var isBadIntegrationID = function isBadIntegrationID(my_string) {
 };
 
 var isBadObject = function isBadObject(my_obj) {
-  return my_obj !== undefined && my_obj !== null && _typeof(my_obj) !== "object";
+  return my_obj !== undefined && my_obj !== null && typeof my_obj !== "object";
 };
 
 var isBadBool = function isBadBool(my_bool) {
   return my_bool !== undefined && my_bool !== null && typeof my_bool !== "boolean";
 };
-
 /**
- * 
+ *
  * @param {GetOptions} options GetOptions.
  * @returns {Promise<Array>} Array of records.
- * 
+ *
  */
+
+
 function get(options) {
   var defaultOptions = {
     integrationID: "",
@@ -59,7 +1864,7 @@ function get(options) {
     customQuery: undefined
   };
 
-  var _defaultOptions$optio = _objectSpread(_objectSpread({}, defaultOptions), options),
+  var _defaultOptions$optio = _extends({}, defaultOptions, options),
       integrationID = _defaultOptions$optio.integrationID,
       offset = _defaultOptions$optio.offset,
       limit = _defaultOptions$optio.limit,
@@ -74,12 +1879,11 @@ function get(options) {
   return new Promise(function (resolve, reject) {
     try {
       var axios_body = {};
-      if (_typeof(customQuery) === "object") axios_body = _objectSpread({}, customQuery);
+      if (typeof customQuery === "object") axios_body = _extends({}, customQuery);
       if (offset !== undefined) axios_body.offset = offset;
       if (limit !== undefined) axios_body.limit = limit;
       if (authentication !== undefined) axios_body.authentication = authentication;
-
-      _axios["default"].post(generateBareUrl('get', integrationID), axios_body).then(function (res) {
+      axios.post(generateBareUrl('get', integrationID), axios_body).then(function (res) {
         if ({}.hasOwnProperty.call(res.data, 'ErrorCode')) {
           console.error(res.data.message);
           resolve([res.data.message]);
@@ -90,13 +1894,13 @@ function get(options) {
     }
   });
 }
-
 /**
- * 
+ *
  * @param {PostOptions} options PostOptions
  * @returns {Promise<String>} Post status.
- * 
+ *
  */
+
 function post(options) {
   var defaultValues = {
     integrationID: "",
@@ -105,7 +1909,7 @@ function post(options) {
     insertAtEnd: undefined
   };
 
-  var _defaultValues$option = _objectSpread(_objectSpread({}, defaultValues), options),
+  var _defaultValues$option = _extends({}, defaultValues, options),
       integrationID = _defaultValues$option.integrationID,
       newRecord = _defaultValues$option.newRecord,
       authentication = _defaultValues$option.authentication,
@@ -117,12 +1921,11 @@ function post(options) {
   if (isBadBool(insertAtEnd)) throw new Error("insertAtEnd must be a boolean or null");
   return new Promise(function (resolve, reject) {
     try {
-      var axios_body = _objectSpread({}, newRecord);
+      var axios_body = _extends({}, newRecord);
 
       if (authentication !== undefined) axios_body.authentication = authentication;
       if (insertAtEnd !== undefined) axios_body.insertAtEnd = insertAtEnd;
-
-      _axios["default"].post(generateBareUrl('post', integrationID), axios_body).then(function (res) {
+      axios.post(generateBareUrl('post', integrationID), axios_body).then(function (res) {
         if ({}.hasOwnProperty.call(res.data, 'ErrorCode')) console.error(res.data.message);
         resolve(res.data.message);
       });
@@ -131,12 +1934,12 @@ function post(options) {
     }
   });
 }
-
 /**
- * 
+ *
  * @param {UpdateOptions} options UpdateOptions
  * @returns {Promise<String>} Update status.
  */
+
 function update(options) {
   var defaultValues = {
     integrationID: "",
@@ -145,7 +1948,7 @@ function update(options) {
     customQuery: undefined
   };
 
-  var _defaultValues$option2 = _objectSpread(_objectSpread({}, defaultValues), options),
+  var _defaultValues$option2 = _extends({}, defaultValues, options),
       integrationID = _defaultValues$option2.integrationID,
       updateValues = _defaultValues$option2.updateValues,
       authentication = _defaultValues$option2.authentication,
@@ -157,13 +1960,12 @@ function update(options) {
   if (isBadObject(customQuery)) throw new Error("customQuery must be an object or null");
   return new Promise(function (resolve, reject) {
     try {
-      var axios_body = _objectSpread({
+      var axios_body = _extends({
         updateValues: updateValues
       }, customQuery);
 
       if (authentication !== undefined) axios_body.authentication = authentication;
-
-      _axios["default"].post(generateBareUrl('update', integrationID), axios_body).then(function (res) {
+      axios.post(generateBareUrl('update', integrationID), axios_body).then(function (res) {
         if ({}.hasOwnProperty.call(res.data, 'ErrorCode')) console.error(res.data.message);
         resolve(res.data.message);
       });
@@ -172,12 +1974,12 @@ function update(options) {
     }
   });
 }
-
 /**
- * 
+ *
  * @param {DeleteOptions} options DeleteOptions
  * @return {Promise<String>} Delete status.
  */
+
 function Delete(options) {
   var defaultValues = {
     integrationID: "",
@@ -185,7 +1987,7 @@ function Delete(options) {
     customQuery: undefined
   };
 
-  var _defaultValues$option3 = _objectSpread(_objectSpread({}, defaultValues), options),
+  var _defaultValues$option3 = _extends({}, defaultValues, options),
       integrationID = _defaultValues$option3.integrationID,
       authentication = _defaultValues$option3.authentication,
       customQuery = _defaultValues$option3.customQuery;
@@ -195,11 +1997,10 @@ function Delete(options) {
   if (isBadObject(customQuery)) throw new Error("customQuery must be an object or null");
   return new Promise(function (resolve, reject) {
     try {
-      var axios_body = _objectSpread({}, customQuery);
+      var axios_body = _extends({}, customQuery);
 
       if (authentication !== undefined) axios_body.authentication = authentication;
-
-      _axios["default"].post(generateBareUrl('delete', integrationID), axios_body).then(function (res) {
+      axios.post(generateBareUrl('delete', integrationID), axios_body).then(function (res) {
         if ({}.hasOwnProperty.call(res.data, 'ErrorCode')) console.error(res.data.message);
         resolve(res.data.message);
       });
@@ -208,4 +2009,10 @@ function Delete(options) {
     }
   });
 }
-//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIi4uL3NyYy9pbmRleC50cyJdLCJuYW1lcyI6WyJnZW5lcmF0ZUJhcmVVcmwiLCJ0eXBlIiwiaW50ZWdyYXRpb25JRCIsImlzQmFkSW50IiwibXlfaW50IiwidW5kZWZpbmVkIiwiTWF0aCIsImZsb29yIiwiaXNCYWRTdHJpbmciLCJteV9zdHJpbmciLCJpc0JhZEludGVncmF0aW9uSUQiLCJpc0JhZE9iamVjdCIsIm15X29iaiIsImlzQmFkQm9vbCIsIm15X2Jvb2wiLCJnZXQiLCJvcHRpb25zIiwiZGVmYXVsdE9wdGlvbnMiLCJvZmZzZXQiLCJsaW1pdCIsImF1dGhlbnRpY2F0aW9uIiwiY3VzdG9tUXVlcnkiLCJFcnJvciIsIlByb21pc2UiLCJyZXNvbHZlIiwicmVqZWN0IiwiYXhpb3NfYm9keSIsImF4aW9zIiwicG9zdCIsInRoZW4iLCJyZXMiLCJoYXNPd25Qcm9wZXJ0eSIsImNhbGwiLCJkYXRhIiwiY29uc29sZSIsImVycm9yIiwibWVzc2FnZSIsImVyciIsImRlZmF1bHRWYWx1ZXMiLCJuZXdSZWNvcmQiLCJpbnNlcnRBdEVuZCIsInVwZGF0ZSIsInVwZGF0ZVZhbHVlcyIsIkRlbGV0ZSJdLCJtYXBwaW5ncyI6Ijs7Ozs7Ozs7OztBQUFBOzs7Ozs7Ozs7Ozs7QUFFQSxJQUFNQSxlQUFlLEdBQUcsU0FBbEJBLGVBQWtCLENBQUNDLElBQUQsRUFBT0MsYUFBUDtBQUFBLDJDQUFvREQsSUFBcEQsY0FBNERDLGFBQTVEO0FBQUEsQ0FBeEI7O0FBQ0EsSUFBTUMsUUFBUSxHQUFHLFNBQVhBLFFBQVcsQ0FBQ0MsTUFBRDtBQUFBLFNBQVlBLE1BQU0sS0FBS0MsU0FBWCxJQUF3QkQsTUFBTSxLQUFLLElBQW5DLElBQTJDRSxJQUFJLENBQUNDLEtBQUwsQ0FBV0gsTUFBWCxNQUF1QkEsTUFBOUU7QUFBQSxDQUFqQjs7QUFDQSxJQUFNSSxXQUFXLEdBQUcsU0FBZEEsV0FBYyxDQUFDQyxTQUFEO0FBQUEsU0FBZUEsU0FBUyxLQUFLSixTQUFkLElBQTJCSSxT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LEVBQVdFLGFBQVgsQ0FBMUIsRUFBcUR3QixVQUFyRCxFQUNLRyxJQURMLENBQ1UsVUFBQUMsR0FBRyxFQUFJO0FBQ1QsWUFBSSxHQUFHQyxjQUFILENBQWtCQyxJQUFsQixDQUF1QkYsR0FBRyxDQUFDRyxJQUEzQixFQUFpQyxXQUFqQyxDQUFKLEVBQW1EQyxPQUFPLENBQUNDLEtBQVIsQ0FBY0wsR0FBRyxDQUFDRyxJQUFKLENBQVNHLE9BQXZCO0FBQ25EWixRQUFBQSxPQUFPLENBQUNNLEdBQUcsQ0FBQ0csSUFBSixDQUFTRyxPQUFWLENBQVA7QUFDSCxPQUpMO0FBS0gsS0FURCxDQVVBLE9BQU9DLEdBQVAsRUFBWTtBQUFFWixNQUFBQSxNQUFNLENBQUNZLEdBQUQsQ0FBTjtBQUFjO0FBQy9CLEdBWk0sQ0FBUDtBQWFIIiwic291cmNlc0NvbnRlbnQiOlsiaW1wb3J0IGF4aW9zIGZyb20gJ2F4aW9zJztcblxuY29uc3QgZ2VuZXJhdGVCYXJlVXJsID0gKHR5cGUsIGludGVncmF0aW9uSUQpID0+IGBodHRwczovL2FwaS5lYXN5YmFzZS5pby8ke3R5cGV9LyR7aW50ZWdyYXRpb25JRH1gO1xuY29uc3QgaXNCYWRJbnQgPSAobXlfaW50KSA9PiBteV9pbnQgIT09IHVuZGVmaW5lZCAmJiBteV9pbnQgIT09IG51bGwgJiYgTWF0aC5mbG9vcihteV9pbnQpICE9PSBteV9pbnQ7XG5jb25zdCBpc0JhZFN0cmluZyA9IChteV9zdHJpbmcpID0+IG15X3N0cmluZyAhPT0gdW5kZWZpbmVkICYmIG15X3N0cmluZyAhPT0gbnVsbCAmJiB0eXBlb2YgbXlfc3RyaW5nICE9PSBcInN0cmluZ1wiO1xuY29uc3QgaXNCYWRJbnRlZ3JhdGlvbklEID0gKG15X3N0cmluZykgPT4gbXlfc3RyaW5nID09PSB1bmRlZmluZWQgfHwgbXlfc3RyaW5nID09PSBudWxsIHx8IHR5cGVvZiBteV9zdHJpbmcgIT09IFwic3RyaW5nXCI7XG5jb25zdCBpc0JhZE9iamVjdCA9IChteV9vYmopID0+IG15X29iaiAhPT0gdW5kZWZpbmVkICYmIG15X29iaiAhPT0gbnVsbCAmJiB0eXBlb2YgbXlfb2JqICE9PSBcIm9iamVjdFwiO1xuY29uc3QgaXNCYWRCb29sID0gKG15X2Jvb2wpID0+IG15X2Jvb2wgIT09IHVuZGVmaW5lZCAmJiBteV9ib29sICE9PSBudWxsICYmIHR5cGVvZiBteV9ib29sICE9PSBcImJvb2xlYW5cIjtcblxuaW50ZXJmYWNlIEdldE9wdGlvbnMge1xuICAgIC8qKiBFYXN5QmFzZSBpbnRlZ3JhdGlvbiBJRC4gQ2FuIGJlIGZvdW5kIGJ5IGV4cGFuZGluZyB0aGUgaW50ZWdyYXRpb24gbWVudS4gVGhpcyBpZCBpcyBhdXRvbWF0aWNhbGx5IGdlbmVyYXRlZC4gICovXG4gICAgaW50ZWdyYXRpb25JRDogc3RyaW5nO1xuICAgIC8qKiBFZGl0IHN0YXJ0aW5nIGluZGV4IGZyb20gd2hpY2ggcmVjb3JkcyB3aWxsIGJlIHJldHJpZXZlZCBmcm9tLiBVc2VmdWwgZm9yIHBhZ2luZy4gKi9cbiAgICBvZmZzZXQ/OiBudW1iZXI7XG4gICAgLyoqIExpbWl0IHRoZSBhbW91bnQgb2YgcmVjb3JkcyB0byBiZSByZXRyaWV2ZWQuIENhbiBiZSB1c2VkIGluIGNvbWJpbmF0aW9uIHdpdGggb2Zmc2V0LiAqL1xuICAgIGxpbWl0PzogbnVtYmVyO1xuICAgIC8qKiBDdXN0b20gYXV0aGVudGljYXRpb24gc3RyaW5nLiBDYW4gYmUgc2V0IGluIGludGVncmF0aW9uIG1lbnUuIElmIGl0IGlzIHNldCwgaXQgaXMgcmVxdWlyZWQgdG8gYWNjZXNzIGludGVncmF0aW9uLiBUaGlzIGFjdHMgYXMgYW4gZXh0cmEgbGF5ZXIgb2Ygc2VjdXJpdHkgYW5kIGV4dGVuc2liaWxpdHkuICovXG4gICAgYXV0aGVudGljYXRpb24/OiBzdHJpbmc7XG4gICAgLyoqIFRoaXMgb2JqZWN0IGNhbiBiZSBzZXQgdG8gb3ZlcndyaXRlIHRoZSBxdWVyeSB2YWx1ZXMgYXMgc2V0IGluIHRoZSBpbnRlZ3JhdGlvbiBtZW51LiBJZiB5b3VyIHF1ZXJ5IGlzIHNldHVwIHRvIGZpbmQgcmVjb3JkcyB3aGVyZSAnYWdlJyA+PSAwLCBwYXNzaW5nIGluIHsgYWdlOiA1MCB9IHdpbGwgcXVlcnkgd2hlcmUgJ2FnZScgPj0gNTAuICovXG4gICAgY3VzdG9tUXVlcnk/OiBSZWNvcmQ8c3RyaW5nLCB1bmtub3duPjtcbn1cblxuLyoqXG4gKiBcbiAqIEBwYXJhbSB7R2V0T3B0aW9uc30gb3B0aW9ucyBHZXRPcHRpb25zLlxuICogQHJldHVybnMge1Byb21pc2U8QXJyYXk+fSBBcnJheSBvZiByZWNvcmRzLlxuICogXG4gKi9cbmV4cG9ydCBmdW5jdGlvbiBnZXQob3B0aW9uczogR2V0T3B0aW9ucyk6IFByb21pc2U8QXJyYXk8UmVjb3JkPHN0cmluZywgdW5rbm93bj4+PiB7XG4gICAgXG4gICAgY29uc3QgZGVmYXVsdE9wdGlvbnM6IEdldE9wdGlvbnMgPSB7XG4gICAgICAgIGludGVncmF0aW9uSUQ6IFwiXCIsXG4gICAgICAgIG9mZnNldDogdW5kZWZpbmVkLFxuICAgICAgICBsaW1pdDogdW5kZWZpbmVkLFxuICAgICAgICBhdXRoZW50aWNhdGlvbjogdW5kZWZpbmVkLFxuICAgICAgICBjdXN0b21RdWVyeTogdW5kZWZpbmVkXG4gICAgfVxuICAgIGNvbnN0IHsgaW50ZWdyYXRpb25JRCwgb2Zmc2V0LCBsaW1pdCwgYXV0aGVudGljYXRpb24sIGN1c3RvbVF1ZXJ5IH0gPSB7IC4uLmRlZmF1bHRPcHRpb25zLCAuLi5vcHRpb25zIH07XG5cbiAgICBpZiAoaXNCYWRJbnRlZ3JhdGlvbklEKGludGVncmF0aW9uSUQpKSB0aHJvdyBuZXcgRXJyb3IoXCJpbnRlZ3JhdGlvbklEIGlzIHJlcXVpcmVkIGFuZCBtdXN0IGJlIGEgc3RyaW5nXCIpO1xuICAgIGlmIChpc0JhZEludChvZmZzZXQpKSB0aHJvdyBuZXcgRXJyb3IoXCJvZmZzZXQgbXVzdCBiZSBhbiBpbnRlZ2VyXCIpO1xuICAgIGlmIChpc0JhZEludChsaW1pdCkpIHRocm93IG5ldyBFcnJvcihcImxpbWl0IG11c3QgYmUgYW4gaW50ZWdlclwiKTtcbiAgICBpZiAoaXNCYWRTdHJpbmcoYXV0aGVudGljYXRpb24pKSB0aHJvdyBuZXcgRXJyb3IoXCJhdXRoZW50aWNhdGlvbiBtdXN0IGJlIGEgc3RyaW5nIG9yIG51bGxcIik7XG4gICAgaWYgKGlzQmFkT2JqZWN0KGN1c3RvbVF1ZXJ5KSkgdGhyb3cgbmV3IEVycm9yKFwiY3VzdG9tUXVlcnkgbXVzdCBiZSBhbiBvYmplY3Qgb3IgbnVsbFwiKTtcblxuICAgIHJldHVybiBuZXcgUHJvbWlzZSgocmVzb2x2ZSwgcmVqZWN0KSA9PiB7XG4gICAgICAgIHRyeSB7XG4gICAgICAgICAgICBsZXQgYXhpb3NfYm9keTogYW55ID0ge307XG4gICAgICAgICAgICBpZiAodHlwZW9mIGN1c3RvbVF1ZXJ5ID09PSBcIm9iamVjdFwiKSBheGlvc19ib2R5ID0geyAuLi5jdXN0b21RdWVyeSB9O1xuICAgICAgICAgICAgaWYgKG9mZnNldCAhPT0gdW5kZWZpbmVkKSBheGlvc19ib2R5Lm9mZnNldCA9IG9mZnNldDtcbiAgICAgICAgICAgIGlmIChsaW1pdCAhPT0gdW5kZWZpbmVkKSBheGlvc19ib2R5LmxpbWl0ID0gbGltaXQ7XG4gICAgICAgICAgICBpZiAoYXV0aGVudGljYXRpb24gIT09IHVuZGVmaW5lZCkgYXhpb3NfYm9keS5hdXRoZW50aWNhdGlvbiA9IGF1dGhlbnRpY2F0aW9uO1xuXG4gICAgICAgICAgICBheGlvcy5wb3N0KGdlbmVyYXRlQmFyZVVybCgnZ2V0JywgaW50ZWdyYXRpb25JRCksIGF4aW9zX2JvZHkpXG4gICAgICAgICAgICAgICAgLnRoZW4ocmVzID0+IHtcbiAgICAgICAgICAgICAgICAgICAgaWYgKHt9Lmhhc093blByb3BlcnR5LmNhbGwocmVzLmRhdGEsICdFcnJvckNvZGUnKSkge1xuICAgICAgICAgICAgICAgICAgICAgICAgY29uc29sZS5lcnJvcihyZXMuZGF0YS5tZXNzYWdlKTtcbiAgICAgICAgICAgICAgICAgICAgICAgIHJlc29sdmUoWyByZXMuZGF0YS5tZXNzYWdlIF0pO1xuICAgICAgICAgICAgICAgICAgICB9IGVsc2UgcmVzb2x2ZShyZXMuZGF0YSk7XG4gICAgICAgICAgICAgICAgfSlcbiAgICAgICAgfVxuICAgICAgICBjYXRjaCAoZXJyKSB7IHJlamVjdChlcnIpOyB9XG4gICAgfSk7XG59XG5cblxuXG5pbnRlcmZhY2UgUG9zdE9wdGlvbnMge1xuICAgIC8qKiBFYXN5QmFzZSBpbnRlZ3JhdGlvbiBJRC4gQ2FuIGJlIGZvdW5kIGJ5IGV4cGFuZGluZyB0aGUgaW50ZWdyYXRpb24gbWVudS4gVGhpcyBpZCBpcyBhdXRvbWF0aWNhbGx5IGdlbmVyYXRlZC4gICovXG4gICAgaW50ZWdyYXRpb25JRDogc3RyaW5nO1xuICAgIC8qKiBWYWx1ZXMgdG8gcG9zdCB0byBFYXN5QmFzZSBjb2xsZWN0aW9uLiBGb3JtYXQgaXMgeyBjb2x1bW4gbmFtZTogdmFsdWUgfSAqL1xuICAgIG5ld1JlY29yZDogUmVjb3JkPHN0cmluZywgdW5rbm93bj47XG4gICAgLyoqIEN1c3RvbSBhdXRoZW50aWNhdGlvbiBzdHJpbmcuIENhbiBiZSBzZXQgaW4gaW50ZWdyYXRpb24gbWVudS4gSWYgaXQgaXMgc2V0LCBpdCBpcyByZXF1aXJlZCB0byBhY2Nlc3MgaW50ZWdyYXRpb24uIFRoaXMgYWN0cyBhcyBhbiBleHRyYSBsYXllciBvZiBzZWN1cml0eSBhbmQgZXh0ZW5zaWJpbGl0eS4gKi9cbiAgICBhdXRoZW50aWNhdGlvbj86IHN0cmluZztcbiAgICAvKiogSWYgdHJ1ZSwgcmVjb3JkIHdpbGwgYmUgaW5zZXJ0ZWQgYXQgdGhlIGVuZCBvZiB0aGUgY29sbGVjdGlvbiByYXRoZXIgdGhhbiB0aGUgZnJvbnQuICovXG4gICAgaW5zZXJ0QXRFbmQ/OiBib29sZWFuO1xufVxuXG4vKipcbiAqIFxuICogQHBhcmFtIHtQb3N0T3B0aW9uc30gb3B0aW9ucyBQb3N0T3B0aW9uc1xuICogQHJldHVybnMge1Byb21pc2U8U3RyaW5nPn0gUG9zdCBzdGF0dXMuXG4gKiBcbiAqL1xuZXhwb3J0IGZ1bmN0aW9uIHBvc3Qob3B0aW9uczogUG9zdE9wdGlvbnMpOiBQcm9taXNlPHN0cmluZz4ge1xuXG4gICAgY29uc3QgZGVmYXVsdFZhbHVlczogUG9zdE9wdGlvbnMgPSB7XG4gICAgICAgIGludGVncmF0aW9uSUQ6IFwiXCIsXG4gICAgICAgIG5ld1JlY29yZDogdW5kZWZpbmVkLFxuICAgICAgICBhdXRoZW50aWNhdGlvbjogdW5kZWZpbmVkLFxuICAgICAgICBpbnNlcnRBdEVuZDogdW5kZWZpbmVkXG4gICAgfVxuXG4gICAgY29uc3QgeyBpbnRlZ3JhdGlvbklELCBuZXdSZWNvcmQsIGF1dGhlbnRpY2F0aW9uLCBpbnNlcnRBdEVuZCB9ID0geyAuLi5kZWZhdWx0VmFsdWVzLCAuLi5vcHRpb25zIH07XG5cbiAgICBpZiAoaXNCYWRJbnRlZ3JhdGlvbklEKGludGVncmF0aW9uSUQpKSB0aHJvdyBuZXcgRXJyb3IoXCJpbnRlZ3JhdGlvbklEIGlzIHJlcXVpcmVkIGFuZCBtdXN0IGJlIGEgc3RyaW5nXCIpO1xuICAgIGlmIChpc0JhZE9iamVjdChuZXdSZWNvcmQpKSB0aHJvdyBuZXcgRXJyb3IoXCJuZXdSZWNvcmQgaXMgcmVxdWlyZWQgYW5kIG11c3QgYmUgYSBzdHJpbmdcIik7XG4gICAgaWYgKGlzQmFkU3RyaW5nKGF1dGhlbnRpY2F0aW9uKSkgdGhyb3cgbmV3IEVycm9yKFwiYXV0aGVudGljYXRpb24gbXVzdCBiZSBhIHN0cmluZyBvciBudWxsXCIpO1xuICAgIGlmIChpc0JhZEJvb2woaW5zZXJ0QXRFbmQpKSB0aHJvdyBuZXcgRXJyb3IoXCJpbnNlcnRBdEVuZCBtdXN0IGJlIGEgYm9vbGVhbiBvciBudWxsXCIpO1xuXG4gICAgcmV0dXJuIG5ldyBQcm9taXNlKChyZXNvbHZlLCByZWplY3QpID0+IHtcbiAgICAgICAgdHJ5IHtcbiAgICAgICAgICAgIGNvbnN0IGF4aW9zX2JvZHk6IGFueSA9IHsgLi4ubmV3UmVjb3JkIH07XG4gICAgICAgICAgICBpZiAoYXV0aGVudGljYXRpb24gIT09IHVuZGVmaW5lZCkgYXhpb3NfYm9keS5hdXRoZW50aWNhdGlvbiA9IGF1dGhlbnRpY2F0aW9uO1xuICAgICAgICAgICAgaWYgKGluc2VydEF0RW5kICE9PSB1bmRlZmluZWQpIGF4aW9zX2JvZHkuaW5zZXJ0QXRFbmQgPSBpbnNlcnRBdEVuZDtcblxuICAgICAgICAgICAgYXhpb3MucG9zdChnZW5lcmF0ZUJhcmVVcmwoJ3Bvc3QnLCBpbnRlZ3JhdGlvbklEKSwgYXhpb3NfYm9keSlcbiAgICAgICAgICAgICAgICAudGhlbihyZXMgPT4ge1xuICAgICAgICAgICAgICAgICAgICBpZiAoe30uaGFzT3duUHJvcGVydHkuY2FsbChyZXMuZGF0YSwgJ0Vycm9yQ29kZScpKSBjb25zb2xlLmVycm9yKHJlcy5kYXRhLm1lc3NhZ2UpO1xuICAgICAgICAgICAgICAgICAgICByZXNvbHZlKHJlcy5kYXRhLm1lc3NhZ2UpO1xuICAgICAgICAgICAgICAgIH0pXG4gICAgICAgIH1cbiAgICAgICAgY2F0Y2ggKGVycikgeyByZWplY3QoZXJyKTsgfVxuICAgIH0pO1xufVxuXG5cbmludGVyZmFjZSBVcGRhdGVPcHRpb25zIHtcbiAgICAvKiogRWFzeUJhc2UgaW50ZWdyYXRpb24gSUQuIENhbiBiZSBmb3VuZCBieSBleHBhbmRpbmcgdGhlIGludGVncmF0aW9uIG1lbnUuIFRoaXMgaWQgaXMgYXV0b21hdGljYWxseSBnZW5lcmF0ZWQuICAqL1xuICAgIGludGVncmF0aW9uSUQ6IHN0cmluZztcbiAgICAvKiogVmFsdWVzIHRvIHVwZGF0ZSByZWNvcmRzIHdpdGguIEZvcm1hdCBpcyB7IGNvbHVtbl9uYW1lOiBuZXcgdmFsdWUgfSAqL1xuICAgIHVwZGF0ZVZhbHVlczogUmVjb3JkPHN0cmluZywgdW5rbm93bj47XG4gICAgLyoqIEN1c3RvbSBhdXRoZW50aWNhdGlvbiBzdHJpbmcuIENhbiBiZSBzZXQgaW4gaW50ZWdyYXRpb24gbWVudS4gSWYgaXQgaXMgc2V0LCBpdCBpcyByZXF1aXJlZCB0byBhY2Nlc3MgaW50ZWdyYXRpb24uIFRoaXMgYWN0cyBhcyBhbiBleHRyYSBsYXllciBvZiBzZWN1cml0eSBhbmQgZXh0ZW5zaWJpbGl0eS4gKi9cbiAgICBhdXRoZW50aWNhdGlvbj86IHN0cmluZztcbiAgICAvKiogVGhpcyBvYmplY3QgY2FuIGJlIHNldCB0byBvdmVyd3JpdGUgdGhlIHF1ZXJ5IHZhbHVlcyBhcyBzZXQgaW4gdGhlIGludGVncmF0aW9uIG1lbnUuIElmIHlvdXIgcXVlcnkgaXMgc2V0dXAgdG8gZmluZCByZWNvcmRzIHdoZXJlICdhZ2UnID49IDAsIHBhc3NpbmcgaW4geyBhZ2U6IDUwIH0gd2lsbCBxdWVyeSB3aGVyZSAnYWdlJyA+PSA1MC4gKi9cbiAgICBjdXN0b21RdWVyeT86IFJlY29yZDxzdHJpbmcsIHVua25vd24+O1xufVxuXG4vKipcbiAqIFxuICogQHBhcmFtIHtVcGRhdGVPcHRpb25zfSBvcHRpb25zIFVwZGF0ZU9wdGlvbnNcbiAqIEByZXR1cm5zIHtQcm9taXNlPFN0cmluZz59IFVwZGF0ZSBzdGF0dXMuXG4gKi9cbmV4cG9ydCBmdW5jdGlvbiB1cGRhdGUob3B0aW9uczogVXBkYXRlT3B0aW9ucyk6IFByb21pc2U8c3RyaW5nPiB7XG4gICAgY29uc3QgZGVmYXVsdFZhbHVlczogVXBkYXRlT3B0aW9ucyA9IHtcbiAgICAgICAgaW50ZWdyYXRpb25JRDogXCJcIixcbiAgICAgICAgdXBkYXRlVmFsdWVzOiB1bmRlZmluZWQsXG4gICAgICAgIGF1dGhlbnRpY2F0aW9uOiB1bmRlZmluZWQsXG4gICAgICAgIGN1c3RvbVF1ZXJ5OiB1bmRlZmluZWRcbiAgICB9XG5cbiAgICBjb25zdCB7IGludGVncmF0aW9uSUQsIHVwZGF0ZVZhbHVlcywgYXV0aGVudGljYXRpb24sIGN1c3RvbVF1ZXJ5IH0gPSB7IC4uLmRlZmF1bHRWYWx1ZXMsIC4uLm9wdGlvbnMgfTtcblxuICAgIGlmIChpc0JhZEludGVncmF0aW9uSUQoaW50ZWdyYXRpb25JRCkpIHRocm93IG5ldyBFcnJvcihcImludGVncmF0aW9uSUQgaXMgcmVxdWlyZWQgYW5kIG11c3QgYmUgYSBzdHJpbmdcIik7XG4gICAgaWYgKGlzQmFkT2JqZWN0KHVwZGF0ZVZhbHVlcykgfHwgdXBkYXRlVmFsdWVzID09PSB1bmRlZmluZWQpIHRocm93IG5ldyBFcnJvcihcInVwZGF0ZVZhbHVlcyBpcyByZXF1aXJlZCBhbmQgbXVzdCBiZSBhIHN0cmluZ1wiKTtcbiAgICBpZiAoaXNCYWRTdHJpbmcoYXV0aGVudGljYXRpb24pKSB0aHJvdyBuZXcgRXJyb3IoXCJhdXRoZW50aWNhdGlvbiBtdXN0IGJlIGEgc3RyaW5nIG9yIG51bGxcIik7XG4gICAgaWYgKGlzQmFkT2JqZWN0KGN1c3RvbVF1ZXJ5KSkgdGhyb3cgbmV3IEVycm9yKFwiY3VzdG9tUXVlcnkgbXVzdCBiZSBhbiBvYmplY3Qgb3IgbnVsbFwiKTtcblxuICAgIHJldHVybiBuZXcgUHJvbWlzZSgocmVzb2x2ZSwgcmVqZWN0KSA9PiB7XG4gICAgICAgIHRyeSB7XG4gICAgICAgICAgICBjb25zdCBheGlvc19ib2R5OiBhbnkgPSB7IHVwZGF0ZVZhbHVlcywgLi4uY3VzdG9tUXVlcnkgfTtcbiAgICAgICAgICAgIGlmIChhdXRoZW50aWNhdGlvbiAhPT0gdW5kZWZpbmVkKSBheGlvc19ib2R5LmF1dGhlbnRpY2F0aW9uID0gYXV0aGVudGljYXRpb247XG5cbiAgICAgICAgICAgIGF4aW9zLnBvc3QoZ2VuZXJhdGVCYXJlVXJsKCd1cGRhdGUnLCBpbnRlZ3JhdGlvbklEKSwgYXhpb3NfYm9keSlcbiAgICAgICAgICAgICAgICAudGhlbihyZXMgPT4ge1xuICAgICAgICAgICAgICAgICAgICBpZiAoe30uaGFzT3duUHJvcGVydHkuY2FsbChyZXMuZGF0YSwgJ0Vycm9yQ29kZScpKSBjb25zb2xlLmVycm9yKHJlcy5kYXRhLm1lc3NhZ2UpO1xuICAgICAgICAgICAgICAgICAgICByZXNvbHZlKHJlcy5kYXRhLm1lc3NhZ2UpO1xuICAgICAgICAgICAgICAgIH0pXG4gICAgICAgIH1cbiAgICAgICAgY2F0Y2ggKGVycikgeyByZWplY3QoZXJyKTsgfVxuICAgIH0pO1xufVxuXG5pbnRlcmZhY2UgRGVsZXRlT3B0aW9ucyB7XG4gICAgLyoqIEVhc3lCYXNlIGludGVncmF0aW9uIElELiBDYW4gYmUgZm91bmQgYnkgZXhwYW5kaW5nIHRoZSBpbnRlZ3JhdGlvbiBtZW51LiBUaGlzIGlkIGlzIGF1dG9tYXRpY2FsbHkgZ2VuZXJhdGVkLiAgKi9cbiAgICBpbnRlZ3JhdGlvbklEOiBzdHJpbmc7XG4gICAgLyoqIEN1c3RvbSBhdXRoZW50aWNhdGlvbiBzdHJpbmcuIENhbiBiZSBzZXQgaW4gaW50ZWdyYXRpb24gbWVudS4gSWYgaXQgaXMgc2V0LCBpdCBpcyByZXF1aXJlZCB0byBhY2Nlc3MgaW50ZWdyYXRpb24uIFRoaXMgYWN0cyBhcyBhbiBleHRyYSBsYXllciBvZiBzZWN1cml0eSBhbmQgZXh0ZW5zaWJpbGl0eS4gKi9cbiAgICBhdXRoZW50aWNhdGlvbj86IHN0cmluZztcbiAgICAvKiogVGhpcyBvYmplY3QgY2FuIGJlIHNldCB0byBvdmVyd3JpdGUgdGhlIHF1ZXJ5IHZhbHVlcyBhcyBzZXQgaW4gdGhlIGludGVncmF0aW9uIG1lbnUuIElmIHlvdXIgcXVlcnkgaXMgc2V0dXAgdG8gZmluZCByZWNvcmRzIHdoZXJlICdhZ2UnID49IDAsIHBhc3NpbmcgaW4geyBhZ2U6IDUwIH0gd2lsbCBxdWVyeSB3aGVyZSAnYWdlJyA+PSA1MC4gKi9cbiAgICBjdXN0b21RdWVyeT86IFJlY29yZDxzdHJpbmcsIHVua25vd24+O1xufVxuXG5cbi8qKlxuICogXG4gKiBAcGFyYW0ge0RlbGV0ZU9wdGlvbnN9IG9wdGlvbnMgRGVsZXRlT3B0aW9uc1xuICogQHJldHVybiB7UHJvbWlzZTxTdHJpbmc+fSBEZWxldGUgc3RhdHVzLlxuICovXG5leHBvcnQgZnVuY3Rpb24gRGVsZXRlKG9wdGlvbnM6IERlbGV0ZU9wdGlvbnMpOiBQcm9taXNlPHN0cmluZz4ge1xuXG4gICAgY29uc3QgZGVmYXVsdFZhbHVlczogRGVsZXRlT3B0aW9ucyA9IHtcbiAgICAgICAgaW50ZWdyYXRpb25JRDogXCJcIixcbiAgICAgICAgYXV0aGVudGljYXRpb246IHVuZGVmaW5lZCxcbiAgICAgICAgY3VzdG9tUXVlcnk6IHVuZGVmaW5lZFxuICAgIH1cblxuICAgIGNvbnN0IHsgaW50ZWdyYXRpb25JRCwgYXV0aGVudGljYXRpb24sIGN1c3RvbVF1ZXJ5IH0gPSB7IC4uLmRlZmF1bHRWYWx1ZXMsIC4uLm9wdGlvbnMgfTtcblxuICAgIGlmIChpc0JhZEludGVncmF0aW9uSUQoaW50ZWdyYXRpb25JRCkpIHRocm93IG5ldyBFcnJvcihcImludGVncmF0aW9uSUQgaXMgcmVxdWlyZWQgYW5kIG11c3QgYmUgYSBzdHJpbmdcIik7XG4gICAgaWYgKGlzQmFkU3RyaW5nKGF1dGhlbnRpY2F0aW9uKSkgdGhyb3cgbmV3IEVycm9yKFwiYXV0aGVudGljYXRpb24gbXVzdCBiZSBhIHN0cmluZyBvciBudWxsXCIpO1xuICAgIGlmIChpc0JhZE9iamVjdChjdXN0b21RdWVyeSkpIHRocm93IG5ldyBFcnJvcihcImN1c3RvbVF1ZXJ5IG11c3QgYmUgYW4gb2JqZWN0IG9yIG51bGxcIik7XG5cbiAgICByZXR1cm4gbmV3IFByb21pc2UoKHJlc29sdmUsIHJlamVjdCkgPT4ge1xuICAgICAgICB0cnkge1xuICAgICAgICAgICAgY29uc3QgYXhpb3NfYm9keTogYW55ID0geyAuLi5jdXN0b21RdWVyeSB9O1xuICAgICAgICAgICAgaWYgKGF1dGhlbnRpY2F0aW9uICE9PSB1bmRlZmluZWQpIGF4aW9zX2JvZHkuYXV0aGVudGljYXRpb24gPSBhdXRoZW50aWNhdGlvbjtcblxuICAgICAgICAgICAgYXhpb3MucG9zdChnZW5lcmF0ZUJhcmVVcmwoJ2RlbGV0ZScsIGludGVncmF0aW9uSUQpLCBheGlvc19ib2R5KVxuICAgICAgICAgICAgICAgIC50aGVuKHJlcyA9PiB7XG4gICAgICAgICAgICAgICAgICAgIGlmICh7fS5oYXNPd25Qcm9wZXJ0eS5jYWxsKHJlcy5kYXRhLCAnRXJyb3JDb2RlJykpIGNvbnNvbGUuZXJyb3IocmVzLmRhdGEubWVzc2FnZSk7XG4gICAgICAgICAgICAgICAgICAgIHJlc29sdmUocmVzLmRhdGEubWVzc2FnZSk7XG4gICAgICAgICAgICAgICAgfSlcbiAgICAgICAgfVxuICAgICAgICBjYXRjaCAoZXJyKSB7IHJlamVjdChlcnIpOyB9XG4gICAgfSk7XG59XG4iXX0=
+
+exports.Delete = Delete;
+exports.EasybaseProvider = EasybaseProvider;
+exports.get = get;
+exports.post = post;
+exports.update = update;
+//# sourceMappingURL=index.js.map

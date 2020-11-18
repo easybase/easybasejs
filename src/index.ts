@@ -1,5 +1,7 @@
 import axios from 'axios';
 
+export { default as EasybaseProvider} from "./EasybaseProvider/EasybaseProvider";
+
 const generateBareUrl = (type, integrationID) => `https://api.easybase.io/${type}/${integrationID}`;
 const isBadInt = (my_int) => my_int !== undefined && my_int !== null && Math.floor(my_int) !== my_int;
 const isBadString = (my_string) => my_string !== undefined && my_string !== null && typeof my_string !== "string";

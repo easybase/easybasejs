@@ -2,12 +2,13 @@
     "compilerOptions": {
         "outDir": "./dist",
         "allowJs": true,
-        "target": "es2015",
+        "target": "ESNext",
         // Ensure that .d.ts files are created by tsc, but not .js files
         "declaration": true,
-        // Ensure that Babel can safely transpile files in the TypeScript project
         "isolatedModules": true,
-        "moduleResolution": "node"
+        "moduleResolution": "node",
+        "resolveJsonModule": true,
+        "allowSyntheticDefaultImports": true
     },
     "include": [
         "./src/**/*"
