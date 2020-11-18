@@ -108,8 +108,8 @@ The *Frame()* function will point to your database and can be edited as a normal
 <!-- // TODO: Add walkthrough and video --->
 
 ```javascript
-var Easybase = require("easybasejs");
-var ebconfig = require("./ebconfig"); // Download from NODE integration
+import Easybase from "easybasejs";
+import ebconfig from "./ebconfig"; // Download from NODE integration
 
 // Initialize
 const eb = Easybase.EasybaseProvider({ ebconfig });
