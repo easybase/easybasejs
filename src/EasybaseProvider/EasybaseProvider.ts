@@ -18,34 +18,24 @@ import imageExtensions from "./assets/image-extensions.json";
 import videoExtensions from "./assets/video-extensions.json";
 import authFactory from "./auth";
 import utilsFactory from "./utils";
+import functionsFactory from "./functions";
 
 export default function EasybaseProvider({ ebconfig, options }: EasybaseProviderProps): ContextValue {
 
     const g = gFactory();
 
     const {
-        initAuth,
-        tokenPost: tokenPostGeneric,
-        tokenPostAttachment: tokenPostAttachmentGeneric
+        tokenPost,
+        tokenPostAttachment
     } = authFactory(g);
 
-    const tokenPost = async (postType: POST_TYPES, body?: {}): Promise<AuthPostResponse> => {
-        if (!_mounted) {
-            await mount();
-        }
-        return tokenPostGeneric(postType, body);
-    }
-
-    const tokenPostAttachment = async (formData: FormData, customHeaders: {}): Promise<AuthPostResponse> => {
-        if (!_mounted) {
-            await mount();
-        }
-        return tokenPostAttachmentGeneric(formData, customHeaders);
-    }
+    const {
+        Query,
+        fullTableSize,
+        tableTypes
+    } = functionsFactory(g);
 
     const { log } = utilsFactory(g);
-
-    let _mounted = false;
 
     if (typeof ebconfig !== 'object' || ebconfig === null || ebconfig === undefined) {
         console.error("No ebconfig object passed. do `import ebconfig from \"ebconfig.json\"` and pass it to the Easybase provider");
@@ -65,18 +55,8 @@ export default function EasybaseProvider({ ebconfig, options }: EasybaseProvider
     g.options = { ...options };
     g.integrationID = ebconfig.integration;
     g.ebconfig = ebconfig;
-
-    const mount = async () => {
-        const t1 = Date.now();
-        log("mounting...");
-        await initAuth();
-        _mounted = true;
-        const res = await tokenPost(POST_TYPES.VALID_TOKEN);
-        const elapsed = Date.now() - t1;
-        if (res.success) {
-            log("Valid auth initiation in " + elapsed + "ms");
-        }
-    }
+    g.mounted = false;
+    g.instance = "Node";
 
     let _isFrameInitialized = true;
     let _frameConfiguration: FrameConfiguration = {
@@ -93,7 +73,6 @@ export default function EasybaseProvider({ ebconfig, options }: EasybaseProvider
 
     let isSyncing = false;
 
-
     function Frame(): Record<string, any>[];
     function Frame(index: number): Record<string, any>;
     function Frame(index?: number): Record<string, any>[] | Record<string, any> {
@@ -105,21 +84,6 @@ export default function EasybaseProvider({ ebconfig, options }: EasybaseProvider
     }
 
     const _recordIDExists = (record: Record<string, any>): Boolean => !!_recordIdMap.get(record);
-
-    const Query = async (options: QueryOptions): Promise<Record<string, any>[]> => {
-        const defaultOptions: QueryOptions = {
-            queryName: ""
-        }
-
-        const fullOptions: QueryOptions = { ...defaultOptions, ...options };
-
-        try {
-            const res = await tokenPost(POST_TYPES.GET_QUERY, fullOptions);
-            return res.data
-        } catch (error) {
-            return [];
-        }
-    }
 
     const configureFrame = (options: ConfigureFrameOptions): StatusResponse => {
         if (options.limit === _frameConfiguration.limit && options.offset === _frameConfiguration.offset) {
@@ -142,30 +106,6 @@ export default function EasybaseProvider({ ebconfig, options }: EasybaseProvider
     }
 
     const currentConfiguration = (): FrameConfiguration => ({ ..._frameConfiguration });
-
-    const addRecord = async (options: AddRecordOptions): Promise<StatusResponse> => {
-        const defaultValues: AddRecordOptions = {
-            insertAtEnd: false,
-            newRecord: {}
-        }
-
-        const fullOptions: AddRecordOptions = { ...defaultValues, ...options };
-
-        try {
-            const res = await tokenPost(POST_TYPES.SYNC_INSERT, fullOptions);
-            return {
-                message: res.data,
-                success: res.success
-            }
-        } catch (err) {
-            console.error("Easybase Error: addRecord failed ", err);
-            return {
-                message: "Easybase Error: addRecord failed " + err,
-                success: false,
-                error: err
-            }
-        }
-    }
 
     const deleteRecord = async (record: Record<string, any> | {}): Promise<StatusResponse> => {
         const _frameRecord = _frame.find(ele => deepEqual(ele, record));
@@ -198,21 +138,27 @@ export default function EasybaseProvider({ ebconfig, options }: EasybaseProvider
         }
     }
 
-    const fullTableSize = async (): Promise<number> => {
-        const res = await tokenPost(POST_TYPES.TABLE_SIZE, {});
-        if (res.success) {
-            return res.data;
-        } else {
-            return 0;
+    const addRecord = async (options: AddRecordOptions): Promise<StatusResponse> => {
+        const defaultValues: AddRecordOptions = {
+            insertAtEnd: false,
+            newRecord: {}
         }
-    }
 
-    const tableTypes = async (): Promise<Record<string, any>> => {
-        const res = await tokenPost(POST_TYPES.COLUMN_TYPES, {});
-        if (res.success) {
-            return res.data;
-        } else {
-            return {};
+        const fullOptions: AddRecordOptions = { ...defaultValues, ...options };
+
+        try {
+            const res = await tokenPost(POST_TYPES.SYNC_INSERT, fullOptions);
+            return {
+                message: res.data,
+                success: res.success
+            }
+        } catch (err) {
+            console.error("Easybase Error: addRecord failed ", err);
+            return {
+                message: "Easybase Error: addRecord failed " + err,
+                success: false,
+                error: err
+            }
         }
     }
 

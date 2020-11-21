@@ -9,21 +9,30 @@ export default function authFactory(globals?: Globals): any {
     const g = globals || _g;
 
     const initAuth = async (): Promise<boolean> => {
+        const t1 = Date.now();
         g.session = Math.floor(100000000 + Math.random() * 900000000);
     
-        log(`Handshaking on instance`);
+        log(`Handshaking on${g.instance} instance`);
     
         try {
             const res = await axios.post(generateBareUrl("REACT", g.integrationID), {
                 version: g.ebconfig.version,
                 tt: g.ebconfig.tt,
                 session: g.session,
-                isNode: true
+                instance: g.instance
             }, { headers: { 'Eb-Post-Req': POST_TYPES.HANDSHAKE } });
     
             if (res.data.token) {
                 g.token = res.data.token;
-                return true;
+                g.mounted = true;
+                const validTokenRes = await tokenPost(POST_TYPES.VALID_TOKEN);
+                const elapsed = Date.now() - t1;
+                if (validTokenRes.success) {
+                    log("Valid auth initiation in " + elapsed + "ms");
+                    return true;
+                } else {
+                    return false;
+                }
             } else {
                 return false;
             }
@@ -34,6 +43,11 @@ export default function authFactory(globals?: Globals): any {
     }
     
     const tokenPost = async (postType: POST_TYPES, body?: {}): Promise<AuthPostResponse> => {
+
+        if (!g.mounted) {
+            await initAuth();
+        }
+
         try {
             const res = await axios.post(generateBareUrl("REACT", g.integrationID), {
                 _auth: generateAuthBody(),
@@ -65,6 +79,11 @@ export default function authFactory(globals?: Globals): any {
     }
     
     const tokenPostAttachment = async (formData: FormData, customHeaders: {}): Promise<AuthPostResponse> => {
+
+        if (!g.mounted) {
+            await initAuth();
+        }
+
         const regularAuthbody = generateAuthBody();
     
         const attachmentAuth = {

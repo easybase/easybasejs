@@ -1080,15 +1080,16 @@ function authFactory(globals) {
   const g = globals || _g;
 
   const initAuth = async () => {
+    const t1 = Date.now();
     g.session = Math.floor(100000000 + Math.random() * 900000000);
-    log(`Handshaking on instance`);
+    log(`Handshaking on${g.instance} instance`);
 
     try {
       const res = await axios.post(generateBareUrl("REACT", g.integrationID), {
         version: g.ebconfig.version,
         tt: g.ebconfig.tt,
         session: g.session,
-        isNode: true
+        instance: g.instance
       }, {
         headers: {
           'Eb-Post-Req': POST_TYPES.HANDSHAKE
@@ -1097,7 +1098,16 @@ function authFactory(globals) {
 
       if (res.data.token) {
         g.token = res.data.token;
-        return true;
+        g.mounted = true;
+        const validTokenRes = await tokenPost(POST_TYPES.VALID_TOKEN);
+        const elapsed = Date.now() - t1;
+
+        if (validTokenRes.success) {
+          log("Valid auth initiation in " + elapsed + "ms");
+          return true;
+        } else {
+          return false;
+        }
       } else {
         return false;
       }
@@ -1108,6 +1118,10 @@ function authFactory(globals) {
   };
 
   const tokenPost = async (postType, body) => {
+    if (!g.mounted) {
+      await initAuth();
+    }
+
     try {
       const res = await axios.post(generateBareUrl("REACT", g.integrationID), _extends({
         _auth: generateAuthBody()
@@ -1142,6 +1156,10 @@ function authFactory(globals) {
   };
 
   const tokenPostAttachment = async (formData, customHeaders) => {
+    if (!g.mounted) {
+      await initAuth();
+    }
+
     const regularAuthbody = generateAuthBody();
     const attachmentAuth = {
       'Eb-token': regularAuthbody.token,
@@ -1188,37 +1206,71 @@ function authFactory(globals) {
   };
 }
 
+function functionsFactory(globals) {
+  const g = globals || _g;
+  const {
+    tokenPost
+  } = authFactory(g);
+
+  const Query = async options => {
+    const defaultOptions = {
+      queryName: ""
+    };
+
+    const fullOptions = _extends({}, defaultOptions, options);
+
+    try {
+      const res = await tokenPost(POST_TYPES.GET_QUERY, fullOptions);
+      return res.data;
+    } catch (error) {
+      return [];
+    }
+  };
+
+  const fullTableSize = async () => {
+    const res = await tokenPost(POST_TYPES.TABLE_SIZE, {});
+
+    if (res.success) {
+      return res.data;
+    } else {
+      return 0;
+    }
+  };
+
+  const tableTypes = async () => {
+    const res = await tokenPost(POST_TYPES.COLUMN_TYPES, {});
+
+    if (res.success) {
+      return res.data;
+    } else {
+      return {};
+    }
+  };
+
+  return {
+    Query,
+    fullTableSize,
+    tableTypes
+  };
+}
+
 function EasybaseProvider({
   ebconfig,
   options
 }) {
   const g = gFactory();
   const {
-    initAuth,
-    tokenPost: tokenPostGeneric,
-    tokenPostAttachment: tokenPostAttachmentGeneric
+    tokenPost,
+    tokenPostAttachment
   } = authFactory(g);
-
-  const tokenPost = async (postType, body) => {
-    if (!_mounted) {
-      await mount();
-    }
-
-    return tokenPostGeneric(postType, body);
-  };
-
-  const tokenPostAttachment = async (formData, customHeaders) => {
-    if (!_mounted) {
-      await mount();
-    }
-
-    return tokenPostAttachmentGeneric(formData, customHeaders);
-  };
-
+  const {
+    Query,
+    fullTableSize,
+    tableTypes
+  } = functionsFactory(g);
   const {
     log
   } = utilsFactory(g);
-  let _mounted = false;
 
   if (typeof ebconfig !== 'object' || ebconfig === null || ebconfig === undefined) {
     console.error("No ebconfig object passed. do `import ebconfig from \"ebconfig.json\"` and pass it to the Easybase provider");
@@ -1238,20 +1290,8 @@ function EasybaseProvider({
   g.options = _extends({}, options);
   g.integrationID = ebconfig.integration;
   g.ebconfig = ebconfig;
-
-  const mount = async () => {
-    const t1 = Date.now();
-    log("mounting...");
-    await initAuth();
-    _mounted = true;
-    const res = await tokenPost(POST_TYPES.VALID_TOKEN);
-    const elapsed = Date.now() - t1;
-
-    if (res.success) {
-      log("Valid auth initiation in " + elapsed + "ms");
-    }
-  };
-
+  g.mounted = false;
+  g.instance = "Node";
   let _isFrameInitialized = true;
   let _frameConfiguration = {
     offset: 0,
@@ -1278,21 +1318,6 @@ function EasybaseProvider({
 
   const _recordIDExists = record => !!_recordIdMap.get(record);
 
-  const Query = async options => {
-    const defaultOptions = {
-      queryName: ""
-    };
-
-    const fullOptions = _extends({}, defaultOptions, options);
-
-    try {
-      const res = await tokenPost(POST_TYPES.GET_QUERY, fullOptions);
-      return res.data;
-    } catch (error) {
-      return [];
-    }
-  };
-
   const configureFrame = options => {
     if (options.limit === _frameConfiguration.limit && options.offset === _frameConfiguration.offset) {
       return {
@@ -1312,30 +1337,6 @@ function EasybaseProvider({
   };
 
   const currentConfiguration = () => _extends({}, _frameConfiguration);
-
-  const addRecord = async options => {
-    const defaultValues = {
-      insertAtEnd: false,
-      newRecord: {}
-    };
-
-    const fullOptions = _extends({}, defaultValues, options);
-
-    try {
-      const res = await tokenPost(POST_TYPES.SYNC_INSERT, fullOptions);
-      return {
-        message: res.data,
-        success: res.success
-      };
-    } catch (err) {
-      console.error("Easybase Error: addRecord failed ", err);
-      return {
-        message: "Easybase Error: addRecord failed " + err,
-        success: false,
-        error: err
-      };
-    }
-  };
 
   const deleteRecord = async record => {
     const _frameRecord = _frame.find(ele => deepEqual(ele, record));
@@ -1368,23 +1369,27 @@ function EasybaseProvider({
     }
   };
 
-  const fullTableSize = async () => {
-    const res = await tokenPost(POST_TYPES.TABLE_SIZE, {});
+  const addRecord = async options => {
+    const defaultValues = {
+      insertAtEnd: false,
+      newRecord: {}
+    };
 
-    if (res.success) {
-      return res.data;
-    } else {
-      return 0;
-    }
-  };
+    const fullOptions = _extends({}, defaultValues, options);
 
-  const tableTypes = async () => {
-    const res = await tokenPost(POST_TYPES.COLUMN_TYPES, {});
-
-    if (res.success) {
-      return res.data;
-    } else {
-      return {};
+    try {
+      const res = await tokenPost(POST_TYPES.SYNC_INSERT, fullOptions);
+      return {
+        message: res.data,
+        success: res.success
+      };
+    } catch (err) {
+      console.error("Easybase Error: addRecord failed ", err);
+      return {
+        message: "Easybase Error: addRecord failed " + err,
+        success: false,
+        error: err
+      };
     }
   }; // Only allow the deletion of one element at a time
   // First handle shifting of the array size. Then iterate

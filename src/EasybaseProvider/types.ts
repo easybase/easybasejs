@@ -215,4 +215,6 @@ export interface Globals {
     integrationID: string;
     session: number;
     options: EasybaseProviderPropsOptions;
+    instance: string;
+    mounted: boolean;
 }

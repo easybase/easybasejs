@@ -6,8 +6,9 @@ namespace GlobalNamespace {
     export let integrationID: string;
     export let session: number;
     export let options: EasybaseProviderPropsOptions;
-    export let isReactNative: boolean;
-};
+    export let instance: string;
+    export let mounted: boolean;
+}
 
 const _g: Globals = { ...GlobalNamespace };
 

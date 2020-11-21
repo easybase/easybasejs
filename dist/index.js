@@ -1184,14 +1184,15 @@ function authFactory(globals) {
 
   var initAuth = function initAuth() {
     try {
+      var t1 = Date.now();
       g.session = Math.floor(100000000 + Math.random() * 900000000);
-      log("Handshaking on instance");
+      log("Handshaking on" + g.instance + " instance");
       return Promise.resolve(_catch(function () {
         return Promise.resolve(axios.post(generateBareUrl("REACT", g.integrationID), {
           version: g.ebconfig.version,
           tt: g.ebconfig.tt,
           session: g.session,
-          isNode: true
+          instance: g.instance
         }, {
           headers: {
             'Eb-Post-Req': POST_TYPES.HANDSHAKE
@@ -1199,7 +1200,17 @@ function authFactory(globals) {
         })).then(function (res) {
           if (res.data.token) {
             g.token = res.data.token;
-            return true;
+            g.mounted = true;
+            return Promise.resolve(tokenPost(POST_TYPES.VALID_TOKEN)).then(function (validTokenRes) {
+              var elapsed = Date.now() - t1;
+
+              if (validTokenRes.success) {
+                log("Valid auth initiation in " + elapsed + "ms");
+                return true;
+              } else {
+                return false;
+              }
+            });
           } else {
             return false;
           }
@@ -1215,47 +1226,57 @@ function authFactory(globals) {
 
   var tokenPost = function tokenPost(postType, body) {
     try {
-      return Promise.resolve(_catch(function () {
-        return Promise.resolve(axios.post(generateBareUrl("REACT", g.integrationID), _extends({
-          _auth: generateAuthBody()
-        }, body), {
-          headers: {
-            'Eb-Post-Req': postType
-          }
-        })).then(function (res) {
-          var _exit;
+      var _temp5 = function _temp5() {
+        return _catch(function () {
+          return Promise.resolve(axios.post(generateBareUrl("REACT", g.integrationID), _extends({
+            _auth: generateAuthBody()
+          }, body), {
+            headers: {
+              'Eb-Post-Req': postType
+            }
+          })).then(function (res) {
+            var _exit;
 
-          if ({}.hasOwnProperty.call(res.data, 'ErrorCode') || {}.hasOwnProperty.call(res.data, 'code')) {
-            var _temp3 = function _temp3(_result) {
-              return _exit ? _result : {
-                success: false,
+            if ({}.hasOwnProperty.call(res.data, 'ErrorCode') || {}.hasOwnProperty.call(res.data, 'code')) {
+              var _temp7 = function _temp7(_result) {
+                return _exit ? _result : {
+                  success: false,
+                  data: res.data.body
+                };
+              };
+
+              var _temp8 = function () {
+                if (res.data.code === "JWT EXPIRED") {
+                  return Promise.resolve(initAuth()).then(function () {
+                    _exit = 1;
+                    return tokenPost(postType, body);
+                  });
+                }
+              }();
+
+              return _temp8 && _temp8.then ? _temp8.then(_temp7) : _temp7(_temp8);
+            } else {
+              return {
+                success: res.data.success,
                 data: res.data.body
               };
-            };
-
-            var _temp4 = function () {
-              if (res.data.code === "JWT EXPIRED") {
-                return Promise.resolve(initAuth()).then(function () {
-                  _exit = 1;
-                  return tokenPost(postType, body);
-                });
-              }
-            }();
-
-            return _temp4 && _temp4.then ? _temp4.then(_temp3) : _temp3(_temp4);
-          } else {
-            return {
-              success: res.data.success,
-              data: res.data.body
-            };
-          }
+            }
+          });
+        }, function (error) {
+          return {
+            success: false,
+            data: error
+          };
         });
-      }, function (error) {
-        return {
-          success: false,
-          data: error
-        };
-      }));
+      };
+
+      var _temp6 = function () {
+        if (!g.mounted) {
+          return Promise.resolve(initAuth()).then(function () {});
+        }
+      }();
+
+      return Promise.resolve(_temp6 && _temp6.then ? _temp6.then(_temp5) : _temp5(_temp6));
     } catch (e) {
       return Promise.reject(e);
     }
@@ -1263,52 +1284,62 @@ function authFactory(globals) {
 
   var tokenPostAttachment = function tokenPostAttachment(formData, customHeaders) {
     try {
-      var regularAuthbody = generateAuthBody();
-      var attachmentAuth = {
-        'Eb-token': regularAuthbody.token,
-        'Eb-token-time': regularAuthbody.token_time,
-        'Eb-now': regularAuthbody.now
-      };
-      return Promise.resolve(_catch(function () {
-        return Promise.resolve(axios.post(generateBareUrl("REACT", g.integrationID), formData, {
-          headers: _extends({
-            'Eb-Post-Req': POST_TYPES.UPLOAD_ATTACHMENT,
-            'Content-Type': 'multipart/form-data'
-          }, customHeaders, attachmentAuth)
-        })).then(function (res) {
-          var _exit2;
+      var _temp13 = function _temp13() {
+        var regularAuthbody = generateAuthBody();
+        var attachmentAuth = {
+          'Eb-token': regularAuthbody.token,
+          'Eb-token-time': regularAuthbody.token_time,
+          'Eb-now': regularAuthbody.now
+        };
+        return _catch(function () {
+          return Promise.resolve(axios.post(generateBareUrl("REACT", g.integrationID), formData, {
+            headers: _extends({
+              'Eb-Post-Req': POST_TYPES.UPLOAD_ATTACHMENT,
+              'Content-Type': 'multipart/form-data'
+            }, customHeaders, attachmentAuth)
+          })).then(function (res) {
+            var _exit2;
 
-          if ({}.hasOwnProperty.call(res.data, 'ErrorCode') || {}.hasOwnProperty.call(res.data, 'code')) {
-            var _temp7 = function _temp7(_result2) {
-              return _exit2 ? _result2 : {
-                success: false,
+            if ({}.hasOwnProperty.call(res.data, 'ErrorCode') || {}.hasOwnProperty.call(res.data, 'code')) {
+              var _temp15 = function _temp15(_result2) {
+                return _exit2 ? _result2 : {
+                  success: false,
+                  data: res.data.body
+                };
+              };
+
+              var _temp16 = function () {
+                if (res.data.code === "JWT EXPIRED") {
+                  return Promise.resolve(initAuth()).then(function () {
+                    _exit2 = 1;
+                    return tokenPostAttachment(formData, customHeaders);
+                  });
+                }
+              }();
+
+              return _temp16 && _temp16.then ? _temp16.then(_temp15) : _temp15(_temp16);
+            } else {
+              return {
+                success: res.data.success,
                 data: res.data.body
               };
-            };
-
-            var _temp8 = function () {
-              if (res.data.code === "JWT EXPIRED") {
-                return Promise.resolve(initAuth()).then(function () {
-                  _exit2 = 1;
-                  return tokenPostAttachment(formData, customHeaders);
-                });
-              }
-            }();
-
-            return _temp8 && _temp8.then ? _temp8.then(_temp7) : _temp7(_temp8);
-          } else {
-            return {
-              success: res.data.success,
-              data: res.data.body
-            };
-          }
+            }
+          });
+        }, function (error) {
+          return {
+            success: false,
+            data: error
+          };
         });
-      }, function (error) {
-        return {
-          success: false,
-          data: error
-        };
-      }));
+      };
+
+      var _temp14 = function () {
+        if (!g.mounted) {
+          return Promise.resolve(initAuth()).then(function () {});
+        }
+      }();
+
+      return Promise.resolve(_temp14 && _temp14.then ? _temp14.then(_temp13) : _temp13(_temp14));
     } catch (e) {
       return Promise.reject(e);
     }
@@ -1335,122 +1366,11 @@ function _catch$1(body, recover) {
   return result;
 }
 
-function EasybaseProvider(_ref) {
-  var ebconfig = _ref.ebconfig,
-      options = _ref.options;
-  var g = gFactory();
+function functionsFactory(globals) {
+  var g = globals || _g;
 
   var _authFactory = authFactory(g),
-      initAuth = _authFactory.initAuth,
-      tokenPostGeneric = _authFactory.tokenPost,
-      tokenPostAttachmentGeneric = _authFactory.tokenPostAttachment;
-
-  var tokenPost = function tokenPost(postType, body) {
-    try {
-      var _temp3 = function _temp3() {
-        return tokenPostGeneric(postType, body);
-      };
-
-      var _temp4 = function () {
-        if (!_mounted) {
-          return Promise.resolve(mount()).then(function () {});
-        }
-      }();
-
-      return Promise.resolve(_temp4 && _temp4.then ? _temp4.then(_temp3) : _temp3(_temp4));
-    } catch (e) {
-      return Promise.reject(e);
-    }
-  };
-
-  var tokenPostAttachment = function tokenPostAttachment(formData, customHeaders) {
-    try {
-      var _temp7 = function _temp7() {
-        return tokenPostAttachmentGeneric(formData, customHeaders);
-      };
-
-      var _temp8 = function () {
-        if (!_mounted) {
-          return Promise.resolve(mount()).then(function () {});
-        }
-      }();
-
-      return Promise.resolve(_temp8 && _temp8.then ? _temp8.then(_temp7) : _temp7(_temp8));
-    } catch (e) {
-      return Promise.reject(e);
-    }
-  };
-
-  var _utilsFactory = utilsFactory(g),
-      log = _utilsFactory.log;
-
-  var _mounted = false;
-
-  if (typeof ebconfig !== 'object' || ebconfig === null || ebconfig === undefined) {
-    console.error("No ebconfig object passed. do `import ebconfig from \"ebconfig.json\"` and pass it to the Easybase provider");
-    return;
-  } else if (!ebconfig.integration || !ebconfig.tt) {
-    console.error("Invalid ebconfig object passed. Download ebconfig.json from Easybase.io and try again.");
-    return;
-  } // eslint-disable-next-line dot-notation
-
-
-  var isIE = typeof document !== 'undefined' && !!document['documentMode'];
-
-  if (isIE) {
-    console.error("EASYBASE — easybase-react does not support Internet Explorer. Please use a different browser.");
-  }
-
-  g.options = _extends({}, options);
-  g.integrationID = ebconfig.integration;
-  g.ebconfig = ebconfig;
-
-  var mount = function mount() {
-    try {
-      var t1 = Date.now();
-      log("mounting...");
-      return Promise.resolve(initAuth()).then(function () {
-        _mounted = true;
-        return Promise.resolve(tokenPost(POST_TYPES.VALID_TOKEN)).then(function (res) {
-          var elapsed = Date.now() - t1;
-
-          if (res.success) {
-            log("Valid auth initiation in " + elapsed + "ms");
-          }
-        });
-      });
-    } catch (e) {
-      return Promise.reject(e);
-    }
-  };
-
-  var _isFrameInitialized = true;
-  var _frameConfiguration = {
-    offset: 0,
-    limit: 0
-  };
-  var _observedChangeStack = [];
-
-  var _recordIdMap = new WeakMap();
-
-  var _observableFrame = {
-    observe: function observe(_) {},
-    unobserve: function unobserve() {}
-  };
-  var _frame = [];
-  var isSyncing = false;
-
-  function Frame(index) {
-    if (typeof index === "number") {
-      return _observableFrame[index];
-    } else {
-      return _observableFrame;
-    }
-  }
-
-  var _recordIDExists = function _recordIDExists(record) {
-    return !!_recordIdMap.get(record);
-  };
+      tokenPost = _authFactory.tokenPost;
 
   var Query = function Query(options) {
     try {
@@ -1467,96 +1387,6 @@ function EasybaseProvider(_ref) {
       }, function () {
         return [];
       }));
-    } catch (e) {
-      return Promise.reject(e);
-    }
-  };
-
-  var configureFrame = function configureFrame(options) {
-    if (options.limit === _frameConfiguration.limit && options.offset === _frameConfiguration.offset) {
-      return {
-        message: "Frame parameters are the same as the previous configuration.",
-        success: true
-      };
-    }
-
-    _frameConfiguration = _extends({}, _frameConfiguration);
-    if (options.limit !== undefined) _frameConfiguration.limit = options.limit;
-    if (options.offset !== undefined && options.offset >= 0) _frameConfiguration.offset = options.offset;
-    _isFrameInitialized = false;
-    return {
-      message: "Successfully configured frame. Run sync() for changes to be shown in frame",
-      success: true
-    };
-  };
-
-  var currentConfiguration = function currentConfiguration() {
-    return _extends({}, _frameConfiguration);
-  };
-
-  var addRecord = function addRecord(options) {
-    try {
-      var defaultValues = {
-        insertAtEnd: false,
-        newRecord: {}
-      };
-
-      var fullOptions = _extends({}, defaultValues, options);
-
-      return Promise.resolve(_catch$1(function () {
-        return Promise.resolve(tokenPost(POST_TYPES.SYNC_INSERT, fullOptions)).then(function (res) {
-          return {
-            message: res.data,
-            success: res.success
-          };
-        });
-      }, function (err) {
-        console.error("Easybase Error: addRecord failed ", err);
-        return {
-          message: "Easybase Error: addRecord failed " + err,
-          success: false,
-          error: err
-        };
-      }));
-    } catch (e) {
-      return Promise.reject(e);
-    }
-  };
-
-  var deleteRecord = function deleteRecord(record) {
-    try {
-      var _frameRecord = _frame.find(function (ele) {
-        return deepEqual(ele, record);
-      });
-
-      if (_frameRecord && _recordIdMap.get(_frameRecord)) {
-        return Promise.resolve(tokenPost(POST_TYPES.SYNC_DELETE, {
-          _id: _recordIdMap.get(_frameRecord)
-        })).then(function (res) {
-          return {
-            success: res.success,
-            message: res.data
-          };
-        });
-      } else {
-        return Promise.resolve(_catch$1(function () {
-          return Promise.resolve(tokenPost(POST_TYPES.SYNC_DELETE, {
-            record: record
-          })).then(function (res) {
-            return {
-              success: res.success,
-              message: res.data
-            };
-          });
-        }, function (err) {
-          console.error("Easybase Error: deleteRecord failed ", err);
-          return {
-            success: false,
-            message: "Easybase Error: deleteRecord failed " + err,
-            error: err
-          };
-        }));
-      }
     } catch (e) {
       return Promise.reject(e);
     }
@@ -1588,14 +1418,190 @@ function EasybaseProvider(_ref) {
     } catch (e) {
       return Promise.reject(e);
     }
+  };
+
+  return {
+    Query: Query,
+    fullTableSize: fullTableSize,
+    tableTypes: tableTypes
+  };
+}
+
+function _catch$2(body, recover) {
+  try {
+    var result = body();
+  } catch (e) {
+    return recover(e);
+  }
+
+  if (result && result.then) {
+    return result.then(void 0, recover);
+  }
+
+  return result;
+}
+
+function EasybaseProvider(_ref) {
+  var ebconfig = _ref.ebconfig,
+      options = _ref.options;
+  var g = gFactory();
+
+  var _authFactory = authFactory(g),
+      tokenPost = _authFactory.tokenPost,
+      tokenPostAttachment = _authFactory.tokenPostAttachment;
+
+  var _functionsFactory = functionsFactory(g),
+      Query = _functionsFactory.Query,
+      fullTableSize = _functionsFactory.fullTableSize,
+      tableTypes = _functionsFactory.tableTypes;
+
+  var _utilsFactory = utilsFactory(g),
+      log = _utilsFactory.log;
+
+  if (typeof ebconfig !== 'object' || ebconfig === null || ebconfig === undefined) {
+    console.error("No ebconfig object passed. do `import ebconfig from \"ebconfig.json\"` and pass it to the Easybase provider");
+    return;
+  } else if (!ebconfig.integration || !ebconfig.tt) {
+    console.error("Invalid ebconfig object passed. Download ebconfig.json from Easybase.io and try again.");
+    return;
+  } // eslint-disable-next-line dot-notation
+
+
+  var isIE = typeof document !== 'undefined' && !!document['documentMode'];
+
+  if (isIE) {
+    console.error("EASYBASE — easybase-react does not support Internet Explorer. Please use a different browser.");
+  }
+
+  g.options = _extends({}, options);
+  g.integrationID = ebconfig.integration;
+  g.ebconfig = ebconfig;
+  g.mounted = false;
+  g.instance = "Node";
+  var _isFrameInitialized = true;
+  var _frameConfiguration = {
+    offset: 0,
+    limit: 0
+  };
+  var _observedChangeStack = [];
+
+  var _recordIdMap = new WeakMap();
+
+  var _observableFrame = {
+    observe: function observe(_) {},
+    unobserve: function unobserve() {}
+  };
+  var _frame = [];
+  var isSyncing = false;
+
+  function Frame(index) {
+    if (typeof index === "number") {
+      return _observableFrame[index];
+    } else {
+      return _observableFrame;
+    }
+  }
+
+  var _recordIDExists = function _recordIDExists(record) {
+    return !!_recordIdMap.get(record);
+  };
+
+  var configureFrame = function configureFrame(options) {
+    if (options.limit === _frameConfiguration.limit && options.offset === _frameConfiguration.offset) {
+      return {
+        message: "Frame parameters are the same as the previous configuration.",
+        success: true
+      };
+    }
+
+    _frameConfiguration = _extends({}, _frameConfiguration);
+    if (options.limit !== undefined) _frameConfiguration.limit = options.limit;
+    if (options.offset !== undefined && options.offset >= 0) _frameConfiguration.offset = options.offset;
+    _isFrameInitialized = false;
+    return {
+      message: "Successfully configured frame. Run sync() for changes to be shown in frame",
+      success: true
+    };
+  };
+
+  var currentConfiguration = function currentConfiguration() {
+    return _extends({}, _frameConfiguration);
+  };
+
+  var deleteRecord = function deleteRecord(record) {
+    try {
+      var _frameRecord = _frame.find(function (ele) {
+        return deepEqual(ele, record);
+      });
+
+      if (_frameRecord && _recordIdMap.get(_frameRecord)) {
+        return Promise.resolve(tokenPost(POST_TYPES.SYNC_DELETE, {
+          _id: _recordIdMap.get(_frameRecord)
+        })).then(function (res) {
+          return {
+            success: res.success,
+            message: res.data
+          };
+        });
+      } else {
+        return Promise.resolve(_catch$2(function () {
+          return Promise.resolve(tokenPost(POST_TYPES.SYNC_DELETE, {
+            record: record
+          })).then(function (res) {
+            return {
+              success: res.success,
+              message: res.data
+            };
+          });
+        }, function (err) {
+          console.error("Easybase Error: deleteRecord failed ", err);
+          return {
+            success: false,
+            message: "Easybase Error: deleteRecord failed " + err,
+            error: err
+          };
+        }));
+      }
+    } catch (e) {
+      return Promise.reject(e);
+    }
+  };
+
+  var addRecord = function addRecord(options) {
+    try {
+      var defaultValues = {
+        insertAtEnd: false,
+        newRecord: {}
+      };
+
+      var fullOptions = _extends({}, defaultValues, options);
+
+      return Promise.resolve(_catch$2(function () {
+        return Promise.resolve(tokenPost(POST_TYPES.SYNC_INSERT, fullOptions)).then(function (res) {
+          return {
+            message: res.data,
+            success: res.success
+          };
+        });
+      }, function (err) {
+        console.error("Easybase Error: addRecord failed ", err);
+        return {
+          message: "Easybase Error: addRecord failed " + err,
+          success: false,
+          error: err
+        };
+      }));
+    } catch (e) {
+      return Promise.reject(e);
+    }
   }; // Only allow the deletion of one element at a time
   // First handle shifting of the array size. Then iterate
 
 
   var sync = function sync() {
     try {
-      var _temp12 = function _temp12() {
-        return _catch$1(function () {
+      var _temp4 = function _temp4() {
+        return _catch$2(function () {
           return Promise.resolve(tokenPost(POST_TYPES.GET_FRAME, {
             offset: offset,
             limit: limit
@@ -1703,9 +1709,9 @@ function EasybaseProvider(_ref) {
           offset = _frameConfiguration2.offset,
           limit = _frameConfiguration2.limit;
 
-      var _temp13 = function () {
+      var _temp5 = function () {
         if (_isFrameInitialized) {
-          var _temp14 = function () {
+          var _temp6 = function () {
             if (_observedChangeStack.length > 0) {
               log("Stack change: ", _observedChangeStack);
               return Promise.resolve(tokenPost(POST_TYPES.SYNC_STACK, {
@@ -1722,11 +1728,11 @@ function EasybaseProvider(_ref) {
             }
           }();
 
-          if (_temp14 && _temp14.then) return _temp14.then(function () {});
+          if (_temp6 && _temp6.then) return _temp6.then(function () {});
         }
       }();
 
-      return Promise.resolve(_temp13 && _temp13.then ? _temp13.then(_temp12) : _temp12(_temp13));
+      return Promise.resolve(_temp5 && _temp5.then ? _temp5.then(_temp4) : _temp4(_temp5));
     } catch (e) {
       return Promise.reject(e);
     }
