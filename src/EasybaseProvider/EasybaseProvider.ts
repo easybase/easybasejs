@@ -49,7 +49,7 @@ export default function EasybaseProvider({ ebconfig, options }: EasybaseProvider
     const isIE = typeof document !== 'undefined' && !!document['documentMode'];
 
     if (isIE) {
-        console.error("EASYBASE — easybase-react does not support Internet Explorer. Please use a different browser.");
+        console.error("EASYBASE — easybasejs does not support Internet Explorer. Please use a different browser.");
     }
 
     g.options = { ...options };
