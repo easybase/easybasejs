@@ -1175,20 +1175,21 @@ function _catch(body, recover) {
 }
 
 function authFactory(globals) {
-  var _utilsFactory = utilsFactory(globals),
+  var g = globals || _g;
+
+  var _utilsFactory = utilsFactory(g),
       generateBareUrl = _utilsFactory.generateBareUrl,
       generateAuthBody = _utilsFactory.generateAuthBody,
       log = _utilsFactory.log;
-
-  var g = globals || _g;
 
   var initAuth = function initAuth() {
     try {
       var t1 = Date.now();
       g.session = Math.floor(100000000 + Math.random() * 900000000);
       log("Handshaking on" + g.instance + " instance");
+      var integrationType = g.ebconfig.integration.split("-")[0].toUpperCase();
       return Promise.resolve(_catch(function () {
-        return Promise.resolve(axios.post(generateBareUrl("REACT", g.integrationID), {
+        return Promise.resolve(axios.post(generateBareUrl(integrationType, g.integrationID), {
           version: g.ebconfig.version,
           tt: g.ebconfig.tt,
           session: g.session,
@@ -1227,8 +1228,9 @@ function authFactory(globals) {
   var tokenPost = function tokenPost(postType, body) {
     try {
       var _temp5 = function _temp5() {
+        var integrationType = g.ebconfig.integration.split("-")[0].toUpperCase();
         return _catch(function () {
-          return Promise.resolve(axios.post(generateBareUrl("REACT", g.integrationID), _extends({
+          return Promise.resolve(axios.post(generateBareUrl(integrationType, g.integrationID), _extends({
             _auth: generateAuthBody()
           }, body), {
             headers: {
@@ -1459,10 +1461,10 @@ function EasybaseProvider(_ref) {
       log = _utilsFactory.log;
 
   if (typeof ebconfig !== 'object' || ebconfig === null || ebconfig === undefined) {
-    console.error("No ebconfig object passed. do `import ebconfig from \"ebconfig.json\"` and pass it to the Easybase provider");
+    console.error("No ebconfig object passed. do `import ebconfig from \"ebconfig.js\"` and pass it to the Easybase provider");
     return;
-  } else if (!ebconfig.integration || !ebconfig.tt) {
-    console.error("Invalid ebconfig object passed. Download ebconfig.json from Easybase.io and try again.");
+  } else if (!ebconfig.integration) {
+    console.error("Invalid ebconfig object passed. Download ebconfig.js from Easybase.io and try again.");
     return;
   } // eslint-disable-next-line dot-notation
 

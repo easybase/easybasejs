@@ -1072,20 +1072,21 @@ function utilsFactory(globals) {
 }
 
 function authFactory(globals) {
+  const g = globals || _g;
   const {
     generateBareUrl,
     generateAuthBody,
     log
-  } = utilsFactory(globals);
-  const g = globals || _g;
+  } = utilsFactory(g);
 
   const initAuth = async () => {
     const t1 = Date.now();
     g.session = Math.floor(100000000 + Math.random() * 900000000);
     log(`Handshaking on${g.instance} instance`);
+    const integrationType = g.ebconfig.integration.split("-")[0].toUpperCase();
 
     try {
-      const res = await axios.post(generateBareUrl("REACT", g.integrationID), {
+      const res = await axios.post(generateBareUrl(integrationType, g.integrationID), {
         version: g.ebconfig.version,
         tt: g.ebconfig.tt,
         session: g.session,
@@ -1122,8 +1123,10 @@ function authFactory(globals) {
       await initAuth();
     }
 
+    const integrationType = g.ebconfig.integration.split("-")[0].toUpperCase();
+
     try {
-      const res = await axios.post(generateBareUrl("REACT", g.integrationID), _extends({
+      const res = await axios.post(generateBareUrl(integrationType, g.integrationID), _extends({
         _auth: generateAuthBody()
       }, body), {
         headers: {
@@ -1273,10 +1276,10 @@ function EasybaseProvider({
   } = utilsFactory(g);
 
   if (typeof ebconfig !== 'object' || ebconfig === null || ebconfig === undefined) {
-    console.error("No ebconfig object passed. do `import ebconfig from \"ebconfig.json\"` and pass it to the Easybase provider");
+    console.error("No ebconfig object passed. do `import ebconfig from \"ebconfig.js\"` and pass it to the Easybase provider");
     return;
-  } else if (!ebconfig.integration || !ebconfig.tt) {
-    console.error("Invalid ebconfig object passed. Download ebconfig.json from Easybase.io and try again.");
+  } else if (!ebconfig.integration) {
+    console.error("Invalid ebconfig object passed. Download ebconfig.js from Easybase.io and try again.");
     return;
   } // eslint-disable-next-line dot-notation
 

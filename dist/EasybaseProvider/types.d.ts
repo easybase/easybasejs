@@ -23,7 +23,7 @@ export interface FrameConfiguration {
     limit: number | null;
 }
 export interface Ebconfig {
-    tt: string;
+    tt?: string;
     integration: string;
     version: string;
 }
