@@ -1,6 +1,6 @@
 {
   "name": "easybasejs",
-  "version": "3.0.3",
+  "version": "3.0.4",
   "description": "Browser and Node.js package for use with EasyBase.io",
   "license": "MIT",
   "source": "src/index.ts",
