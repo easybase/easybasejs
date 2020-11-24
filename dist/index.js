@@ -1187,7 +1187,7 @@ function authFactory(globals) {
       var t1 = Date.now();
       g.session = Math.floor(100000000 + Math.random() * 900000000);
       log("Handshaking on" + g.instance + " instance");
-      var integrationType = g.ebconfig.integration.split("-")[0].toUpperCase();
+      var integrationType = g.ebconfig.integration.split("-")[0].toUpperCase() === "PROJECT" ? "PROJECT" : "REACT";
       return Promise.resolve(_catch(function () {
         return Promise.resolve(axios.post(generateBareUrl(integrationType, g.integrationID), {
           version: g.ebconfig.version,
@@ -1228,7 +1228,7 @@ function authFactory(globals) {
   var tokenPost = function tokenPost(postType, body) {
     try {
       var _temp5 = function _temp5() {
-        var integrationType = g.ebconfig.integration.split("-")[0].toUpperCase();
+        var integrationType = g.ebconfig.integration.split("-")[0].toUpperCase() === "PROJECT" ? "PROJECT" : "REACT";
         return _catch(function () {
           return Promise.resolve(axios.post(generateBareUrl(integrationType, g.integrationID), _extends({
             _auth: generateAuthBody()
@@ -1369,6 +1369,38 @@ function _catch$1(body, recover) {
 }
 
 function functionsFactory(globals) {
+  var tableTypes = function tableTypes(tableName) {
+    try {
+      return Promise.resolve(tokenPost(POST_TYPES.COLUMN_TYPES, tableName ? {
+        tableName: tableName
+      } : {})).then(function (res) {
+        if (res.success) {
+          return res.data;
+        } else {
+          return {};
+        }
+      });
+    } catch (e) {
+      return Promise.reject(e);
+    }
+  };
+
+  var fullTableSize = function fullTableSize(tableName) {
+    try {
+      return Promise.resolve(tokenPost(POST_TYPES.TABLE_SIZE, tableName ? {
+        tableName: tableName
+      } : {})).then(function (res) {
+        if (res.success) {
+          return res.data;
+        } else {
+          return 0;
+        }
+      });
+    } catch (e) {
+      return Promise.reject(e);
+    }
+  };
+
   var g = globals || _g;
 
   var _authFactory = authFactory(g),
@@ -1389,34 +1421,6 @@ function functionsFactory(globals) {
       }, function () {
         return [];
       }));
-    } catch (e) {
-      return Promise.reject(e);
-    }
-  };
-
-  var fullTableSize = function fullTableSize() {
-    try {
-      return Promise.resolve(tokenPost(POST_TYPES.TABLE_SIZE, {})).then(function (res) {
-        if (res.success) {
-          return res.data;
-        } else {
-          return 0;
-        }
-      });
-    } catch (e) {
-      return Promise.reject(e);
-    }
-  };
-
-  var tableTypes = function tableTypes() {
-    try {
-      return Promise.resolve(tokenPost(POST_TYPES.COLUMN_TYPES, {})).then(function (res) {
-        if (res.success) {
-          return res.data;
-        } else {
-          return {};
-        }
-      });
     } catch (e) {
       return Promise.reject(e);
     }
@@ -1472,7 +1476,7 @@ function EasybaseProvider(_ref) {
   var isIE = typeof document !== 'undefined' && !!document['documentMode'];
 
   if (isIE) {
-    console.error("EASYBASE — easybase-react does not support Internet Explorer. Please use a different browser.");
+    console.error("EASYBASE — easybasejs does not support Internet Explorer. Please use a different browser.");
   }
 
   g.options = _extends({}, options);
@@ -1509,16 +1513,10 @@ function EasybaseProvider(_ref) {
   };
 
   var configureFrame = function configureFrame(options) {
-    if (options.limit === _frameConfiguration.limit && options.offset === _frameConfiguration.offset) {
-      return {
-        message: "Frame parameters are the same as the previous configuration.",
-        success: true
-      };
-    }
-
     _frameConfiguration = _extends({}, _frameConfiguration);
     if (options.limit !== undefined) _frameConfiguration.limit = options.limit;
     if (options.offset !== undefined && options.offset >= 0) _frameConfiguration.offset = options.offset;
+    if (options.tableName !== undefined) _frameConfiguration.tableName = options.tableName;
     _isFrameInitialized = false;
     return {
       message: "Successfully configured frame. Run sync() for changes to be shown in frame",
@@ -1530,15 +1528,16 @@ function EasybaseProvider(_ref) {
     return _extends({}, _frameConfiguration);
   };
 
-  var deleteRecord = function deleteRecord(record) {
+  var deleteRecord = function deleteRecord(options) {
     try {
       var _frameRecord = _frame.find(function (ele) {
-        return deepEqual(ele, record);
+        return deepEqual(ele, options.record);
       });
 
       if (_frameRecord && _recordIdMap.get(_frameRecord)) {
         return Promise.resolve(tokenPost(POST_TYPES.SYNC_DELETE, {
-          _id: _recordIdMap.get(_frameRecord)
+          _id: _recordIdMap.get(_frameRecord),
+          tableName: options.tableName
         })).then(function (res) {
           return {
             success: res.success,
@@ -1548,7 +1547,8 @@ function EasybaseProvider(_ref) {
       } else {
         return Promise.resolve(_catch$2(function () {
           return Promise.resolve(tokenPost(POST_TYPES.SYNC_DELETE, {
-            record: record
+            record: options.record,
+            tableName: options.tableName
           })).then(function (res) {
             return {
               success: res.success,
@@ -1573,7 +1573,8 @@ function EasybaseProvider(_ref) {
     try {
       var defaultValues = {
         insertAtEnd: false,
-        newRecord: {}
+        newRecord: {},
+        tableName: null
       };
 
       var fullOptions = _extends({}, defaultValues, options);
@@ -1604,10 +1605,7 @@ function EasybaseProvider(_ref) {
     try {
       var _temp4 = function _temp4() {
         return _catch$2(function () {
-          return Promise.resolve(tokenPost(POST_TYPES.GET_FRAME, {
-            offset: offset,
-            limit: limit
-          })).then(function (res) {
+          return Promise.resolve(tokenPost(POST_TYPES.GET_FRAME, _frameConfiguration)).then(function (res) {
             if (res.success === false) {
               console.error(res.data);
               isSyncing = false;
@@ -1707,20 +1705,15 @@ function EasybaseProvider(_ref) {
       }
 
       isSyncing = true;
-      var _frameConfiguration2 = _frameConfiguration,
-          offset = _frameConfiguration2.offset,
-          limit = _frameConfiguration2.limit;
 
       var _temp5 = function () {
         if (_isFrameInitialized) {
           var _temp6 = function () {
             if (_observedChangeStack.length > 0) {
               log("Stack change: ", _observedChangeStack);
-              return Promise.resolve(tokenPost(POST_TYPES.SYNC_STACK, {
-                stack: _observedChangeStack,
-                limit: limit,
-                offset: offset
-              })).then(function (res) {
+              return Promise.resolve(tokenPost(POST_TYPES.SYNC_STACK, _extends({
+                stack: _observedChangeStack
+              }, _frameConfiguration))).then(function (res) {
                 console.log(res.data);
 
                 if (res.success) {
@@ -1800,7 +1793,8 @@ function EasybaseProvider(_ref) {
       var customHeaders = {
         'Eb-upload-type': type,
         'Eb-column-name': options.columnName,
-        'Eb-record-id': _recordIdMap.get(_frameRecord)
+        'Eb-record-id': _recordIdMap.get(_frameRecord),
+        'Eb-table-name': options.tableName
       };
       return Promise.resolve(tokenPostAttachment(formData, customHeaders)).then(function (res) {
         return Promise.resolve(sync()).then(function () {

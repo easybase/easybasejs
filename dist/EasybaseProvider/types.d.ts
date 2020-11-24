@@ -3,6 +3,8 @@ export interface ConfigureFrameOptions {
     offset?: number;
     /** Limit the amount of records to be retrieved. Set to -1 or null to return all records. Can be used in combination with offset. */
     limit?: number | null;
+    /** Table to sync frame with. (Projects only) */
+    tableName?: string;
 }
 export interface EasybaseProviderPropsOptions {
     /** Custom authentication string. Can be set in integration menu. If it is set, it is required to access integration. This acts as an extra layer of security and extensibility. */
@@ -21,6 +23,8 @@ export interface FrameConfiguration {
     offset: number;
     /** Limit the amount of records to be retrieved. Set to -1 or null to return all records. Can be used in combination with offset. */
     limit: number | null;
+    /** Table to sync frame with. (Projects only) */
+    tableName?: string;
 }
 export interface Ebconfig {
     tt?: string;
@@ -32,6 +36,13 @@ export interface AddRecordOptions {
     insertAtEnd?: boolean;
     /** Values to post to EasyBase collection. Format is { column name: value } */
     newRecord: Record<string, any>;
+    /** Table to post new record to. (Projects only) */
+    tableName?: string;
+}
+export interface DeleteRecordOptions {
+    record: Record<string, any>;
+    /** Table to delete record from. (Projects only) */
+    tableName?: string;
 }
 export interface QueryOptions {
     /** Name of the query saved in Easybase's Visual Query Builder */
@@ -46,6 +57,8 @@ export interface QueryOptions {
     limit?: number;
     /** This object can be set to overwrite the query values as set in the integration menu. If your query is setup to find records where 'age' >= 0, passing in { age: 50 } will query where 'age' >= 50. Read more: https://easybase.io/about/2020/09/15/Customizing-query-values/ */
     customQuery?: Record<string, any>;
+    /** Table to query. (Projects only) */
+    tableName?: string;
 }
 export interface FileFromURI {
     /** Path on local device to the attachment. Usually received from react-native-image-picker or react-native-document-picker */
@@ -65,6 +78,8 @@ export interface UpdateRecordAttachmentOptions {
      * The file name must have a proper file extension corresponding to the attachment.
      */
     attachment: File | FileFromURI;
+    /** Table to post attachment to. (Projects only) */
+    tableName?: string;
 }
 export interface StatusResponse {
     /** Returns true if the operation was successful */
@@ -111,10 +126,10 @@ export interface ContextValue {
      * Manually delete a record from your collection regardless of your current frame. You must call sync() after this to see updated response.
      * @abstract
      * @async
-     * @param {Record<string, any>} record Individual Record from frame
+     * @param {Record<string, any>} record
      * @return {Promise<StatusResponse>} Promise<StatusResponse>
      */
-    deleteRecord(record: Record<string, any>): Promise<StatusResponse>;
+    deleteRecord(options: DeleteRecordOptions): Promise<StatusResponse>;
     /**
      * Call this method to syncronize your current changes with your database. Delections, additions, and changes will all be reflected by your
      * backend after calling this method. Call Frame() after this to get a normalized array of the freshest data.
@@ -176,11 +191,25 @@ export interface ContextValue {
      */
     fullTableSize(): Promise<number>;
     /**
+     * Gets the number of records in your table.
      * @async
+     * @param {string} [tableName] Name of table to get the sizes of. (Projects only)
+     * @returns {Promise<number>} The the number of records in your table.
+     */
+    fullTableSize(tableName: string): Promise<number>;
+    /**
      * Retrieve an object detailing the columns in your table mapped to their corresponding type.
+     * @async
      * @returns {Promise<Record<string, any>>} Object detailing the columns in your table mapped to their corresponding type.
      */
     tableTypes(): Promise<Record<string, any>>;
+    /**
+     * Retrieve an object detailing the columns in your table mapped to their corresponding type.
+     * @async
+     * @param {string} [tableName] Name of table to get the types of. (Projects only)
+     * @returns {Promise<Record<string, any>>} Object detailing the columns in your table mapped to their corresponding type.
+     */
+    tableTypes(tableName: string): Promise<Record<string, any>>;
     /**
      * View your frames current configuration
      * @returns {Record<string, any>} Object contains the `offset` and `length` of your current frame.

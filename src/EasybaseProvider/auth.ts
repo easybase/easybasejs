@@ -14,7 +14,7 @@ export default function authFactory(globals?: Globals): any {
     
         log(`Handshaking on${g.instance} instance`);
     
-        const integrationType = g.ebconfig.integration.split("-")[0].toUpperCase();
+        const integrationType = g.ebconfig.integration.split("-")[0].toUpperCase() === "PROJECT" ? "PROJECT" : "REACT";
 
         try {
             const res = await axios.post(generateBareUrl(integrationType, g.integrationID), {
@@ -50,7 +50,7 @@ export default function authFactory(globals?: Globals): any {
             await initAuth();
         }
 
-        const integrationType = g.ebconfig.integration.split("-")[0].toUpperCase();
+        const integrationType = g.ebconfig.integration.split("-")[0].toUpperCase() === "PROJECT" ? "PROJECT" : "REACT";
 
         try {
             const res = await axios.post(generateBareUrl(integrationType, g.integrationID), {

@@ -4,12 +4,11 @@ import {
     POST_TYPES,
     FileFromURI,
     ContextValue,
-    QueryOptions,
     AddRecordOptions,
     StatusResponse,
     ConfigureFrameOptions,
     UpdateRecordAttachmentOptions,
-    AuthPostResponse
+    DeleteRecordOptions
 } from "./types";
 import { gFactory } from "./g";
 import deepEqual from "fast-deep-equal";
@@ -86,17 +85,11 @@ export default function EasybaseProvider({ ebconfig, options }: EasybaseProvider
     const _recordIDExists = (record: Record<string, any>): Boolean => !!_recordIdMap.get(record);
 
     const configureFrame = (options: ConfigureFrameOptions): StatusResponse => {
-        if (options.limit === _frameConfiguration.limit && options.offset === _frameConfiguration.offset) {
-            return {
-                message: "Frame parameters are the same as the previous configuration.",
-                success: true
-            };
-        }
-
         _frameConfiguration = { ..._frameConfiguration };
 
         if (options.limit !== undefined) _frameConfiguration.limit = options.limit;
         if (options.offset !== undefined && options.offset >= 0) _frameConfiguration.offset = options.offset;
+        if (options.tableName !== undefined) _frameConfiguration.tableName = options.tableName;
 
         _isFrameInitialized = false;
         return {
@@ -107,12 +100,13 @@ export default function EasybaseProvider({ ebconfig, options }: EasybaseProvider
 
     const currentConfiguration = (): FrameConfiguration => ({ ..._frameConfiguration });
 
-    const deleteRecord = async (record: Record<string, any> | {}): Promise<StatusResponse> => {
-        const _frameRecord = _frame.find(ele => deepEqual(ele, record));
+    const deleteRecord = async (options: DeleteRecordOptions): Promise<StatusResponse> => {
+        const _frameRecord = _frame.find(ele => deepEqual(ele, options.record));
 
         if (_frameRecord && _recordIdMap.get(_frameRecord)) {
             const res = await tokenPost(POST_TYPES.SYNC_DELETE, {
-                _id: _recordIdMap.get(_frameRecord)
+                _id: _recordIdMap.get(_frameRecord),
+                tableName: options.tableName
             });
             return {
                 success: res.success,
@@ -121,7 +115,8 @@ export default function EasybaseProvider({ ebconfig, options }: EasybaseProvider
         } else {
             try {
                 const res = await tokenPost(POST_TYPES.SYNC_DELETE, {
-                    record
+                    record: options.record,
+                    tableName: options.tableName
                 });
                 return {
                     success: res.success,
@@ -141,7 +136,8 @@ export default function EasybaseProvider({ ebconfig, options }: EasybaseProvider
     const addRecord = async (options: AddRecordOptions): Promise<StatusResponse> => {
         const defaultValues: AddRecordOptions = {
             insertAtEnd: false,
-            newRecord: {}
+            newRecord: {},
+            tableName: null
         }
 
         const fullOptions: AddRecordOptions = { ...defaultValues, ...options };
@@ -225,15 +221,12 @@ export default function EasybaseProvider({ ebconfig, options }: EasybaseProvider
 
         isSyncing = true;
 
-        const { offset, limit }: ConfigureFrameOptions = _frameConfiguration;
-
         if (_isFrameInitialized) {
             if (_observedChangeStack.length > 0) {
                 log("Stack change: ", _observedChangeStack);
                 const res = await tokenPost(POST_TYPES.SYNC_STACK, {
                     stack: _observedChangeStack,
-                    limit,
-                    offset
+                    ..._frameConfiguration
                 });
                 console.log(res.data);
                 if (res.success) {
@@ -243,10 +236,7 @@ export default function EasybaseProvider({ ebconfig, options }: EasybaseProvider
         }
 
         try {
-            const res = await tokenPost(POST_TYPES.GET_FRAME, {
-                offset,
-                limit
-            });
+            const res = await tokenPost(POST_TYPES.GET_FRAME, _frameConfiguration);
 
             // Check if the array recieved from db is the same as frame
             // If not, update it and send useFrameEffect
@@ -337,7 +327,8 @@ export default function EasybaseProvider({ ebconfig, options }: EasybaseProvider
         const customHeaders = {
             'Eb-upload-type': type,
             'Eb-column-name': options.columnName,
-            'Eb-record-id': _recordIdMap.get(_frameRecord)
+            'Eb-record-id': _recordIdMap.get(_frameRecord),
+            'Eb-table-name': options.tableName
         }
 
         const res = await tokenPostAttachment(formData, customHeaders);

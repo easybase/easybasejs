@@ -14,6 +14,9 @@ async function main() {
 
     const q = await b.Query({ queryName: "my q", limit: 3 })
     console.log(q);
+
+    const tableTypes = await b.tableTypes("table name optional");
+    console.log(tableTypes);
 }
 
 main();

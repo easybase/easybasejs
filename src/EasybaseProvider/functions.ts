@@ -6,15 +6,12 @@ import {
 import _g from "./g";
 
 import authFactory from "./auth";
-import utilsFactory from "./utils";
 
 export default function functionsFactory(globals?: Globals): any {
 
     const g = globals || _g;
 
     const { tokenPost } = authFactory(g);
-
-    const { log } = utilsFactory(g);
 
     const Query = async (options: QueryOptions): Promise<Record<string, any>[]> => {
         const defaultOptions: QueryOptions = {
@@ -31,8 +28,10 @@ export default function functionsFactory(globals?: Globals): any {
         }
     }
 
-    const fullTableSize = async (): Promise<number> => {
-        const res = await tokenPost(POST_TYPES.TABLE_SIZE, {});
+    async function fullTableSize(): Promise<number>;
+    async function fullTableSize(tableName: string): Promise<number>;
+    async function fullTableSize(tableName?: string): Promise<number> {
+        const res = await tokenPost(POST_TYPES.TABLE_SIZE, tableName ? { tableName } : {});
         if (res.success) {
             return res.data;
         } else {
@@ -40,8 +39,10 @@ export default function functionsFactory(globals?: Globals): any {
         }
     }
 
-    const tableTypes = async (): Promise<Record<string, any>> => {
-        const res = await tokenPost(POST_TYPES.COLUMN_TYPES, {});
+    async function tableTypes(): Promise<Record<string, any>>;
+    async function tableTypes(tableName: string): Promise<Record<string, any>>
+    async function tableTypes(tableName?: string): Promise<Record<string, any>> {
+        const res = await tokenPost(POST_TYPES.COLUMN_TYPES, tableName ? { tableName } : {});
         if (res.success) {
             return res.data;
         } else {

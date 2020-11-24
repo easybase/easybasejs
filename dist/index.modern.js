@@ -1083,7 +1083,7 @@ function authFactory(globals) {
     const t1 = Date.now();
     g.session = Math.floor(100000000 + Math.random() * 900000000);
     log(`Handshaking on${g.instance} instance`);
-    const integrationType = g.ebconfig.integration.split("-")[0].toUpperCase();
+    const integrationType = g.ebconfig.integration.split("-")[0].toUpperCase() === "PROJECT" ? "PROJECT" : "REACT";
 
     try {
       const res = await axios.post(generateBareUrl(integrationType, g.integrationID), {
@@ -1123,7 +1123,7 @@ function authFactory(globals) {
       await initAuth();
     }
 
-    const integrationType = g.ebconfig.integration.split("-")[0].toUpperCase();
+    const integrationType = g.ebconfig.integration.split("-")[0].toUpperCase() === "PROJECT" ? "PROJECT" : "REACT";
 
     try {
       const res = await axios.post(generateBareUrl(integrationType, g.integrationID), _extends({
@@ -1230,25 +1230,29 @@ function functionsFactory(globals) {
     }
   };
 
-  const fullTableSize = async () => {
-    const res = await tokenPost(POST_TYPES.TABLE_SIZE, {});
+  async function fullTableSize(tableName) {
+    const res = await tokenPost(POST_TYPES.TABLE_SIZE, tableName ? {
+      tableName
+    } : {});
 
     if (res.success) {
       return res.data;
     } else {
       return 0;
     }
-  };
+  }
 
-  const tableTypes = async () => {
-    const res = await tokenPost(POST_TYPES.COLUMN_TYPES, {});
+  async function tableTypes(tableName) {
+    const res = await tokenPost(POST_TYPES.COLUMN_TYPES, tableName ? {
+      tableName
+    } : {});
 
     if (res.success) {
       return res.data;
     } else {
       return {};
     }
-  };
+  }
 
   return {
     Query,
@@ -1287,7 +1291,7 @@ function EasybaseProvider({
   const isIE = typeof document !== 'undefined' && !!document['documentMode'];
 
   if (isIE) {
-    console.error("EASYBASE — easybase-react does not support Internet Explorer. Please use a different browser.");
+    console.error("EASYBASE — easybasejs does not support Internet Explorer. Please use a different browser.");
   }
 
   g.options = _extends({}, options);
@@ -1322,16 +1326,10 @@ function EasybaseProvider({
   const _recordIDExists = record => !!_recordIdMap.get(record);
 
   const configureFrame = options => {
-    if (options.limit === _frameConfiguration.limit && options.offset === _frameConfiguration.offset) {
-      return {
-        message: "Frame parameters are the same as the previous configuration.",
-        success: true
-      };
-    }
-
     _frameConfiguration = _extends({}, _frameConfiguration);
     if (options.limit !== undefined) _frameConfiguration.limit = options.limit;
     if (options.offset !== undefined && options.offset >= 0) _frameConfiguration.offset = options.offset;
+    if (options.tableName !== undefined) _frameConfiguration.tableName = options.tableName;
     _isFrameInitialized = false;
     return {
       message: "Successfully configured frame. Run sync() for changes to be shown in frame",
@@ -1341,12 +1339,13 @@ function EasybaseProvider({
 
   const currentConfiguration = () => _extends({}, _frameConfiguration);
 
-  const deleteRecord = async record => {
-    const _frameRecord = _frame.find(ele => deepEqual(ele, record));
+  const deleteRecord = async options => {
+    const _frameRecord = _frame.find(ele => deepEqual(ele, options.record));
 
     if (_frameRecord && _recordIdMap.get(_frameRecord)) {
       const res = await tokenPost(POST_TYPES.SYNC_DELETE, {
-        _id: _recordIdMap.get(_frameRecord)
+        _id: _recordIdMap.get(_frameRecord),
+        tableName: options.tableName
       });
       return {
         success: res.success,
@@ -1355,7 +1354,8 @@ function EasybaseProvider({
     } else {
       try {
         const res = await tokenPost(POST_TYPES.SYNC_DELETE, {
-          record
+          record: options.record,
+          tableName: options.tableName
         });
         return {
           success: res.success,
@@ -1375,7 +1375,8 @@ function EasybaseProvider({
   const addRecord = async options => {
     const defaultValues = {
       insertAtEnd: false,
-      newRecord: {}
+      newRecord: {},
+      tableName: null
     };
 
     const fullOptions = _extends({}, defaultValues, options);
@@ -1467,19 +1468,13 @@ function EasybaseProvider({
     }
 
     isSyncing = true;
-    const {
-      offset,
-      limit
-    } = _frameConfiguration;
 
     if (_isFrameInitialized) {
       if (_observedChangeStack.length > 0) {
         log("Stack change: ", _observedChangeStack);
-        const res = await tokenPost(POST_TYPES.SYNC_STACK, {
-          stack: _observedChangeStack,
-          limit,
-          offset
-        });
+        const res = await tokenPost(POST_TYPES.SYNC_STACK, _extends({
+          stack: _observedChangeStack
+        }, _frameConfiguration));
         console.log(res.data);
 
         if (res.success) {
@@ -1489,10 +1484,7 @@ function EasybaseProvider({
     }
 
     try {
-      const res = await tokenPost(POST_TYPES.GET_FRAME, {
-        offset,
-        limit
-      }); // Check if the array recieved from db is the same as frame
+      const res = await tokenPost(POST_TYPES.GET_FRAME, _frameConfiguration); // Check if the array recieved from db is the same as frame
       // If not, update it and send useFrameEffect
 
       if (res.success === false) {
@@ -1584,7 +1576,8 @@ function EasybaseProvider({
     const customHeaders = {
       'Eb-upload-type': type,
       'Eb-column-name': options.columnName,
-      'Eb-record-id': _recordIdMap.get(_frameRecord)
+      'Eb-record-id': _recordIdMap.get(_frameRecord),
+      'Eb-table-name': options.tableName
     };
     const res = await tokenPostAttachment(formData, customHeaders);
     await sync();
