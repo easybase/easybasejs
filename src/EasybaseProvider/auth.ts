@@ -4,9 +4,9 @@ import _g from "./g";
 import utilsFactory from "./utils";
 
 export default function authFactory(globals?: Globals): any {
-    const { generateBareUrl, generateAuthBody, log } = utilsFactory(globals);
-
     const g = globals || _g;
+
+    const { generateBareUrl, generateAuthBody, log } = utilsFactory(g);
 
     const initAuth = async (): Promise<boolean> => {
         const t1 = Date.now();
@@ -14,8 +14,10 @@ export default function authFactory(globals?: Globals): any {
     
         log(`Handshaking on${g.instance} instance`);
     
+        const integrationType = g.ebconfig.integration.split("-")[0].toUpperCase();
+
         try {
-            const res = await axios.post(generateBareUrl("REACT", g.integrationID), {
+            const res = await axios.post(generateBareUrl(integrationType, g.integrationID), {
                 version: g.ebconfig.version,
                 tt: g.ebconfig.tt,
                 session: g.session,
@@ -48,8 +50,10 @@ export default function authFactory(globals?: Globals): any {
             await initAuth();
         }
 
+        const integrationType = g.ebconfig.integration.split("-")[0].toUpperCase();
+
         try {
-            const res = await axios.post(generateBareUrl("REACT", g.integrationID), {
+            const res = await axios.post(generateBareUrl(integrationType, g.integrationID), {
                 _auth: generateAuthBody(),
                 ...body
             }, { headers: { 'Eb-Post-Req': postType } });
