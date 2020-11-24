@@ -1,5 +1,5 @@
 import axios from "axios";
-import { POST_TYPES, AuthPostResponse, Globals } from "./types";
+import { POST_TYPES, AuthPostResponse, Globals, StatusResponse } from "./types";
 import _g from "./g";
 import utilsFactory from "./utils";
 
@@ -7,6 +7,55 @@ export default function authFactory(globals?: Globals): any {
     const g = globals || _g;
 
     const { generateBareUrl, generateAuthBody, log } = utilsFactory(g);
+
+    const getUserAttributes = async (): Promise<Record<string, string>> => {
+        try {
+            const attrsRes = await tokenPost(POST_TYPES.USER_ATTRIBUTES);
+            return attrsRes.data;   
+        } catch (error) {
+            return error;
+        }
+    }
+
+    const setUserAttribute = async (key: string, value: string): Promise<StatusResponse> => {
+        try {
+            const setAttrsRes = await tokenPost(POST_TYPES.SET_ATTRIBUTE, {
+                key,
+                value
+            });
+
+            return {
+                success: setAttrsRes.success,
+                message: JSON.stringify(setAttrsRes.data)
+            };
+        } catch (error) {
+            return {
+                success: false,
+                message: "Error",
+                error
+            };
+        }
+    }
+
+    const signUp = async (newUserID: string, password: string, userAttributes?: Record<string, string>): Promise<StatusResponse> => {
+        try {
+            const signUpRes = await tokenPost(POST_TYPES.SIGN_UP, {
+                newUserID,
+                password,
+                userAttributes
+            });
+            return {
+                success: signUpRes.success,
+                message: signUpRes.data
+            }   
+        } catch (error) {
+            return {
+                success: false,
+                message: "Error",
+                error
+            }
+        }
+    }
 
     const initAuth = async (): Promise<boolean> => {
         const t1 = Date.now();
@@ -133,6 +182,9 @@ export default function authFactory(globals?: Globals): any {
     return {
         initAuth,
         tokenPost,
-        tokenPostAttachment
+        tokenPostAttachment,
+        signUp,
+        setUserAttribute,
+        getUserAttributes
     }
 }

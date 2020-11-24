@@ -99,13 +99,58 @@ export declare enum POST_TYPES {
     SYNC_STACK = "sync_stack",
     SYNC_DELETE = "sync_delete",
     SYNC_INSERT = "sync_insert",
-    GET_QUERY = "get_query"
+    GET_QUERY = "get_query",
+    USER_ATTRIBUTES = "user_attributes",
+    SET_ATTRIBUTE = "set_attribute",
+    SIGN_UP = "sign_up"
 }
 export interface AuthPostResponse {
     success: boolean;
     data: any;
 }
 export interface ContextValue {
+    /**
+     * Check if a user is currently signed in.
+     */
+    isUserSignedIn(): boolean;
+    /**
+     * Sign out the current user.
+     */
+    signOut(): any;
+    /**
+     * Retrieve the currently signed in users attribute object.
+     * @async
+     * @return {Promise<Record<string, string>>} Promise<Record<string, string>>
+     */
+    getUserAttributes(): Promise<Record<string, string>>;
+    /**
+     * Set a single attribute of the currently signed in user. Can also be updated visually in the Easybase 'Users' tab.
+     * @async
+     * @abstract
+     * @param key Object key. Can be a new key or existing key.
+     * @param value attribute value.
+     * @return {Promise<StatusResponse>} Promise<StatusResponse>
+     */
+    setUserAttribute(key: string, value: string): Promise<StatusResponse>;
+    /**
+     * Sign in a user that already exists for a project.
+     * @abstract
+     * @async
+     * @param userID unique identifier for new user. Usually an email or phone number.
+     * @param password user password.
+     * @return {Promise<StatusResponse>} Promise<StatusResponse>
+     */
+    signIn(userID: string, password: string): Promise<StatusResponse>;
+    /**
+     * Create a new user for your project. You must still call signIn() after signing up.
+     * @abstract
+     * @async
+     * @param newUserID unique identifier for new user. Usually an email or phone number.
+     * @param password user password. Must be at least 8 characters long.
+     * @param userAttributes Optional object to store user attributes. Can also be edited visually in the Easybase 'Users' tab.
+     * @return {Promise<StatusResponse>} Promise<StatusResponse>
+     */
+    signUp(newUserID: string, password: string, userAttributes?: Record<string, string>): Promise<StatusResponse>;
     /**
      * Configure the current frame size. Set the offset and amount of records to retreive assume you don't want to receive
      * your entire collection. This is useful for paging.

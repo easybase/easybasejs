@@ -18,6 +18,7 @@ import videoExtensions from "./assets/video-extensions.json";
 import authFactory from "./auth";
 import utilsFactory from "./utils";
 import functionsFactory from "./functions";
+import axios from "axios";
 
 export default function EasybaseProvider({ ebconfig, options }: EasybaseProviderProps): ContextValue {
 
@@ -25,7 +26,10 @@ export default function EasybaseProvider({ ebconfig, options }: EasybaseProvider
 
     const {
         tokenPost,
-        tokenPostAttachment
+        tokenPostAttachment,
+        signUp,
+        setUserAttribute,
+        getUserAttributes
     } = authFactory(g);
 
     const {
@@ -34,7 +38,7 @@ export default function EasybaseProvider({ ebconfig, options }: EasybaseProvider
         tableTypes
     } = functionsFactory(g);
 
-    const { log } = utilsFactory(g);
+    const { log, generateBareUrl } = utilsFactory(g);
 
     if (typeof ebconfig !== 'object' || ebconfig === null || ebconfig === undefined) {
         console.error("No ebconfig object passed. do `import ebconfig from \"ebconfig.js\"` and pass it to the Easybase provider");
@@ -54,7 +58,11 @@ export default function EasybaseProvider({ ebconfig, options }: EasybaseProvider
     g.options = { ...options };
     g.integrationID = ebconfig.integration;
     g.ebconfig = ebconfig;
-    g.mounted = false;
+    if (g.ebconfig.tt && g.ebconfig.integration.split("-")[0].toUpperCase() !== "PROJECT") {
+        g.mounted = false;
+    } else {
+        g.mounted = true;
+    }
     g.instance = "Node";
 
     let _isFrameInitialized = true;
@@ -137,7 +145,7 @@ export default function EasybaseProvider({ ebconfig, options }: EasybaseProvider
         const defaultValues: AddRecordOptions = {
             insertAtEnd: false,
             newRecord: {},
-            tableName: null
+            tableName: undefined
         }
 
         const fullOptions: AddRecordOptions = { ...defaultValues, ...options };
@@ -341,6 +349,60 @@ export default function EasybaseProvider({ ebconfig, options }: EasybaseProvider
         };
     }
 
+    const isUserSignedIn = (): boolean => Object.keys(g.token).length > 0;
+
+    const signIn = async (userID: string, password: string): Promise<StatusResponse> => {
+        const t1 = Date.now();
+        g.session = Math.floor(100000000 + Math.random() * 900000000);
+    
+        const integrationType = g.ebconfig.integration.split("-")[0].toUpperCase() === "PROJECT" ? "PROJECT" : "REACT";
+
+        try {
+            const res = await axios.post(generateBareUrl(integrationType, g.integrationID), {
+                version: g.ebconfig.version,
+                session: g.session,
+                instance: g.instance,
+                userID,
+                password
+            }, { headers: { 'Eb-Post-Req': POST_TYPES.HANDSHAKE } });
+    
+            if (res.data.token) {
+                g.token = res.data.token;
+                g.mounted = true;
+                const validTokenRes = await tokenPost(POST_TYPES.VALID_TOKEN);
+                const elapsed = Date.now() - t1;
+                if (validTokenRes.success) {
+                    log("Valid auth initiation in " + elapsed + "ms");
+                    return {
+                        success: true,
+                        message: "Successfully signed in user"
+                    };
+                } else {
+                    return {
+                        success: false,
+                        message: "Could not sign in user"
+                    };
+                }
+            } else {
+                return {
+                    success: false,
+                    message: "Could not sign in user"
+                };
+            }
+        } catch (error) {
+            console.error(error);
+            return {
+                success: false,
+                message: error,
+                error
+            };
+        }
+    }
+
+    const signOut = () => {
+        g.token = {};
+    }
+
     const c: ContextValue = {
         configureFrame,
         addRecord,
@@ -353,9 +415,14 @@ export default function EasybaseProvider({ ebconfig, options }: EasybaseProvider
         fullTableSize,
         tableTypes,
         currentConfiguration,
-        Query
+        Query,
+        isUserSignedIn,
+        signIn,
+        signOut,
+        signUp,
+        setUserAttribute,
+        getUserAttributes
     }
 
     return c;
-
 }

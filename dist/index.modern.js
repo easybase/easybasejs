@@ -32,6 +32,9 @@ var POST_TYPES;
   POST_TYPES["SYNC_DELETE"] = "sync_delete";
   POST_TYPES["SYNC_INSERT"] = "sync_insert";
   POST_TYPES["GET_QUERY"] = "get_query";
+  POST_TYPES["USER_ATTRIBUTES"] = "user_attributes";
+  POST_TYPES["SET_ATTRIBUTE"] = "set_attribute";
+  POST_TYPES["SIGN_UP"] = "sign_up";
 })(POST_TYPES || (POST_TYPES = {}));
 
 var GlobalNamespace;
@@ -1079,6 +1082,54 @@ function authFactory(globals) {
     log
   } = utilsFactory(g);
 
+  const getUserAttributes = async () => {
+    try {
+      const attrsRes = await tokenPost(POST_TYPES.USER_ATTRIBUTES);
+      return attrsRes.data;
+    } catch (error) {
+      return error;
+    }
+  };
+
+  const setUserAttribute = async (key, value) => {
+    try {
+      const setAttrsRes = await tokenPost(POST_TYPES.SET_ATTRIBUTE, {
+        key,
+        value
+      });
+      return {
+        success: setAttrsRes.success,
+        message: JSON.stringify(setAttrsRes.data)
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: "Error",
+        error
+      };
+    }
+  };
+
+  const signUp = async (newUserID, password, userAttributes) => {
+    try {
+      const signUpRes = await tokenPost(POST_TYPES.SIGN_UP, {
+        newUserID,
+        password,
+        userAttributes
+      });
+      return {
+        success: signUpRes.success,
+        message: signUpRes.data
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: "Error",
+        error
+      };
+    }
+  };
+
   const initAuth = async () => {
     const t1 = Date.now();
     g.session = Math.floor(100000000 + Math.random() * 900000000);
@@ -1205,7 +1256,10 @@ function authFactory(globals) {
   return {
     initAuth,
     tokenPost,
-    tokenPostAttachment
+    tokenPostAttachment,
+    signUp,
+    setUserAttribute,
+    getUserAttributes
   };
 }
 
@@ -1268,7 +1322,10 @@ function EasybaseProvider({
   const g = gFactory();
   const {
     tokenPost,
-    tokenPostAttachment
+    tokenPostAttachment,
+    signUp,
+    setUserAttribute,
+    getUserAttributes
   } = authFactory(g);
   const {
     Query,
@@ -1276,7 +1333,8 @@ function EasybaseProvider({
     tableTypes
   } = functionsFactory(g);
   const {
-    log
+    log,
+    generateBareUrl
   } = utilsFactory(g);
 
   if (typeof ebconfig !== 'object' || ebconfig === null || ebconfig === undefined) {
@@ -1297,7 +1355,13 @@ function EasybaseProvider({
   g.options = _extends({}, options);
   g.integrationID = ebconfig.integration;
   g.ebconfig = ebconfig;
-  g.mounted = false;
+
+  if (g.ebconfig.tt && g.ebconfig.integration.split("-")[0].toUpperCase() !== "PROJECT") {
+    g.mounted = false;
+  } else {
+    g.mounted = true;
+  }
+
   g.instance = "Node";
   let _isFrameInitialized = true;
   let _frameConfiguration = {
@@ -1376,7 +1440,7 @@ function EasybaseProvider({
     const defaultValues = {
       insertAtEnd: false,
       newRecord: {},
-      tableName: null
+      tableName: undefined
     };
 
     const fullOptions = _extends({}, defaultValues, options);
@@ -1587,6 +1651,64 @@ function EasybaseProvider({
     };
   };
 
+  const isUserSignedIn = () => Object.keys(g.token).length > 0;
+
+  const signIn = async (userID, password) => {
+    const t1 = Date.now();
+    g.session = Math.floor(100000000 + Math.random() * 900000000);
+    const integrationType = g.ebconfig.integration.split("-")[0].toUpperCase() === "PROJECT" ? "PROJECT" : "REACT";
+
+    try {
+      const res = await axios.post(generateBareUrl(integrationType, g.integrationID), {
+        version: g.ebconfig.version,
+        session: g.session,
+        instance: g.instance,
+        userID,
+        password
+      }, {
+        headers: {
+          'Eb-Post-Req': POST_TYPES.HANDSHAKE
+        }
+      });
+
+      if (res.data.token) {
+        g.token = res.data.token;
+        g.mounted = true;
+        const validTokenRes = await tokenPost(POST_TYPES.VALID_TOKEN);
+        const elapsed = Date.now() - t1;
+
+        if (validTokenRes.success) {
+          log("Valid auth initiation in " + elapsed + "ms");
+          return {
+            success: true,
+            message: "Successfully signed in user"
+          };
+        } else {
+          return {
+            success: false,
+            message: "Could not sign in user"
+          };
+        }
+      } else {
+        return {
+          success: false,
+          message: "Could not sign in user"
+        };
+      }
+    } catch (error) {
+      console.error(error);
+      return {
+        success: false,
+        message: error,
+        error
+      };
+    }
+  };
+
+  const signOut = () => {
+    g.token = {};
+  };
+
   const c = {
     configureFrame,
     addRecord,
@@ -1599,7 +1721,13 @@ function EasybaseProvider({
     fullTableSize,
     tableTypes,
     currentConfiguration,
-    Query
+    Query,
+    isUserSignedIn,
+    signIn,
+    signOut,
+    signUp,
+    setUserAttribute,
+    getUserAttributes
   };
   return c;
 }

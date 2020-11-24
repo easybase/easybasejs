@@ -82,6 +82,9 @@ var POST_TYPES;
   POST_TYPES["SYNC_DELETE"] = "sync_delete";
   POST_TYPES["SYNC_INSERT"] = "sync_insert";
   POST_TYPES["GET_QUERY"] = "get_query";
+  POST_TYPES["USER_ATTRIBUTES"] = "user_attributes";
+  POST_TYPES["SET_ATTRIBUTE"] = "set_attribute";
+  POST_TYPES["SIGN_UP"] = "sign_up";
 })(POST_TYPES || (POST_TYPES = {}));
 
 var GlobalNamespace;
@@ -1182,6 +1185,65 @@ function authFactory(globals) {
       generateAuthBody = _utilsFactory.generateAuthBody,
       log = _utilsFactory.log;
 
+  var getUserAttributes = function getUserAttributes() {
+    return Promise.resolve(_catch(function () {
+      return Promise.resolve(tokenPost(POST_TYPES.USER_ATTRIBUTES)).then(function (attrsRes) {
+        return attrsRes.data;
+      });
+    }, function (error) {
+      return error;
+    }));
+  };
+
+  var setUserAttribute = function setUserAttribute(key, value) {
+    try {
+      return Promise.resolve(_catch(function () {
+        return Promise.resolve(tokenPost(POST_TYPES.SET_ATTRIBUTE, {
+          key: key,
+          value: value
+        })).then(function (setAttrsRes) {
+          return {
+            success: setAttrsRes.success,
+            message: JSON.stringify(setAttrsRes.data)
+          };
+        });
+      }, function (error) {
+        return {
+          success: false,
+          message: "Error",
+          error: error
+        };
+      }));
+    } catch (e) {
+      return Promise.reject(e);
+    }
+  };
+
+  var signUp = function signUp(newUserID, password, userAttributes) {
+    try {
+      return Promise.resolve(_catch(function () {
+        return Promise.resolve(tokenPost(POST_TYPES.SIGN_UP, {
+          newUserID: newUserID,
+          password: password,
+          userAttributes: userAttributes
+        })).then(function (signUpRes) {
+          return {
+            success: signUpRes.success,
+            message: signUpRes.data
+          };
+        });
+      }, function (error) {
+        return {
+          success: false,
+          message: "Error",
+          error: error
+        };
+      }));
+    } catch (e) {
+      return Promise.reject(e);
+    }
+  };
+
   var initAuth = function initAuth() {
     try {
       var t1 = Date.now();
@@ -1350,7 +1412,10 @@ function authFactory(globals) {
   return {
     initAuth: initAuth,
     tokenPost: tokenPost,
-    tokenPostAttachment: tokenPostAttachment
+    tokenPostAttachment: tokenPostAttachment,
+    signUp: signUp,
+    setUserAttribute: setUserAttribute,
+    getUserAttributes: getUserAttributes
   };
 }
 
@@ -1454,7 +1519,10 @@ function EasybaseProvider(_ref) {
 
   var _authFactory = authFactory(g),
       tokenPost = _authFactory.tokenPost,
-      tokenPostAttachment = _authFactory.tokenPostAttachment;
+      tokenPostAttachment = _authFactory.tokenPostAttachment,
+      signUp = _authFactory.signUp,
+      setUserAttribute = _authFactory.setUserAttribute,
+      getUserAttributes = _authFactory.getUserAttributes;
 
   var _functionsFactory = functionsFactory(g),
       Query = _functionsFactory.Query,
@@ -1462,7 +1530,8 @@ function EasybaseProvider(_ref) {
       tableTypes = _functionsFactory.tableTypes;
 
   var _utilsFactory = utilsFactory(g),
-      log = _utilsFactory.log;
+      log = _utilsFactory.log,
+      generateBareUrl = _utilsFactory.generateBareUrl;
 
   if (typeof ebconfig !== 'object' || ebconfig === null || ebconfig === undefined) {
     console.error("No ebconfig object passed. do `import ebconfig from \"ebconfig.js\"` and pass it to the Easybase provider");
@@ -1482,7 +1551,13 @@ function EasybaseProvider(_ref) {
   g.options = _extends({}, options);
   g.integrationID = ebconfig.integration;
   g.ebconfig = ebconfig;
-  g.mounted = false;
+
+  if (g.ebconfig.tt && g.ebconfig.integration.split("-")[0].toUpperCase() !== "PROJECT") {
+    g.mounted = false;
+  } else {
+    g.mounted = true;
+  }
+
   g.instance = "Node";
   var _isFrameInitialized = true;
   var _frameConfiguration = {
@@ -1574,7 +1649,7 @@ function EasybaseProvider(_ref) {
       var defaultValues = {
         insertAtEnd: false,
         newRecord: {},
-        tableName: null
+        tableName: undefined
       };
 
       var fullOptions = _extends({}, defaultValues, options);
@@ -1809,6 +1884,70 @@ function EasybaseProvider(_ref) {
     }
   };
 
+  var isUserSignedIn = function isUserSignedIn() {
+    return Object.keys(g.token).length > 0;
+  };
+
+  var signIn = function signIn(userID, password) {
+    try {
+      var t1 = Date.now();
+      g.session = Math.floor(100000000 + Math.random() * 900000000);
+      var integrationType = g.ebconfig.integration.split("-")[0].toUpperCase() === "PROJECT" ? "PROJECT" : "REACT";
+      return Promise.resolve(_catch$2(function () {
+        return Promise.resolve(axios.post(generateBareUrl(integrationType, g.integrationID), {
+          version: g.ebconfig.version,
+          session: g.session,
+          instance: g.instance,
+          userID: userID,
+          password: password
+        }, {
+          headers: {
+            'Eb-Post-Req': POST_TYPES.HANDSHAKE
+          }
+        })).then(function (res) {
+          if (res.data.token) {
+            g.token = res.data.token;
+            g.mounted = true;
+            return Promise.resolve(tokenPost(POST_TYPES.VALID_TOKEN)).then(function (validTokenRes) {
+              var elapsed = Date.now() - t1;
+
+              if (validTokenRes.success) {
+                log("Valid auth initiation in " + elapsed + "ms");
+                return {
+                  success: true,
+                  message: "Successfully signed in user"
+                };
+              } else {
+                return {
+                  success: false,
+                  message: "Could not sign in user"
+                };
+              }
+            });
+          } else {
+            return {
+              success: false,
+              message: "Could not sign in user"
+            };
+          }
+        });
+      }, function (error) {
+        console.error(error);
+        return {
+          success: false,
+          message: error,
+          error: error
+        };
+      }));
+    } catch (e) {
+      return Promise.reject(e);
+    }
+  };
+
+  var signOut = function signOut() {
+    g.token = {};
+  };
+
   var c = {
     configureFrame: configureFrame,
     addRecord: addRecord,
@@ -1821,7 +1960,13 @@ function EasybaseProvider(_ref) {
     fullTableSize: fullTableSize,
     tableTypes: tableTypes,
     currentConfiguration: currentConfiguration,
-    Query: Query
+    Query: Query,
+    isUserSignedIn: isUserSignedIn,
+    signIn: signIn,
+    signOut: signOut,
+    signUp: signUp,
+    setUserAttribute: setUserAttribute,
+    getUserAttributes: getUserAttributes
   };
   return c;
 }
