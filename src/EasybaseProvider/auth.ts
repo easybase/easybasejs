@@ -176,6 +176,9 @@ export default function authFactory(globals?: Globals): any {
                             g.newTokenCallback();
                             return tokenPost(postType, body);
                         } else {
+                            g.token = "";
+                            g.refreshToken = "";
+                            g.newTokenCallback();
                             return {
                                 success: false,
                                 data: req_res.data
@@ -244,6 +247,9 @@ export default function authFactory(globals?: Globals): any {
                             g.newTokenCallback();
                             return tokenPostAttachment(formData, customHeaders);
                         } else {
+                            g.token = "";
+                            g.refreshToken = "";
+                            g.newTokenCallback();
                             return {
                                 success: false,
                                 data: req_res.data

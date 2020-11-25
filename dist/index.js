@@ -1397,6 +1397,9 @@ function authFactory(globals) {
                           _exit = 1;
                           return tokenPost(postType, body);
                         } else {
+                          g.token = "";
+                          g.refreshToken = "";
+                          g.newTokenCallback();
                           _exit = 1;
                           return {
                             success: false,
@@ -1488,6 +1491,9 @@ function authFactory(globals) {
                           _exit2 = 1;
                           return tokenPostAttachment(formData, customHeaders);
                         } else {
+                          g.token = "";
+                          g.refreshToken = "";
+                          g.newTokenCallback();
                           _exit2 = 1;
                           return {
                             success: false,
