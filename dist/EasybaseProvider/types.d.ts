@@ -114,9 +114,9 @@ export interface ContextValue {
      */
     isUserSignedIn(): boolean;
     /**
-     * Sign out the current user.
+     * Signs out the current user.
      */
-    signOut(): any;
+    signOut(): void;
     /**
      * Retrieve the currently signed in users attribute object.
      * @async

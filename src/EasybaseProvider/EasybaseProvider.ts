@@ -399,7 +399,7 @@ export default function EasybaseProvider({ ebconfig, options }: EasybaseProvider
         }
     }
 
-    const signOut = () => {
+    const signOut = (): void => {
         g.token = {};
     }
 
