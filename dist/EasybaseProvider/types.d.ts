@@ -102,7 +102,8 @@ export declare enum POST_TYPES {
     GET_QUERY = "get_query",
     USER_ATTRIBUTES = "user_attributes",
     SET_ATTRIBUTE = "set_attribute",
-    SIGN_UP = "sign_up"
+    SIGN_UP = "sign_up",
+    REQUEST_TOKEN = "request_token"
 }
 export interface AuthPostResponse {
     success: boolean;
@@ -273,6 +274,7 @@ export interface ContextValue {
 export interface Globals {
     ebconfig: Ebconfig;
     token: {};
+    refreshToken: {};
     integrationID: string;
     session: number;
     options: EasybaseProviderPropsOptions;

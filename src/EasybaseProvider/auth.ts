@@ -57,6 +57,61 @@ export default function authFactory(globals?: Globals): any {
         }
     }
 
+    const signIn = async (userID: string, password: string): Promise<StatusResponse> => {
+        const t1 = Date.now();
+        g.session = Math.floor(100000000 + Math.random() * 900000000);
+    
+        const integrationType = g.ebconfig.integration.split("-")[0].toUpperCase() === "PROJECT" ? "PROJECT" : "REACT";
+
+        try {
+            const res = await axios.post(generateBareUrl(integrationType, g.integrationID), {
+                version: g.ebconfig.version,
+                session: g.session,
+                instance: g.instance,
+                userID,
+                password
+            }, { headers: { 'Eb-Post-Req': POST_TYPES.HANDSHAKE } });
+    
+            if (res.data.token) {
+                g.token = res.data.token;
+                g.refreshToken = res.data.refreshToken;
+                g.mounted = true;
+                const validTokenRes = await tokenPost(POST_TYPES.VALID_TOKEN);
+                const elapsed = Date.now() - t1;
+                if (validTokenRes.success) {
+                    log("Valid auth initiation in " + elapsed + "ms");
+                    return {
+                        success: true,
+                        message: "Successfully signed in user"
+                    };
+                } else {
+                    return {
+                        success: false,
+                        message: "Could not sign in user"
+                    };
+                }
+            } else {
+                return {
+                    success: false,
+                    message: "Could not sign in user"
+                };
+            }
+        } catch (error) {
+            console.error(error);
+            return {
+                success: false,
+                message: error,
+                error
+            };
+        }
+    }
+    
+    const isUserSignedIn = (): boolean => Object.keys(g.token).length > 0;
+
+    const signOut = (): void => {
+        g.token = {};
+    }
+
     const initAuth = async (): Promise<boolean> => {
         const t1 = Date.now();
         g.session = Math.floor(100000000 + Math.random() * 900000000);
@@ -94,7 +149,6 @@ export default function authFactory(globals?: Globals): any {
     }
     
     const tokenPost = async (postType: POST_TYPES, body?: {}): Promise<AuthPostResponse> => {
-
         if (!g.mounted) {
             await initAuth();
         }
@@ -109,7 +163,24 @@ export default function authFactory(globals?: Globals): any {
     
             if ({}.hasOwnProperty.call(res.data, 'ErrorCode') || {}.hasOwnProperty.call(res.data, 'code')) {
                 if (res.data.code === "JWT EXPIRED") {
-                    await initAuth();
+                    if (integrationType === "PROJECT") {
+                        const req_res = await tokenPost(POST_TYPES.REQUEST_TOKEN, {
+                            refreshToken: g.refreshToken,
+                            token: g.token
+                        });
+
+                        if (req_res.success) {
+                            g.token = req_res.data.token
+                            return tokenPost(postType, body);
+                        } else {
+                            return {
+                                success: false,
+                                data: req_res.data
+                            }
+                        }
+                    } else {
+                        await initAuth();
+                    }
                     return tokenPost(postType, body);
                 }
     
@@ -145,8 +216,10 @@ export default function authFactory(globals?: Globals): any {
             'Eb-now': regularAuthbody.now
         };
     
+        const integrationType = g.ebconfig.integration.split("-")[0].toUpperCase() === "PROJECT" ? "PROJECT" : "REACT";
+
         try {
-            const res = await axios.post(generateBareUrl("REACT", g.integrationID), formData, {
+            const res = await axios.post(generateBareUrl(integrationType, g.integrationID), formData, {
                 headers: {
                     'Eb-Post-Req': POST_TYPES.UPLOAD_ATTACHMENT,
                     'Content-Type': 'multipart/form-data',
@@ -157,7 +230,24 @@ export default function authFactory(globals?: Globals): any {
     
             if ({}.hasOwnProperty.call(res.data, 'ErrorCode') || {}.hasOwnProperty.call(res.data, 'code')) {
                 if (res.data.code === "JWT EXPIRED") {
-                    await initAuth();
+                    if (integrationType === "PROJECT") {
+                        const req_res = await tokenPost(POST_TYPES.REQUEST_TOKEN, {
+                            refreshToken: g.refreshToken,
+                            token: g.token
+                        });
+
+                        if (req_res.success) {
+                            g.token = req_res.data.token
+                            return tokenPostAttachment(formData, customHeaders);
+                        } else {
+                            return {
+                                success: false,
+                                data: req_res.data
+                            }
+                        }
+                    } else {
+                        await initAuth();
+                    }
                     return tokenPostAttachment(formData, customHeaders);
                 }
     
@@ -185,6 +275,9 @@ export default function authFactory(globals?: Globals): any {
         tokenPostAttachment,
         signUp,
         setUserAttribute,
-        getUserAttributes
+        getUserAttributes,
+        isUserSignedIn,
+        signIn,
+        signOut
     }
 }

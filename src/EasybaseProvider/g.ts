@@ -3,6 +3,7 @@ import { Ebconfig, EasybaseProviderPropsOptions, Globals } from "./types";
 namespace GlobalNamespace {
     export let ebconfig: Ebconfig;
     export let token: {};
+    export let refreshToken: {};
     export let integrationID: string;
     export let session: number;
     export let options: EasybaseProviderPropsOptions;

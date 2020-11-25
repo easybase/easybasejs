@@ -85,6 +85,7 @@ var POST_TYPES;
   POST_TYPES["USER_ATTRIBUTES"] = "user_attributes";
   POST_TYPES["SET_ATTRIBUTE"] = "set_attribute";
   POST_TYPES["SIGN_UP"] = "sign_up";
+  POST_TYPES["REQUEST_TOKEN"] = "request_token";
 })(POST_TYPES || (POST_TYPES = {}));
 
 var GlobalNamespace;
@@ -1244,6 +1245,71 @@ function authFactory(globals) {
     }
   };
 
+  var signIn = function signIn(userID, password) {
+    try {
+      var t1 = Date.now();
+      g.session = Math.floor(100000000 + Math.random() * 900000000);
+      var integrationType = g.ebconfig.integration.split("-")[0].toUpperCase() === "PROJECT" ? "PROJECT" : "REACT";
+      return Promise.resolve(_catch(function () {
+        return Promise.resolve(axios.post(generateBareUrl(integrationType, g.integrationID), {
+          version: g.ebconfig.version,
+          session: g.session,
+          instance: g.instance,
+          userID: userID,
+          password: password
+        }, {
+          headers: {
+            'Eb-Post-Req': POST_TYPES.HANDSHAKE
+          }
+        })).then(function (res) {
+          if (res.data.token) {
+            g.token = res.data.token;
+            g.refreshToken = res.data.refreshToken;
+            g.mounted = true;
+            return Promise.resolve(tokenPost(POST_TYPES.VALID_TOKEN)).then(function (validTokenRes) {
+              var elapsed = Date.now() - t1;
+
+              if (validTokenRes.success) {
+                log("Valid auth initiation in " + elapsed + "ms");
+                return {
+                  success: true,
+                  message: "Successfully signed in user"
+                };
+              } else {
+                return {
+                  success: false,
+                  message: "Could not sign in user"
+                };
+              }
+            });
+          } else {
+            return {
+              success: false,
+              message: "Could not sign in user"
+            };
+          }
+        });
+      }, function (error) {
+        console.error(error);
+        return {
+          success: false,
+          message: error,
+          error: error
+        };
+      }));
+    } catch (e) {
+      return Promise.reject(e);
+    }
+  };
+
+  var isUserSignedIn = function isUserSignedIn() {
+    return Object.keys(g.token).length > 0;
+  };
+
+  var signOut = function signOut() {
+    g.token = {};
+  };
+
   var initAuth = function initAuth() {
     try {
       var t1 = Date.now();
@@ -1289,7 +1355,7 @@ function authFactory(globals) {
 
   var tokenPost = function tokenPost(postType, body) {
     try {
-      var _temp5 = function _temp5() {
+      var _temp7 = function _temp7() {
         var integrationType = g.ebconfig.integration.split("-")[0].toUpperCase() === "PROJECT" ? "PROJECT" : "REACT";
         return _catch(function () {
           return Promise.resolve(axios.post(generateBareUrl(integrationType, g.integrationID), _extends({
@@ -1302,23 +1368,49 @@ function authFactory(globals) {
             var _exit;
 
             if ({}.hasOwnProperty.call(res.data, 'ErrorCode') || {}.hasOwnProperty.call(res.data, 'code')) {
-              var _temp7 = function _temp7(_result) {
-                return _exit ? _result : {
+              var _temp9 = function _temp9(_result2) {
+                return _exit ? _result2 : {
                   success: false,
                   data: res.data.body
                 };
               };
 
-              var _temp8 = function () {
+              var _temp10 = function () {
                 if (res.data.code === "JWT EXPIRED") {
-                  return Promise.resolve(initAuth()).then(function () {
+                  var _temp11 = function _temp11(_result) {
+                    if (_exit) return _result;
                     _exit = 1;
                     return tokenPost(postType, body);
-                  });
+                  };
+
+                  var _temp12 = function () {
+                    if (integrationType === "PROJECT") {
+                      return Promise.resolve(tokenPost(POST_TYPES.REQUEST_TOKEN, {
+                        refreshToken: g.refreshToken,
+                        token: g.token
+                      })).then(function (req_res) {
+                        if (req_res.success) {
+                          g.token = req_res.data.token;
+                          _exit = 1;
+                          return tokenPost(postType, body);
+                        } else {
+                          _exit = 1;
+                          return {
+                            success: false,
+                            data: req_res.data
+                          };
+                        }
+                      });
+                    } else {
+                      return Promise.resolve(initAuth()).then(function () {});
+                    }
+                  }();
+
+                  return _temp12 && _temp12.then ? _temp12.then(_temp11) : _temp11(_temp12);
                 }
               }();
 
-              return _temp8 && _temp8.then ? _temp8.then(_temp7) : _temp7(_temp8);
+              return _temp10 && _temp10.then ? _temp10.then(_temp9) : _temp9(_temp10);
             } else {
               return {
                 success: res.data.success,
@@ -1334,13 +1426,13 @@ function authFactory(globals) {
         });
       };
 
-      var _temp6 = function () {
+      var _temp8 = function () {
         if (!g.mounted) {
           return Promise.resolve(initAuth()).then(function () {});
         }
       }();
 
-      return Promise.resolve(_temp6 && _temp6.then ? _temp6.then(_temp5) : _temp5(_temp6));
+      return Promise.resolve(_temp8 && _temp8.then ? _temp8.then(_temp7) : _temp7(_temp8));
     } catch (e) {
       return Promise.reject(e);
     }
@@ -1348,15 +1440,16 @@ function authFactory(globals) {
 
   var tokenPostAttachment = function tokenPostAttachment(formData, customHeaders) {
     try {
-      var _temp13 = function _temp13() {
+      var _temp19 = function _temp19() {
         var regularAuthbody = generateAuthBody();
         var attachmentAuth = {
           'Eb-token': regularAuthbody.token,
           'Eb-token-time': regularAuthbody.token_time,
           'Eb-now': regularAuthbody.now
         };
+        var integrationType = g.ebconfig.integration.split("-")[0].toUpperCase() === "PROJECT" ? "PROJECT" : "REACT";
         return _catch(function () {
-          return Promise.resolve(axios.post(generateBareUrl("REACT", g.integrationID), formData, {
+          return Promise.resolve(axios.post(generateBareUrl(integrationType, g.integrationID), formData, {
             headers: _extends({
               'Eb-Post-Req': POST_TYPES.UPLOAD_ATTACHMENT,
               'Content-Type': 'multipart/form-data'
@@ -1365,23 +1458,49 @@ function authFactory(globals) {
             var _exit2;
 
             if ({}.hasOwnProperty.call(res.data, 'ErrorCode') || {}.hasOwnProperty.call(res.data, 'code')) {
-              var _temp15 = function _temp15(_result2) {
-                return _exit2 ? _result2 : {
+              var _temp21 = function _temp21(_result4) {
+                return _exit2 ? _result4 : {
                   success: false,
                   data: res.data.body
                 };
               };
 
-              var _temp16 = function () {
+              var _temp22 = function () {
                 if (res.data.code === "JWT EXPIRED") {
-                  return Promise.resolve(initAuth()).then(function () {
+                  var _temp23 = function _temp23(_result3) {
+                    if (_exit2) return _result3;
                     _exit2 = 1;
                     return tokenPostAttachment(formData, customHeaders);
-                  });
+                  };
+
+                  var _temp24 = function () {
+                    if (integrationType === "PROJECT") {
+                      return Promise.resolve(tokenPost(POST_TYPES.REQUEST_TOKEN, {
+                        refreshToken: g.refreshToken,
+                        token: g.token
+                      })).then(function (req_res) {
+                        if (req_res.success) {
+                          g.token = req_res.data.token;
+                          _exit2 = 1;
+                          return tokenPostAttachment(formData, customHeaders);
+                        } else {
+                          _exit2 = 1;
+                          return {
+                            success: false,
+                            data: req_res.data
+                          };
+                        }
+                      });
+                    } else {
+                      return Promise.resolve(initAuth()).then(function () {});
+                    }
+                  }();
+
+                  return _temp24 && _temp24.then ? _temp24.then(_temp23) : _temp23(_temp24);
                 }
               }();
 
-              return _temp16 && _temp16.then ? _temp16.then(_temp15) : _temp15(_temp16);
+              return _temp22 && _temp22.then ? _temp22.then(_temp21) : _temp21(_temp22);
             } else {
               return {
                 success: res.data.success,
@@ -1397,13 +1516,13 @@ function authFactory(globals) {
         });
       };
 
-      var _temp14 = function () {
+      var _temp20 = function () {
         if (!g.mounted) {
           return Promise.resolve(initAuth()).then(function () {});
         }
       }();
 
-      return Promise.resolve(_temp14 && _temp14.then ? _temp14.then(_temp13) : _temp13(_temp14));
+      return Promise.resolve(_temp20 && _temp20.then ? _temp20.then(_temp19) : _temp19(_temp20));
     } catch (e) {
       return Promise.reject(e);
     }
@@ -1415,7 +1534,10 @@ function authFactory(globals) {
     tokenPostAttachment: tokenPostAttachment,
     signUp: signUp,
     setUserAttribute: setUserAttribute,
-    getUserAttributes: getUserAttributes
+    getUserAttributes: getUserAttributes,
+    isUserSignedIn: isUserSignedIn,
+    signIn: signIn,
+    signOut: signOut
   };
 }
 
@@ -1522,7 +1644,10 @@ function EasybaseProvider(_ref) {
       tokenPostAttachment = _authFactory.tokenPostAttachment,
       signUp = _authFactory.signUp,
       setUserAttribute = _authFactory.setUserAttribute,
-      getUserAttributes = _authFactory.getUserAttributes;
+      getUserAttributes = _authFactory.getUserAttributes,
+      isUserSignedIn = _authFactory.isUserSignedIn,
+      signIn = _authFactory.signIn,
+      signOut = _authFactory.signOut;
 
   var _functionsFactory = functionsFactory(g),
       Query = _functionsFactory.Query,
@@ -1530,8 +1655,7 @@ function EasybaseProvider(_ref) {
       tableTypes = _functionsFactory.tableTypes;
 
   var _utilsFactory = utilsFactory(g),
-      log = _utilsFactory.log,
-      generateBareUrl = _utilsFactory.generateBareUrl;
+      log = _utilsFactory.log;
 
   if (typeof ebconfig !== 'object' || ebconfig === null || ebconfig === undefined) {
     console.error("No ebconfig object passed. do `import ebconfig from \"ebconfig.js\"` and pass it to the Easybase provider");
@@ -1882,70 +2006,6 @@ function EasybaseProvider(_ref) {
     } catch (e) {
       return Promise.reject(e);
     }
-  };
-
-  var isUserSignedIn = function isUserSignedIn() {
-    return Object.keys(g.token).length > 0;
-  };
-
-  var signIn = function signIn(userID, password) {
-    try {
-      var t1 = Date.now();
-      g.session = Math.floor(100000000 + Math.random() * 900000000);
-      var integrationType = g.ebconfig.integration.split("-")[0].toUpperCase() === "PROJECT" ? "PROJECT" : "REACT";
-      return Promise.resolve(_catch$2(function () {
-        return Promise.resolve(axios.post(generateBareUrl(integrationType, g.integrationID), {
-          version: g.ebconfig.version,
-          session: g.session,
-          instance: g.instance,
-          userID: userID,
-          password: password
-        }, {
-          headers: {
-            'Eb-Post-Req': POST_TYPES.HANDSHAKE
-          }
-        })).then(function (res) {
-          if (res.data.token) {
-            g.token = res.data.token;
-            g.mounted = true;
-            return Promise.resolve(tokenPost(POST_TYPES.VALID_TOKEN)).then(function (validTokenRes) {
-              var elapsed = Date.now() - t1;
-
-              if (validTokenRes.success) {
-                log("Valid auth initiation in " + elapsed + "ms");
-                return {
-                  success: true,
-                  message: "Successfully signed in user"
-                };
-              } else {
-                return {
-                  success: false,
-                  message: "Could not sign in user"
-                };
-              }
-            });
-          } else {
-            return {
-              success: false,
-              message: "Could not sign in user"
-            };
-          }
-        });
-      }, function (error) {
-        console.error(error);
-        return {
-          success: false,
-          message: error,
-          error: error
-        };
-      }));
-    } catch (e) {
-      return Promise.reject(e);
-    }
-  };
-
-  var signOut = function signOut() {
-    g.token = {};
   };
 
   var c = {

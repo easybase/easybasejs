@@ -35,6 +35,7 @@ var POST_TYPES;
   POST_TYPES["USER_ATTRIBUTES"] = "user_attributes";
   POST_TYPES["SET_ATTRIBUTE"] = "set_attribute";
   POST_TYPES["SIGN_UP"] = "sign_up";
+  POST_TYPES["REQUEST_TOKEN"] = "request_token";
 })(POST_TYPES || (POST_TYPES = {}));
 
 var GlobalNamespace;
@@ -1130,6 +1131,65 @@ function authFactory(globals) {
     }
   };
 
+  const signIn = async (userID, password) => {
+    const t1 = Date.now();
+    g.session = Math.floor(100000000 + Math.random() * 900000000);
+    const integrationType = g.ebconfig.integration.split("-")[0].toUpperCase() === "PROJECT" ? "PROJECT" : "REACT";
+
+    try {
+      const res = await axios.post(generateBareUrl(integrationType, g.integrationID), {
+        version: g.ebconfig.version,
+        session: g.session,
+        instance: g.instance,
+        userID,
+        password
+      }, {
+        headers: {
+          'Eb-Post-Req': POST_TYPES.HANDSHAKE
+        }
+      });
+
+      if (res.data.token) {
+        g.token = res.data.token;
+        g.refreshToken = res.data.refreshToken;
+        g.mounted = true;
+        const validTokenRes = await tokenPost(POST_TYPES.VALID_TOKEN);
+        const elapsed = Date.now() - t1;
+
+        if (validTokenRes.success) {
+          log("Valid auth initiation in " + elapsed + "ms");
+          return {
+            success: true,
+            message: "Successfully signed in user"
+          };
+        } else {
+          return {
+            success: false,
+            message: "Could not sign in user"
+          };
+        }
+      } else {
+        return {
+          success: false,
+          message: "Could not sign in user"
+        };
+      }
+    } catch (error) {
+      console.error(error);
+      return {
+        success: false,
+        message: error,
+        error
+      };
+    }
+  };
+
+  const isUserSignedIn = () => Object.keys(g.token).length > 0;
+
+  const signOut = () => {
+    g.token = {};
+  };
+
   const initAuth = async () => {
     const t1 = Date.now();
     g.session = Math.floor(100000000 + Math.random() * 900000000);
@@ -1187,7 +1247,25 @@ function authFactory(globals) {
 
       if ({}.hasOwnProperty.call(res.data, 'ErrorCode') || {}.hasOwnProperty.call(res.data, 'code')) {
         if (res.data.code === "JWT EXPIRED") {
-          await initAuth();
+          if (integrationType === "PROJECT") {
+            const req_res = await tokenPost(POST_TYPES.REQUEST_TOKEN, {
+              refreshToken: g.refreshToken,
+              token: g.token
+            });
+
+            if (req_res.success) {
+              g.token = req_res.data.token;
+              return tokenPost(postType, body);
+            } else {
+              return {
+                success: false,
+                data: req_res.data
+              };
+            }
+          } else {
+            await initAuth();
+          }
+
           return tokenPost(postType, body);
         }
 
@@ -1220,9 +1298,10 @@ function authFactory(globals) {
       'Eb-token-time': regularAuthbody.token_time,
       'Eb-now': regularAuthbody.now
     };
+    const integrationType = g.ebconfig.integration.split("-")[0].toUpperCase() === "PROJECT" ? "PROJECT" : "REACT";
 
     try {
-      const res = await axios.post(generateBareUrl("REACT", g.integrationID), formData, {
+      const res = await axios.post(generateBareUrl(integrationType, g.integrationID), formData, {
         headers: _extends({
           'Eb-Post-Req': POST_TYPES.UPLOAD_ATTACHMENT,
           'Content-Type': 'multipart/form-data'
@@ -1231,7 +1310,25 @@ function authFactory(globals) {
 
       if ({}.hasOwnProperty.call(res.data, 'ErrorCode') || {}.hasOwnProperty.call(res.data, 'code')) {
         if (res.data.code === "JWT EXPIRED") {
-          await initAuth();
+          if (integrationType === "PROJECT") {
+            const req_res = await tokenPost(POST_TYPES.REQUEST_TOKEN, {
+              refreshToken: g.refreshToken,
+              token: g.token
+            });
+
+            if (req_res.success) {
+              g.token = req_res.data.token;
+              return tokenPostAttachment(formData, customHeaders);
+            } else {
+              return {
+                success: false,
+                data: req_res.data
+              };
+            }
+          } else {
+            await initAuth();
+          }
+
           return tokenPostAttachment(formData, customHeaders);
         }
 
@@ -1259,7 +1356,10 @@ function authFactory(globals) {
     tokenPostAttachment,
     signUp,
     setUserAttribute,
-    getUserAttributes
+    getUserAttributes,
+    isUserSignedIn,
+    signIn,
+    signOut
   };
 }
 
@@ -1325,7 +1425,10 @@ function EasybaseProvider({
     tokenPostAttachment,
     signUp,
     setUserAttribute,
-    getUserAttributes
+    getUserAttributes,
+    isUserSignedIn,
+    signIn,
+    signOut
   } = authFactory(g);
   const {
     Query,
@@ -1333,8 +1436,7 @@ function EasybaseProvider({
     tableTypes
   } = functionsFactory(g);
   const {
-    log,
-    generateBareUrl
+    log
   } = utilsFactory(g);
 
   if (typeof ebconfig !== 'object' || ebconfig === null || ebconfig === undefined) {
@@ -1649,64 +1751,6 @@ function EasybaseProvider({
       message: res.data,
       success: res.success
     };
-  };
-
-  const isUserSignedIn = () => Object.keys(g.token).length > 0;
-
-  const signIn = async (userID, password) => {
-    const t1 = Date.now();
-    g.session = Math.floor(100000000 + Math.random() * 900000000);
-    const integrationType = g.ebconfig.integration.split("-")[0].toUpperCase() === "PROJECT" ? "PROJECT" : "REACT";
-
-    try {
-      const res = await axios.post(generateBareUrl(integrationType, g.integrationID), {
-        version: g.ebconfig.version,
-        session: g.session,
-        instance: g.instance,
-        userID,
-        password
-      }, {
-        headers: {
-          'Eb-Post-Req': POST_TYPES.HANDSHAKE
-        }
-      });
-
-      if (res.data.token) {
-        g.token = res.data.token;
-        g.mounted = true;
-        const validTokenRes = await tokenPost(POST_TYPES.VALID_TOKEN);
-        const elapsed = Date.now() - t1;
-
-        if (validTokenRes.success) {
-          log("Valid auth initiation in " + elapsed + "ms");
-          return {
-            success: true,
-            message: "Successfully signed in user"
-          };
-        } else {
-          return {
-            success: false,
-            message: "Could not sign in user"
-          };
-        }
-      } else {
-        return {
-          success: false,
-          message: "Could not sign in user"
-        };
-      }
-    } catch (error) {
-      console.error(error);
-      return {
-        success: false,
-        message: error,
-        error
-      };
-    }
-  };
-
-  const signOut = () => {
-    g.token = {};
   };
 
   const c = {
