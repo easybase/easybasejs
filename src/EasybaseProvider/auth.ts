@@ -75,6 +75,7 @@ export default function authFactory(globals?: Globals): any {
             if (res.data.token) {
                 g.token = res.data.token;
                 g.refreshToken = res.data.refreshToken;
+                g.newTokenCallback();
                 g.mounted = true;
                 const validTokenRes = await tokenPost(POST_TYPES.VALID_TOKEN);
                 const elapsed = Date.now() - t1;
@@ -106,10 +107,11 @@ export default function authFactory(globals?: Globals): any {
         }
     }
     
-    const isUserSignedIn = (): boolean => Object.keys(g.token).length > 0;
+    const isUserSignedIn = (): boolean => g.token.length > 0;
 
     const signOut = (): void => {
-        g.token = {};
+        g.token = "";
+        g.newTokenCallback();
     }
 
     const initAuth = async (): Promise<boolean> => {
@@ -171,6 +173,7 @@ export default function authFactory(globals?: Globals): any {
 
                         if (req_res.success) {
                             g.token = req_res.data.token
+                            g.newTokenCallback();
                             return tokenPost(postType, body);
                         } else {
                             return {
@@ -238,6 +241,7 @@ export default function authFactory(globals?: Globals): any {
 
                         if (req_res.success) {
                             g.token = req_res.data.token
+                            g.newTokenCallback();
                             return tokenPostAttachment(formData, customHeaders);
                         } else {
                             return {

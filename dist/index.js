@@ -1265,6 +1265,7 @@ function authFactory(globals) {
           if (res.data.token) {
             g.token = res.data.token;
             g.refreshToken = res.data.refreshToken;
+            g.newTokenCallback();
             g.mounted = true;
             return Promise.resolve(tokenPost(POST_TYPES.VALID_TOKEN)).then(function (validTokenRes) {
               var elapsed = Date.now() - t1;
@@ -1303,11 +1304,12 @@ function authFactory(globals) {
   };
 
   var isUserSignedIn = function isUserSignedIn() {
-    return Object.keys(g.token).length > 0;
+    return g.token.length > 0;
   };
 
   var signOut = function signOut() {
-    g.token = {};
+    g.token = "";
+    g.newTokenCallback();
   };
 
   var initAuth = function initAuth() {
@@ -1391,6 +1393,7 @@ function authFactory(globals) {
                       })).then(function (req_res) {
                         if (req_res.success) {
                           g.token = req_res.data.token;
+                          g.newTokenCallback();
                           _exit = 1;
                           return tokenPost(postType, body);
                         } else {
@@ -1481,6 +1484,7 @@ function authFactory(globals) {
                       })).then(function (req_res) {
                         if (req_res.success) {
                           g.token = req_res.data.token;
+                          g.newTokenCallback();
                           _exit2 = 1;
                           return tokenPostAttachment(formData, customHeaders);
                         } else {

@@ -273,11 +273,12 @@ export interface ContextValue {
 }
 export interface Globals {
     ebconfig: Ebconfig;
-    token: {};
-    refreshToken: {};
+    token: string;
+    refreshToken: string;
     integrationID: string;
     session: number;
     options: EasybaseProviderPropsOptions;
     instance: string;
     mounted: boolean;
+    newTokenCallback(): void;
 }

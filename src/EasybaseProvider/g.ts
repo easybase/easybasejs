@@ -2,13 +2,14 @@ import { Ebconfig, EasybaseProviderPropsOptions, Globals } from "./types";
 
 namespace GlobalNamespace {
     export let ebconfig: Ebconfig;
-    export let token: {};
-    export let refreshToken: {};
+    export let token: string;
+    export let refreshToken: string;
     export let integrationID: string;
     export let session: number;
     export let options: EasybaseProviderPropsOptions;
     export let instance: string;
     export let mounted: boolean;
+    export let newTokenCallback: () => {};
 }
 
 const _g: Globals = { ...GlobalNamespace };
