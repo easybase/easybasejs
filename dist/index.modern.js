@@ -1,4 +1,4 @@
-import axios from 'axios';
+import fetch from 'cross-fetch';
 import deepEqual from 'fast-deep-equal';
 
 function _extends() {
@@ -1137,21 +1137,26 @@ function authFactory(globals) {
     const integrationType = g.ebconfig.integration.split("-")[0].toUpperCase() === "PROJECT" ? "PROJECT" : "REACT";
 
     try {
-      const res = await axios.post(generateBareUrl(integrationType, g.integrationID), {
-        version: g.ebconfig.version,
-        session: g.session,
-        instance: g.instance,
-        userID,
-        password
-      }, {
+      const res = await fetch(generateBareUrl(integrationType, g.integrationID), {
+        method: "POST",
         headers: {
-          'Eb-Post-Req': POST_TYPES.HANDSHAKE
-        }
+          'Eb-Post-Req': POST_TYPES.HANDSHAKE,
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          version: g.ebconfig.version,
+          session: g.session,
+          instance: g.instance,
+          userID,
+          password
+        })
       });
+      const resData = await res.json();
 
-      if (res.data.token) {
-        g.token = res.data.token;
-        g.refreshToken = res.data.refreshToken;
+      if (resData.token) {
+        g.token = resData.token;
+        g.refreshToken = resData.refreshToken;
         g.newTokenCallback();
         g.mounted = true;
         const validTokenRes = await tokenPost(POST_TYPES.VALID_TOKEN);
@@ -1199,19 +1204,24 @@ function authFactory(globals) {
     const integrationType = g.ebconfig.integration.split("-")[0].toUpperCase() === "PROJECT" ? "PROJECT" : "REACT";
 
     try {
-      const res = await axios.post(generateBareUrl(integrationType, g.integrationID), {
-        version: g.ebconfig.version,
-        tt: g.ebconfig.tt,
-        session: g.session,
-        instance: g.instance
-      }, {
+      const res = await fetch(generateBareUrl(integrationType, g.integrationID), {
+        method: "POST",
         headers: {
-          'Eb-Post-Req': POST_TYPES.HANDSHAKE
-        }
+          'Eb-Post-Req': POST_TYPES.HANDSHAKE,
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          version: g.ebconfig.version,
+          tt: g.ebconfig.tt,
+          session: g.session,
+          instance: g.instance
+        })
       });
+      const resData = await res.json();
 
-      if (res.data.token) {
-        g.token = res.data.token;
+      if (resData.token) {
+        g.token = resData.token;
         g.mounted = true;
         const validTokenRes = await tokenPost(POST_TYPES.VALID_TOKEN);
         const elapsed = Date.now() - t1;
@@ -1239,16 +1249,21 @@ function authFactory(globals) {
     const integrationType = g.ebconfig.integration.split("-")[0].toUpperCase() === "PROJECT" ? "PROJECT" : "REACT";
 
     try {
-      const res = await axios.post(generateBareUrl(integrationType, g.integrationID), _extends({
-        _auth: generateAuthBody()
-      }, body), {
+      const res = await fetch(generateBareUrl(integrationType, g.integrationID), {
+        method: "POST",
         headers: {
-          'Eb-Post-Req': postType
-        }
+          'Eb-Post-Req': postType,
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(_extends({
+          _auth: generateAuthBody()
+        }, body))
       });
+      const resData = await res.json();
 
-      if ({}.hasOwnProperty.call(res.data, 'ErrorCode') || {}.hasOwnProperty.call(res.data, 'code')) {
-        if (res.data.code === "JWT EXPIRED") {
+      if ({}.hasOwnProperty.call(resData, 'ErrorCode') || {}.hasOwnProperty.call(resData, 'code')) {
+        if (resData.code === "JWT EXPIRED") {
           if (integrationType === "PROJECT") {
             const req_res = await tokenPost(POST_TYPES.REQUEST_TOKEN, {
               refreshToken: g.refreshToken,
@@ -1277,12 +1292,12 @@ function authFactory(globals) {
 
         return {
           success: false,
-          data: res.data.body
+          data: resData.body
         };
       } else {
         return {
-          success: res.data.success,
-          data: res.data.body
+          success: resData.success,
+          data: resData.body
         };
       }
     } catch (error) {
@@ -1307,15 +1322,18 @@ function authFactory(globals) {
     const integrationType = g.ebconfig.integration.split("-")[0].toUpperCase() === "PROJECT" ? "PROJECT" : "REACT";
 
     try {
-      const res = await axios.post(generateBareUrl(integrationType, g.integrationID), formData, {
+      const res = await fetch(generateBareUrl(integrationType, g.integrationID), {
+        method: "POST",
         headers: _extends({
           'Eb-Post-Req': POST_TYPES.UPLOAD_ATTACHMENT,
           'Content-Type': 'multipart/form-data'
-        }, customHeaders, attachmentAuth)
+        }, customHeaders, attachmentAuth),
+        body: formData
       });
+      const resData = await res.json();
 
-      if ({}.hasOwnProperty.call(res.data, 'ErrorCode') || {}.hasOwnProperty.call(res.data, 'code')) {
-        if (res.data.code === "JWT EXPIRED") {
+      if ({}.hasOwnProperty.call(resData, 'ErrorCode') || {}.hasOwnProperty.call(resData, 'code')) {
+        if (resData.code === "JWT EXPIRED") {
           if (integrationType === "PROJECT") {
             const req_res = await tokenPost(POST_TYPES.REQUEST_TOKEN, {
               refreshToken: g.refreshToken,
@@ -1344,12 +1362,12 @@ function authFactory(globals) {
 
         return {
           success: false,
-          data: res.data.body
+          data: resData.body
         };
       } else {
         return {
-          success: res.data.success,
-          data: res.data.body
+          success: resData.success,
+          data: resData.body
         };
       }
     } catch (error) {
@@ -1829,16 +1847,23 @@ function get(options) {
   if (isBadObject(customQuery)) throw new Error("customQuery must be an object or null");
   return new Promise((resolve, reject) => {
     try {
-      let axios_body = {};
-      if (typeof customQuery === "object") axios_body = _extends({}, customQuery);
-      if (offset !== undefined) axios_body.offset = offset;
-      if (limit !== undefined) axios_body.limit = limit;
-      if (authentication !== undefined) axios_body.authentication = authentication;
-      axios.post(generateBareUrl('get', integrationID), axios_body).then(res => {
-        if ({}.hasOwnProperty.call(res.data, 'ErrorCode')) {
-          console.error(res.data.message);
-          resolve([res.data.message]);
-        } else resolve(res.data);
+      let fetch_body = {};
+      if (typeof customQuery === "object") fetch_body = _extends({}, customQuery);
+      if (offset !== undefined) fetch_body.offset = offset;
+      if (limit !== undefined) fetch_body.limit = limit;
+      if (authentication !== undefined) fetch_body.authentication = authentication;
+      fetch(generateBareUrl('get', integrationID), {
+        method: "POST",
+        body: JSON.stringify(fetch_body),
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
+      }).then(res => res.json()).then(resData => {
+        if ({}.hasOwnProperty.call(resData, 'ErrorCode')) {
+          console.error(resData.message);
+          resolve([resData.message]);
+        } else resolve(resData);
       });
     } catch (err) {
       reject(err);
@@ -1873,13 +1898,20 @@ function post(options) {
   if (isBadBool(insertAtEnd)) throw new Error("insertAtEnd must be a boolean or null");
   return new Promise((resolve, reject) => {
     try {
-      const axios_body = _extends({}, newRecord);
+      const fetch_body = _extends({}, newRecord);
 
-      if (authentication !== undefined) axios_body.authentication = authentication;
-      if (insertAtEnd !== undefined) axios_body.insertAtEnd = insertAtEnd;
-      axios.post(generateBareUrl('post', integrationID), axios_body).then(res => {
-        if ({}.hasOwnProperty.call(res.data, 'ErrorCode')) console.error(res.data.message);
-        resolve(res.data.message);
+      if (authentication !== undefined) fetch_body.authentication = authentication;
+      if (insertAtEnd !== undefined) fetch_body.insertAtEnd = insertAtEnd;
+      fetch(generateBareUrl('post', integrationID), {
+        method: "POST",
+        body: JSON.stringify(fetch_body),
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
+      }).then(res => res.json()).then(resData => {
+        if ({}.hasOwnProperty.call(resData, 'ErrorCode')) console.error(resData.message);
+        resolve(resData);
       });
     } catch (err) {
       reject(err);
@@ -1913,14 +1945,21 @@ function update(options) {
   if (isBadObject(customQuery)) throw new Error("customQuery must be an object or null");
   return new Promise((resolve, reject) => {
     try {
-      const axios_body = _extends({
+      const fetch_body = _extends({
         updateValues
       }, customQuery);
 
-      if (authentication !== undefined) axios_body.authentication = authentication;
-      axios.post(generateBareUrl('update', integrationID), axios_body).then(res => {
-        if ({}.hasOwnProperty.call(res.data, 'ErrorCode')) console.error(res.data.message);
-        resolve(res.data.message);
+      if (authentication !== undefined) fetch_body.authentication = authentication;
+      fetch(generateBareUrl('update', integrationID), {
+        method: "POST",
+        body: JSON.stringify(fetch_body),
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
+      }).then(res => res.json()).then(resData => {
+        if ({}.hasOwnProperty.call(resData, 'ErrorCode')) console.error(resData.message);
+        resolve(resData.message);
       });
     } catch (err) {
       reject(err);
@@ -1951,12 +1990,19 @@ function Delete(options) {
   if (isBadObject(customQuery)) throw new Error("customQuery must be an object or null");
   return new Promise((resolve, reject) => {
     try {
-      const axios_body = _extends({}, customQuery);
+      const fetch_body = _extends({}, customQuery);
 
-      if (authentication !== undefined) axios_body.authentication = authentication;
-      axios.post(generateBareUrl('delete', integrationID), axios_body).then(res => {
-        if ({}.hasOwnProperty.call(res.data, 'ErrorCode')) console.error(res.data.message);
-        resolve(res.data.message);
+      if (authentication !== undefined) fetch_body.authentication = authentication;
+      fetch(generateBareUrl('delete', integrationID), {
+        method: "POST",
+        body: JSON.stringify(fetch_body),
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
+      }).then(res => res.json()).then(resData => {
+        if ({}.hasOwnProperty.call(resData, 'ErrorCode')) console.error(resData.message);
+        resolve(resData.message);
       });
     } catch (err) {
       reject(err);

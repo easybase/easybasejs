@@ -1,6 +1,6 @@
 function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
 
-var axios = _interopDefault(require('axios'));
+var fetch = _interopDefault(require('cross-fetch'));
 var deepEqual = _interopDefault(require('fast-deep-equal'));
 
 function _extends() {
@@ -1251,44 +1251,50 @@ function authFactory(globals) {
       g.session = Math.floor(100000000 + Math.random() * 900000000);
       var integrationType = g.ebconfig.integration.split("-")[0].toUpperCase() === "PROJECT" ? "PROJECT" : "REACT";
       return Promise.resolve(_catch(function () {
-        return Promise.resolve(axios.post(generateBareUrl(integrationType, g.integrationID), {
-          version: g.ebconfig.version,
-          session: g.session,
-          instance: g.instance,
-          userID: userID,
-          password: password
-        }, {
+        return Promise.resolve(fetch(generateBareUrl(integrationType, g.integrationID), {
+          method: "POST",
           headers: {
-            'Eb-Post-Req': POST_TYPES.HANDSHAKE
-          }
+            'Eb-Post-Req': POST_TYPES.HANDSHAKE,
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            version: g.ebconfig.version,
+            session: g.session,
+            instance: g.instance,
+            userID: userID,
+            password: password
+          })
         })).then(function (res) {
-          if (res.data.token) {
-            g.token = res.data.token;
-            g.refreshToken = res.data.refreshToken;
-            g.newTokenCallback();
-            g.mounted = true;
-            return Promise.resolve(tokenPost(POST_TYPES.VALID_TOKEN)).then(function (validTokenRes) {
-              var elapsed = Date.now() - t1;
+          return Promise.resolve(res.json()).then(function (resData) {
+            if (resData.token) {
+              g.token = resData.token;
+              g.refreshToken = resData.refreshToken;
+              g.newTokenCallback();
+              g.mounted = true;
+              return Promise.resolve(tokenPost(POST_TYPES.VALID_TOKEN)).then(function (validTokenRes) {
+                var elapsed = Date.now() - t1;
 
-              if (validTokenRes.success) {
-                log("Valid auth initiation in " + elapsed + "ms");
-                return {
-                  success: true,
-                  message: "Successfully signed in user"
-                };
-              } else {
-                return {
-                  success: false,
-                  message: "Could not sign in user"
-                };
-              }
-            });
-          } else {
-            return {
-              success: false,
-              message: "Could not sign in user"
-            };
-          }
+                if (validTokenRes.success) {
+                  log("Valid auth initiation in " + elapsed + "ms");
+                  return {
+                    success: true,
+                    message: "Successfully signed in user"
+                  };
+                } else {
+                  return {
+                    success: false,
+                    message: "Could not sign in user"
+                  };
+                }
+              });
+            } else {
+              return {
+                success: false,
+                message: "Could not sign in user"
+              };
+            }
+          });
         });
       }, function (error) {
         console.error(error);
@@ -1319,32 +1325,38 @@ function authFactory(globals) {
       log("Handshaking on" + g.instance + " instance");
       var integrationType = g.ebconfig.integration.split("-")[0].toUpperCase() === "PROJECT" ? "PROJECT" : "REACT";
       return Promise.resolve(_catch(function () {
-        return Promise.resolve(axios.post(generateBareUrl(integrationType, g.integrationID), {
-          version: g.ebconfig.version,
-          tt: g.ebconfig.tt,
-          session: g.session,
-          instance: g.instance
-        }, {
+        return Promise.resolve(fetch(generateBareUrl(integrationType, g.integrationID), {
+          method: "POST",
           headers: {
-            'Eb-Post-Req': POST_TYPES.HANDSHAKE
-          }
+            'Eb-Post-Req': POST_TYPES.HANDSHAKE,
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            version: g.ebconfig.version,
+            tt: g.ebconfig.tt,
+            session: g.session,
+            instance: g.instance
+          })
         })).then(function (res) {
-          if (res.data.token) {
-            g.token = res.data.token;
-            g.mounted = true;
-            return Promise.resolve(tokenPost(POST_TYPES.VALID_TOKEN)).then(function (validTokenRes) {
-              var elapsed = Date.now() - t1;
+          return Promise.resolve(res.json()).then(function (resData) {
+            if (resData.token) {
+              g.token = resData.token;
+              g.mounted = true;
+              return Promise.resolve(tokenPost(POST_TYPES.VALID_TOKEN)).then(function (validTokenRes) {
+                var elapsed = Date.now() - t1;
 
-              if (validTokenRes.success) {
-                log("Valid auth initiation in " + elapsed + "ms");
-                return true;
-              } else {
-                return false;
-              }
-            });
-          } else {
-            return false;
-          }
+                if (validTokenRes.success) {
+                  log("Valid auth initiation in " + elapsed + "ms");
+                  return true;
+                } else {
+                  return false;
+                }
+              });
+            } else {
+              return false;
+            }
+          });
         });
       }, function (error) {
         console.error(error);
@@ -1360,69 +1372,75 @@ function authFactory(globals) {
       var _temp7 = function _temp7() {
         var integrationType = g.ebconfig.integration.split("-")[0].toUpperCase() === "PROJECT" ? "PROJECT" : "REACT";
         return _catch(function () {
-          return Promise.resolve(axios.post(generateBareUrl(integrationType, g.integrationID), _extends({
-            _auth: generateAuthBody()
-          }, body), {
+          return Promise.resolve(fetch(generateBareUrl(integrationType, g.integrationID), {
+            method: "POST",
             headers: {
-              'Eb-Post-Req': postType
-            }
+              'Eb-Post-Req': postType,
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(_extends({
+              _auth: generateAuthBody()
+            }, body))
           })).then(function (res) {
-            var _exit;
+            return Promise.resolve(res.json()).then(function (resData) {
+              var _exit;
 
-            if ({}.hasOwnProperty.call(res.data, 'ErrorCode') || {}.hasOwnProperty.call(res.data, 'code')) {
-              var _temp9 = function _temp9(_result2) {
-                return _exit ? _result2 : {
-                  success: false,
-                  data: res.data.body
-                };
-              };
-
-              var _temp10 = function () {
-                if (res.data.code === "JWT EXPIRED") {
-                  var _temp11 = function _temp11(_result) {
-                    if (_exit) return _result;
-                    _exit = 1;
-                    return tokenPost(postType, body);
+              if ({}.hasOwnProperty.call(resData, 'ErrorCode') || {}.hasOwnProperty.call(resData, 'code')) {
+                var _temp9 = function _temp9(_result2) {
+                  return _exit ? _result2 : {
+                    success: false,
+                    data: resData.body
                   };
+                };
 
-                  var _temp12 = function () {
-                    if (integrationType === "PROJECT") {
-                      return Promise.resolve(tokenPost(POST_TYPES.REQUEST_TOKEN, {
-                        refreshToken: g.refreshToken,
-                        token: g.token
-                      })).then(function (req_res) {
-                        if (req_res.success) {
-                          g.token = req_res.data.token;
-                          g.newTokenCallback();
-                          _exit = 1;
-                          return tokenPost(postType, body);
-                        } else {
-                          g.token = "";
-                          g.refreshToken = "";
-                          g.newTokenCallback();
-                          _exit = 1;
-                          return {
-                            success: false,
-                            data: req_res.data
-                          };
-                        }
-                      });
-                    } else {
-                      return Promise.resolve(initAuth()).then(function () {});
-                    }
-                  }();
+                var _temp10 = function () {
+                  if (resData.code === "JWT EXPIRED") {
+                    var _temp11 = function _temp11(_result) {
+                      if (_exit) return _result;
+                      _exit = 1;
+                      return tokenPost(postType, body);
+                    };
 
-                  return _temp12 && _temp12.then ? _temp12.then(_temp11) : _temp11(_temp12);
-                }
-              }();
+                    var _temp12 = function () {
+                      if (integrationType === "PROJECT") {
+                        return Promise.resolve(tokenPost(POST_TYPES.REQUEST_TOKEN, {
+                          refreshToken: g.refreshToken,
+                          token: g.token
+                        })).then(function (req_res) {
+                          if (req_res.success) {
+                            g.token = req_res.data.token;
+                            g.newTokenCallback();
+                            _exit = 1;
+                            return tokenPost(postType, body);
+                          } else {
+                            g.token = "";
+                            g.refreshToken = "";
+                            g.newTokenCallback();
+                            _exit = 1;
+                            return {
+                              success: false,
+                              data: req_res.data
+                            };
+                          }
+                        });
+                      } else {
+                        return Promise.resolve(initAuth()).then(function () {});
+                      }
+                    }();
 
-              return _temp10 && _temp10.then ? _temp10.then(_temp9) : _temp9(_temp10);
-            } else {
-              return {
-                success: res.data.success,
-                data: res.data.body
-              };
-            }
+                    return _temp12 && _temp12.then ? _temp12.then(_temp11) : _temp11(_temp12);
+                  }
+                }();
+
+                return _temp10 && _temp10.then ? _temp10.then(_temp9) : _temp9(_temp10);
+              } else {
+                return {
+                  success: resData.success,
+                  data: resData.body
+                };
+              }
+            });
           });
         }, function (error) {
           return {
@@ -1455,68 +1473,72 @@ function authFactory(globals) {
         };
         var integrationType = g.ebconfig.integration.split("-")[0].toUpperCase() === "PROJECT" ? "PROJECT" : "REACT";
         return _catch(function () {
-          return Promise.resolve(axios.post(generateBareUrl(integrationType, g.integrationID), formData, {
+          return Promise.resolve(fetch(generateBareUrl(integrationType, g.integrationID), {
+            method: "POST",
             headers: _extends({
               'Eb-Post-Req': POST_TYPES.UPLOAD_ATTACHMENT,
               'Content-Type': 'multipart/form-data'
-            }, customHeaders, attachmentAuth)
+            }, customHeaders, attachmentAuth),
+            body: formData
           })).then(function (res) {
-            var _exit2;
+            return Promise.resolve(res.json()).then(function (resData) {
+              var _exit2;
 
-            if ({}.hasOwnProperty.call(res.data, 'ErrorCode') || {}.hasOwnProperty.call(res.data, 'code')) {
-              var _temp21 = function _temp21(_result4) {
-                return _exit2 ? _result4 : {
-                  success: false,
-                  data: res.data.body
-                };
-              };
-
-              var _temp22 = function () {
-                if (res.data.code === "JWT EXPIRED") {
-                  var _temp23 = function _temp23(_result3) {
-                    if (_exit2) return _result3;
-                    _exit2 = 1;
-                    return tokenPostAttachment(formData, customHeaders);
+              if ({}.hasOwnProperty.call(resData, 'ErrorCode') || {}.hasOwnProperty.call(resData, 'code')) {
+                var _temp21 = function _temp21(_result4) {
+                  return _exit2 ? _result4 : {
+                    success: false,
+                    data: resData.body
                   };
+                };
 
-                  var _temp24 = function () {
-                    if (integrationType === "PROJECT") {
-                      return Promise.resolve(tokenPost(POST_TYPES.REQUEST_TOKEN, {
-                        refreshToken: g.refreshToken,
-                        token: g.token
-                      })).then(function (req_res) {
-                        if (req_res.success) {
-                          g.token = req_res.data.token;
-                          g.newTokenCallback();
-                          _exit2 = 1;
-                          return tokenPostAttachment(formData, customHeaders);
-                        } else {
-                          g.token = "";
-                          g.refreshToken = "";
-                          g.newTokenCallback();
-                          _exit2 = 1;
-                          return {
-                            success: false,
-                            data: req_res.data
-                          };
-                        }
-                      });
-                    } else {
-                      return Promise.resolve(initAuth()).then(function () {});
-                    }
-                  }();
+                var _temp22 = function () {
+                  if (resData.code === "JWT EXPIRED") {
+                    var _temp23 = function _temp23(_result3) {
+                      if (_exit2) return _result3;
+                      _exit2 = 1;
+                      return tokenPostAttachment(formData, customHeaders);
+                    };
 
-                  return _temp24 && _temp24.then ? _temp24.then(_temp23) : _temp23(_temp24);
-                }
-              }();
+                    var _temp24 = function () {
+                      if (integrationType === "PROJECT") {
+                        return Promise.resolve(tokenPost(POST_TYPES.REQUEST_TOKEN, {
+                          refreshToken: g.refreshToken,
+                          token: g.token
+                        })).then(function (req_res) {
+                          if (req_res.success) {
+                            g.token = req_res.data.token;
+                            g.newTokenCallback();
+                            _exit2 = 1;
+                            return tokenPostAttachment(formData, customHeaders);
+                          } else {
+                            g.token = "";
+                            g.refreshToken = "";
+                            g.newTokenCallback();
+                            _exit2 = 1;
+                            return {
+                              success: false,
+                              data: req_res.data
+                            };
+                          }
+                        });
+                      } else {
+                        return Promise.resolve(initAuth()).then(function () {});
+                      }
+                    }();
 
-              return _temp22 && _temp22.then ? _temp22.then(_temp21) : _temp21(_temp22);
-            } else {
-              return {
-                success: res.data.success,
-                data: res.data.body
-              };
-            }
+                    return _temp24 && _temp24.then ? _temp24.then(_temp23) : _temp23(_temp24);
+                  }
+                }();
+
+                return _temp22 && _temp22.then ? _temp22.then(_temp21) : _temp21(_temp22);
+              } else {
+                return {
+                  success: resData.success,
+                  data: resData.body
+                };
+              }
+            });
           });
         }, function (error) {
           return {
@@ -2095,16 +2117,25 @@ function get(options) {
   if (isBadObject(customQuery)) throw new Error("customQuery must be an object or null");
   return new Promise(function (resolve, reject) {
     try {
-      var axios_body = {};
-      if (typeof customQuery === "object") axios_body = _extends({}, customQuery);
-      if (offset !== undefined) axios_body.offset = offset;
-      if (limit !== undefined) axios_body.limit = limit;
-      if (authentication !== undefined) axios_body.authentication = authentication;
-      axios.post(generateBareUrl('get', integrationID), axios_body).then(function (res) {
-        if ({}.hasOwnProperty.call(res.data, 'ErrorCode')) {
-          console.error(res.data.message);
-          resolve([res.data.message]);
-        } else resolve(res.data);
+      var fetch_body = {};
+      if (typeof customQuery === "object") fetch_body = _extends({}, customQuery);
+      if (offset !== undefined) fetch_body.offset = offset;
+      if (limit !== undefined) fetch_body.limit = limit;
+      if (authentication !== undefined) fetch_body.authentication = authentication;
+      fetch(generateBareUrl('get', integrationID), {
+        method: "POST",
+        body: JSON.stringify(fetch_body),
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
+      }).then(function (res) {
+        return res.json();
+      }).then(function (resData) {
+        if ({}.hasOwnProperty.call(resData, 'ErrorCode')) {
+          console.error(resData.message);
+          resolve([resData.message]);
+        } else resolve(resData);
       });
     } catch (err) {
       reject(err);
@@ -2138,13 +2169,22 @@ function post(options) {
   if (isBadBool(insertAtEnd)) throw new Error("insertAtEnd must be a boolean or null");
   return new Promise(function (resolve, reject) {
     try {
-      var axios_body = _extends({}, newRecord);
+      var fetch_body = _extends({}, newRecord);
 
-      if (authentication !== undefined) axios_body.authentication = authentication;
-      if (insertAtEnd !== undefined) axios_body.insertAtEnd = insertAtEnd;
-      axios.post(generateBareUrl('post', integrationID), axios_body).then(function (res) {
-        if ({}.hasOwnProperty.call(res.data, 'ErrorCode')) console.error(res.data.message);
-        resolve(res.data.message);
+      if (authentication !== undefined) fetch_body.authentication = authentication;
+      if (insertAtEnd !== undefined) fetch_body.insertAtEnd = insertAtEnd;
+      fetch(generateBareUrl('post', integrationID), {
+        method: "POST",
+        body: JSON.stringify(fetch_body),
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
+      }).then(function (res) {
+        return res.json();
+      }).then(function (resData) {
+        if ({}.hasOwnProperty.call(resData, 'ErrorCode')) console.error(resData.message);
+        resolve(resData);
       });
     } catch (err) {
       reject(err);
@@ -2177,14 +2217,23 @@ function update(options) {
   if (isBadObject(customQuery)) throw new Error("customQuery must be an object or null");
   return new Promise(function (resolve, reject) {
     try {
-      var axios_body = _extends({
+      var fetch_body = _extends({
         updateValues: updateValues
       }, customQuery);
 
-      if (authentication !== undefined) axios_body.authentication = authentication;
-      axios.post(generateBareUrl('update', integrationID), axios_body).then(function (res) {
-        if ({}.hasOwnProperty.call(res.data, 'ErrorCode')) console.error(res.data.message);
-        resolve(res.data.message);
+      if (authentication !== undefined) fetch_body.authentication = authentication;
+      fetch(generateBareUrl('update', integrationID), {
+        method: "POST",
+        body: JSON.stringify(fetch_body),
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
+      }).then(function (res) {
+        return res.json();
+      }).then(function (resData) {
+        if ({}.hasOwnProperty.call(resData, 'ErrorCode')) console.error(resData.message);
+        resolve(resData.message);
       });
     } catch (err) {
       reject(err);
@@ -2214,12 +2263,21 @@ function Delete(options) {
   if (isBadObject(customQuery)) throw new Error("customQuery must be an object or null");
   return new Promise(function (resolve, reject) {
     try {
-      var axios_body = _extends({}, customQuery);
+      var fetch_body = _extends({}, customQuery);
 
-      if (authentication !== undefined) axios_body.authentication = authentication;
-      axios.post(generateBareUrl('delete', integrationID), axios_body).then(function (res) {
-        if ({}.hasOwnProperty.call(res.data, 'ErrorCode')) console.error(res.data.message);
-        resolve(res.data.message);
+      if (authentication !== undefined) fetch_body.authentication = authentication;
+      fetch(generateBareUrl('delete', integrationID), {
+        method: "POST",
+        body: JSON.stringify(fetch_body),
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
+      }).then(function (res) {
+        return res.json();
+      }).then(function (resData) {
+        if ({}.hasOwnProperty.call(resData, 'ErrorCode')) console.error(resData.message);
+        resolve(resData.message);
       });
     } catch (err) {
       reject(err);

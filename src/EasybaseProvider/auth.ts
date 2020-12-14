@@ -1,7 +1,7 @@
-import axios from "axios";
 import { POST_TYPES, AuthPostResponse, Globals, StatusResponse } from "./types";
 import _g from "./g";
 import utilsFactory from "./utils";
+import fetch from 'cross-fetch';
 
 export default function authFactory(globals?: Globals): any {
     const g = globals || _g;
@@ -64,17 +64,27 @@ export default function authFactory(globals?: Globals): any {
         const integrationType = g.ebconfig.integration.split("-")[0].toUpperCase() === "PROJECT" ? "PROJECT" : "REACT";
 
         try {
-            const res = await axios.post(generateBareUrl(integrationType, g.integrationID), {
-                version: g.ebconfig.version,
-                session: g.session,
-                instance: g.instance,
-                userID,
-                password
-            }, { headers: { 'Eb-Post-Req': POST_TYPES.HANDSHAKE } });
+            const res = await fetch(generateBareUrl(integrationType, g.integrationID), {
+                method: "POST",
+                headers: {
+                    'Eb-Post-Req': POST_TYPES.HANDSHAKE,
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    version: g.ebconfig.version,
+                    session: g.session,
+                    instance: g.instance,
+                    userID,
+                    password
+                })
+            });
+
+            const resData = await res.json();
     
-            if (res.data.token) {
-                g.token = res.data.token;
-                g.refreshToken = res.data.refreshToken;
+            if (resData.token) {
+                g.token = resData.token;
+                g.refreshToken = resData.refreshToken;
                 g.newTokenCallback();
                 g.mounted = true;
                 const validTokenRes = await tokenPost(POST_TYPES.VALID_TOKEN);
@@ -123,15 +133,26 @@ export default function authFactory(globals?: Globals): any {
         const integrationType = g.ebconfig.integration.split("-")[0].toUpperCase() === "PROJECT" ? "PROJECT" : "REACT";
 
         try {
-            const res = await axios.post(generateBareUrl(integrationType, g.integrationID), {
-                version: g.ebconfig.version,
-                tt: g.ebconfig.tt,
-                session: g.session,
-                instance: g.instance
-            }, { headers: { 'Eb-Post-Req': POST_TYPES.HANDSHAKE } });
+
+            const res = await fetch(generateBareUrl(integrationType, g.integrationID), {
+                method: "POST",
+                headers: {
+                    'Eb-Post-Req': POST_TYPES.HANDSHAKE,
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    version: g.ebconfig.version,
+                    tt: g.ebconfig.tt,
+                    session: g.session,
+                    instance: g.instance
+                })
+            });
+
+            const resData = await res.json();
     
-            if (res.data.token) {
-                g.token = res.data.token;
+            if (resData.token) {
+                g.token = resData.token;
                 g.mounted = true;
                 const validTokenRes = await tokenPost(POST_TYPES.VALID_TOKEN);
                 const elapsed = Date.now() - t1;
@@ -158,13 +179,24 @@ export default function authFactory(globals?: Globals): any {
         const integrationType = g.ebconfig.integration.split("-")[0].toUpperCase() === "PROJECT" ? "PROJECT" : "REACT";
 
         try {
-            const res = await axios.post(generateBareUrl(integrationType, g.integrationID), {
-                _auth: generateAuthBody(),
-                ...body
-            }, { headers: { 'Eb-Post-Req': postType } });
-    
-            if ({}.hasOwnProperty.call(res.data, 'ErrorCode') || {}.hasOwnProperty.call(res.data, 'code')) {
-                if (res.data.code === "JWT EXPIRED") {
+
+            const res = await fetch(generateBareUrl(integrationType, g.integrationID), {
+                method: "POST",
+                headers: {
+                    'Eb-Post-Req': postType,
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    _auth: generateAuthBody(),
+                    ...body
+                })
+            });
+
+            const resData = await res.json();
+
+            if ({}.hasOwnProperty.call(resData, 'ErrorCode') || {}.hasOwnProperty.call(resData, 'code')) {
+                if (resData.code === "JWT EXPIRED") {
                     if (integrationType === "PROJECT") {
                         const req_res = await tokenPost(POST_TYPES.REQUEST_TOKEN, {
                             refreshToken: g.refreshToken,
@@ -192,12 +224,12 @@ export default function authFactory(globals?: Globals): any {
     
                 return {
                     success: false,
-                    data: res.data.body
+                    data: resData.body
                 }
             } else {
                 return {
-                    success: res.data.success,
-                    data: res.data.body
+                    success: resData.success,
+                    data: resData.body
                 }
             }
         } catch (error) {
@@ -225,17 +257,22 @@ export default function authFactory(globals?: Globals): any {
         const integrationType = g.ebconfig.integration.split("-")[0].toUpperCase() === "PROJECT" ? "PROJECT" : "REACT";
 
         try {
-            const res = await axios.post(generateBareUrl(integrationType, g.integrationID), formData, {
+
+            const res = await fetch(generateBareUrl(integrationType, g.integrationID), {
+                method: "POST",
                 headers: {
                     'Eb-Post-Req': POST_TYPES.UPLOAD_ATTACHMENT,
                     'Content-Type': 'multipart/form-data',
                     ...customHeaders,
                     ...attachmentAuth
-                }
+                },
+                body: formData
             });
-    
-            if ({}.hasOwnProperty.call(res.data, 'ErrorCode') || {}.hasOwnProperty.call(res.data, 'code')) {
-                if (res.data.code === "JWT EXPIRED") {
+
+            const resData = await res.json();
+
+            if ({}.hasOwnProperty.call(resData, 'ErrorCode') || {}.hasOwnProperty.call(resData, 'code')) {
+                if (resData.code === "JWT EXPIRED") {
                     if (integrationType === "PROJECT") {
                         const req_res = await tokenPost(POST_TYPES.REQUEST_TOKEN, {
                             refreshToken: g.refreshToken,
@@ -263,12 +300,12 @@ export default function authFactory(globals?: Globals): any {
     
                 return {
                     success: false,
-                    data: res.data.body
+                    data: resData.body
                 }
             } else {
                 return {
-                    success: res.data.success,
-                    data: res.data.body
+                    success: resData.success,
+                    data: resData.body
                 }
             }
         } catch (error) {

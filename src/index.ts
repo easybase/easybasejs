@@ -1,4 +1,4 @@
-import axios from 'axios';
+import fetch from 'cross-fetch';
 
 export { default as EasybaseProvider} from "./EasybaseProvider/EasybaseProvider";
 
@@ -47,19 +47,27 @@ export function get(options: GetOptions): Promise<Array<Record<string, unknown>>
 
     return new Promise((resolve, reject) => {
         try {
-            let axios_body: any = {};
-            if (typeof customQuery === "object") axios_body = { ...customQuery };
-            if (offset !== undefined) axios_body.offset = offset;
-            if (limit !== undefined) axios_body.limit = limit;
-            if (authentication !== undefined) axios_body.authentication = authentication;
+            let fetch_body: any = {};
+            if (typeof customQuery === "object") fetch_body = { ...customQuery };
+            if (offset !== undefined) fetch_body.offset = offset;
+            if (limit !== undefined) fetch_body.limit = limit;
+            if (authentication !== undefined) fetch_body.authentication = authentication;
 
-            axios.post(generateBareUrl('get', integrationID), axios_body)
-                .then(res => {
-                    if ({}.hasOwnProperty.call(res.data, 'ErrorCode')) {
-                        console.error(res.data.message);
-                        resolve([ res.data.message ]);
-                    } else resolve(res.data);
-                })
+            fetch(generateBareUrl('get', integrationID), {
+                method: "POST",
+                body: JSON.stringify(fetch_body),
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(res => res.json())
+            .then(resData => {
+                if ({}.hasOwnProperty.call(resData, 'ErrorCode')) {
+                    console.error(resData.message);
+                    resolve([ resData.message ]);
+                } else resolve(resData);
+            });
         }
         catch (err) { reject(err); }
     });
@@ -102,15 +110,23 @@ export function post(options: PostOptions): Promise<string> {
 
     return new Promise((resolve, reject) => {
         try {
-            const axios_body: any = { ...newRecord };
-            if (authentication !== undefined) axios_body.authentication = authentication;
-            if (insertAtEnd !== undefined) axios_body.insertAtEnd = insertAtEnd;
+            const fetch_body: any = { ...newRecord };
+            if (authentication !== undefined) fetch_body.authentication = authentication;
+            if (insertAtEnd !== undefined) fetch_body.insertAtEnd = insertAtEnd;
 
-            axios.post(generateBareUrl('post', integrationID), axios_body)
-                .then(res => {
-                    if ({}.hasOwnProperty.call(res.data, 'ErrorCode')) console.error(res.data.message);
-                    resolve(res.data.message);
-                })
+            fetch(generateBareUrl('post', integrationID), {
+                method: "POST",
+                body: JSON.stringify(fetch_body),
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(res => res.json())
+            .then(resData => {
+                if ({}.hasOwnProperty.call(resData, 'ErrorCode')) console.error(resData.message);
+                resolve(resData);
+            });
         }
         catch (err) { reject(err); }
     });
@@ -150,14 +166,22 @@ export function update(options: UpdateOptions): Promise<string> {
 
     return new Promise((resolve, reject) => {
         try {
-            const axios_body: any = { updateValues, ...customQuery };
-            if (authentication !== undefined) axios_body.authentication = authentication;
+            const fetch_body: any = { updateValues, ...customQuery };
+            if (authentication !== undefined) fetch_body.authentication = authentication;
 
-            axios.post(generateBareUrl('update', integrationID), axios_body)
-                .then(res => {
-                    if ({}.hasOwnProperty.call(res.data, 'ErrorCode')) console.error(res.data.message);
-                    resolve(res.data.message);
-                })
+            fetch(generateBareUrl('update', integrationID), {
+                method: "POST",
+                body: JSON.stringify(fetch_body),
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(res => res.json())
+            .then(resData => {
+                if ({}.hasOwnProperty.call(resData, 'ErrorCode')) console.error(resData.message);
+                resolve(resData.message);
+            });
         }
         catch (err) { reject(err); }
     });
@@ -194,14 +218,22 @@ export function Delete(options: DeleteOptions): Promise<string> {
 
     return new Promise((resolve, reject) => {
         try {
-            const axios_body: any = { ...customQuery };
-            if (authentication !== undefined) axios_body.authentication = authentication;
+            const fetch_body: any = { ...customQuery };
+            if (authentication !== undefined) fetch_body.authentication = authentication;
 
-            axios.post(generateBareUrl('delete', integrationID), axios_body)
-                .then(res => {
-                    if ({}.hasOwnProperty.call(res.data, 'ErrorCode')) console.error(res.data.message);
-                    resolve(res.data.message);
-                })
+            fetch(generateBareUrl('delete', integrationID), {
+                method: "POST",
+                body: JSON.stringify(fetch_body),
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(res => res.json())
+            .then(resData => {
+                if ({}.hasOwnProperty.call(resData, 'ErrorCode')) console.error(resData.message);
+                resolve(resData.message);
+            });
         }
         catch (err) { reject(err); }
     });

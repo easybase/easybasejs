@@ -17,6 +17,15 @@ async function main() {
 
     const tableTypes = await b.tableTypes("table name optional");
     console.log(tableTypes);
+
+    console.log("---------\n");
+
+    const data = await Easybase.get({
+        integrationID: "Jbw2xmrIM-ly1Inb",
+        limit: 10,
+        offset: 0
+    });
+    console.log(data);
 }
 
 main();

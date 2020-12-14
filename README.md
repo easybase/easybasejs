@@ -63,7 +63,7 @@
 
 * [microbundle](https://github.com/developit/microbundle)
 * [webpack](https://webpack.js.org/)
-* [axios](https://github.com/axios/axios)
+* [cross-fetch](https://github.com/lquixada/cross-fetch)
 * [Easybase.io](https://easybase.io)
 * [object-observer](https://github.com/gullerya/object-observer)
 
