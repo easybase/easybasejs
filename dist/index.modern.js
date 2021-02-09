@@ -1325,8 +1325,7 @@ function authFactory(globals) {
       const res = await fetch(generateBareUrl(integrationType, g.integrationID), {
         method: "POST",
         headers: _extends({
-          'Eb-Post-Req': POST_TYPES.UPLOAD_ATTACHMENT,
-          'Content-Type': 'multipart/form-data'
+          'Eb-Post-Req': POST_TYPES.UPLOAD_ATTACHMENT
         }, customHeaders, attachmentAuth),
         body: formData
       });

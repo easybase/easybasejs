@@ -262,7 +262,6 @@ export default function authFactory(globals?: Globals): any {
                 method: "POST",
                 headers: {
                     'Eb-Post-Req': POST_TYPES.UPLOAD_ATTACHMENT,
-                    'Content-Type': 'multipart/form-data',
                     ...customHeaders,
                     ...attachmentAuth
                 },
