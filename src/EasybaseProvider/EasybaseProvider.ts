@@ -17,7 +17,7 @@ import imageExtensions from "./assets/image-extensions.json";
 import videoExtensions from "./assets/video-extensions.json";
 import authFactory from "./auth";
 import utilsFactory from "./utils";
-import functionsFactory from "./functions";
+import tableFactory from "./table";
 
 export default function EasybaseProvider({ ebconfig, options }: EasybaseProviderProps): ContextValue {
 
@@ -38,7 +38,7 @@ export default function EasybaseProvider({ ebconfig, options }: EasybaseProvider
         Query,
         fullTableSize,
         tableTypes
-    } = functionsFactory(g);
+    } = tableFactory(g);
 
     const { log } = utilsFactory(g);
 

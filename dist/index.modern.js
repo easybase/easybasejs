@@ -1390,7 +1390,7 @@ function authFactory(globals) {
   };
 }
 
-function functionsFactory(globals) {
+function tableFactory(globals) {
   const g = globals || _g;
   const {
     tokenPost
@@ -1461,7 +1461,7 @@ function EasybaseProvider({
     Query,
     fullTableSize,
     tableTypes
-  } = functionsFactory(g);
+  } = tableFactory(g);
   const {
     log
   } = utilsFactory(g);
@@ -2008,6 +2008,25 @@ function Delete(options) {
     }
   });
 }
+/**
+ * @async
+ * Call a cloud function, created in Easybase interface.
+ * @param {string} route Route as detailed in Easybase. Found under 'Deploy'. Will be in the form of ####...####-function-name.
+ * @param {Record<string, any>} postBody Optional object to pass as the body of the POST request. This object will available in your cloud function's event.body.
+ * @return {Promise<string | undefined>} Response from your cloud function. Detailed with a call to 'return context.succeed("RESPONSE")'.
+ */
 
-export { Delete, EasybaseProvider, get, post, update };
+async function callFunction(route, postBody) {
+  const res = await fetch(generateBareUrl('function', route.split("/").pop()), {
+    method: "POST",
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(postBody) || ""
+  });
+  const rawDataText = await res.text();
+  return rawDataText;
+}
+
+export { Delete, EasybaseProvider, callFunction, get, post, update };
 //# sourceMappingURL=index.modern.js.map

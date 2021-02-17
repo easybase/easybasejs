@@ -7,7 +7,7 @@ import _g from "./g";
 
 import authFactory from "./auth";
 
-export default function functionsFactory(globals?: Globals): any {
+export default function tableFactory(globals?: Globals): any {
 
     const g = globals || _g;
 

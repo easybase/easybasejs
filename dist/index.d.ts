@@ -65,3 +65,11 @@ interface DeleteOptions {
  * @return {Promise<String>} Delete status.
  */
 export declare function Delete(options: DeleteOptions): Promise<string>;
+/**
+ * @async
+ * Call a cloud function, created in Easybase interface.
+ * @param {string} route Route as detailed in Easybase. Found under 'Deploy'. Will be in the form of ####...####-function-name.
+ * @param {Record<string, any>} postBody Optional object to pass as the body of the POST request. This object will available in your cloud function's event.body.
+ * @return {Promise<string | undefined>} Response from your cloud function. Detailed with a call to 'return context.succeed("RESPONSE")'.
+ */
+export declare function callFunction(route: string, postBody?: Record<string, any>): Promise<string | undefined>;

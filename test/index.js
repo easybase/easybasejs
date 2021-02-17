@@ -26,6 +26,9 @@ async function main() {
         offset: 0
     });
     console.log(data);
+
+    const res = await Easybase.callFunction("d6f217bde0b6b4d2a1d9138be901e3d8-new-hello-2", {cap: "D"});
+    console.log(res);
 }
 
 main();

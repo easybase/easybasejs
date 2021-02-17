@@ -1,2 +1,3 @@
-import { Globals } from "./types";
-export default function functionsFactory(globals?: Globals): any;
+export default function functionsFactory(globals?: any): {
+    callFunction: (route: string, postBody?: Record<string, any>) => Promise<string | undefined>;
+};

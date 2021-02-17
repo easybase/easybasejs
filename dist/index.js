@@ -1586,7 +1586,7 @@ function _catch$1(body, recover) {
   return result;
 }
 
-function functionsFactory(globals) {
+function tableFactory(globals) {
   var tableTypes = function tableTypes(tableName) {
     try {
       return Promise.resolve(tokenPost(POST_TYPES.COLUMN_TYPES, tableName ? {
@@ -1680,10 +1680,10 @@ function EasybaseProvider(_ref) {
       signIn = _authFactory.signIn,
       signOut = _authFactory.signOut;
 
-  var _functionsFactory = functionsFactory(g),
-      Query = _functionsFactory.Query,
-      fullTableSize = _functionsFactory.fullTableSize,
-      tableTypes = _functionsFactory.tableTypes;
+  var _tableFactory = tableFactory(g),
+      Query = _tableFactory.Query,
+      fullTableSize = _tableFactory.fullTableSize,
+      tableTypes = _tableFactory.tableTypes;
 
   var _utilsFactory = utilsFactory(g),
       log = _utilsFactory.log;
@@ -2062,6 +2062,29 @@ function EasybaseProvider(_ref) {
   return c;
 }
 
+/**
+ * @async
+ * Call a cloud function, created in Easybase interface.
+ * @param {string} route Route as detailed in Easybase. Found under 'Deploy'. Will be in the form of ####...####-function-name.
+ * @param {Record<string, any>} postBody Optional object to pass as the body of the POST request. This object will available in your cloud function's event.body.
+ * @return {Promise<string | undefined>} Response from your cloud function. Detailed with a call to 'return context.succeed("RESPONSE")'.
+ */
+var callFunction = function callFunction(route, postBody) {
+  try {
+    return Promise.resolve(fetch(generateBareUrl('function', route.split("/").pop()), {
+      method: "POST",
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(postBody) || ""
+    })).then(function (res) {
+      return Promise.resolve(res.text());
+    });
+  } catch (e) {
+    return Promise.reject(e);
+  }
+};
+
 var generateBareUrl = function generateBareUrl(type, integrationID) {
   return "https://api.easybase.io/" + type + "/" + integrationID;
 };
@@ -2286,6 +2309,7 @@ function Delete(options) {
 
 exports.Delete = Delete;
 exports.EasybaseProvider = EasybaseProvider;
+exports.callFunction = callFunction;
 exports.get = get;
 exports.post = post;
 exports.update = update;

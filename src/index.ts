@@ -1,6 +1,6 @@
 import fetch from 'cross-fetch';
 
-export { default as EasybaseProvider} from "./EasybaseProvider/EasybaseProvider";
+export { default as EasybaseProvider } from "./EasybaseProvider/EasybaseProvider";
 
 const generateBareUrl = (type, integrationID) => `https://api.easybase.io/${type}/${integrationID}`;
 const isBadInt = (my_int) => my_int !== undefined && my_int !== null && Math.floor(my_int) !== my_int;
@@ -29,7 +29,7 @@ interface GetOptions {
  * 
  */
 export function get(options: GetOptions): Promise<Array<Record<string, unknown>>> {
-    
+
     const defaultOptions: GetOptions = {
         integrationID: "",
         offset: undefined,
@@ -61,13 +61,13 @@ export function get(options: GetOptions): Promise<Array<Record<string, unknown>>
                     'Content-Type': 'application/json'
                 }
             })
-            .then(res => res.json())
-            .then(resData => {
-                if ({}.hasOwnProperty.call(resData, 'ErrorCode')) {
-                    console.error(resData.message);
-                    resolve([ resData.message ]);
-                } else resolve(resData);
-            });
+                .then(res => res.json())
+                .then(resData => {
+                    if ({}.hasOwnProperty.call(resData, 'ErrorCode')) {
+                        console.error(resData.message);
+                        resolve([resData.message]);
+                    } else resolve(resData);
+                });
         }
         catch (err) { reject(err); }
     });
@@ -122,11 +122,11 @@ export function post(options: PostOptions): Promise<string> {
                     'Content-Type': 'application/json'
                 }
             })
-            .then(res => res.json())
-            .then(resData => {
-                if ({}.hasOwnProperty.call(resData, 'ErrorCode')) console.error(resData.message);
-                resolve(resData);
-            });
+                .then(res => res.json())
+                .then(resData => {
+                    if ({}.hasOwnProperty.call(resData, 'ErrorCode')) console.error(resData.message);
+                    resolve(resData);
+                });
         }
         catch (err) { reject(err); }
     });
@@ -177,11 +177,11 @@ export function update(options: UpdateOptions): Promise<string> {
                     'Content-Type': 'application/json'
                 }
             })
-            .then(res => res.json())
-            .then(resData => {
-                if ({}.hasOwnProperty.call(resData, 'ErrorCode')) console.error(resData.message);
-                resolve(resData.message);
-            });
+                .then(res => res.json())
+                .then(resData => {
+                    if ({}.hasOwnProperty.call(resData, 'ErrorCode')) console.error(resData.message);
+                    resolve(resData.message);
+                });
         }
         catch (err) { reject(err); }
     });
@@ -229,12 +229,34 @@ export function Delete(options: DeleteOptions): Promise<string> {
                     'Content-Type': 'application/json'
                 }
             })
-            .then(res => res.json())
-            .then(resData => {
-                if ({}.hasOwnProperty.call(resData, 'ErrorCode')) console.error(resData.message);
-                resolve(resData.message);
-            });
+                .then(res => res.json())
+                .then(resData => {
+                    if ({}.hasOwnProperty.call(resData, 'ErrorCode')) console.error(resData.message);
+                    resolve(resData.message);
+                });
         }
         catch (err) { reject(err); }
     });
+}
+
+/**
+ * @async
+ * Call a cloud function, created in Easybase interface.
+ * @param {string} route Route as detailed in Easybase. Found under 'Deploy'. Will be in the form of ####...####-function-name.
+ * @param {Record<string, any>} postBody Optional object to pass as the body of the POST request. This object will available in your cloud function's event.body.
+ * @return {Promise<string | undefined>} Response from your cloud function. Detailed with a call to 'return context.succeed("RESPONSE")'.
+ */
+export async function callFunction(route: string, postBody?: Record<string, any>): Promise<string | undefined> {
+
+    const res = await fetch(generateBareUrl('function', route.split("/").pop()), {
+        method: "POST",
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(postBody) || ""
+    });
+
+    const rawDataText = await res.text();
+
+    return rawDataText;
 }
