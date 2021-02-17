@@ -244,9 +244,9 @@ export function Delete(options: DeleteOptions): Promise<string> {
  * Call a cloud function, created in Easybase interface.
  * @param {string} route Route as detailed in Easybase. Found under 'Deploy'. Will be in the form of ####...####-function-name.
  * @param {Record<string, any>} postBody Optional object to pass as the body of the POST request. This object will available in your cloud function's event.body.
- * @return {Promise<string | undefined>} Response from your cloud function. Detailed with a call to 'return context.succeed("RESPONSE")'.
+ * @return {Promise<string>} Response from your cloud function. Detailed with a call to 'return context.succeed("RESPONSE")'.
  */
-export async function callFunction(route: string, postBody?: Record<string, any>): Promise<string | undefined> {
+export async function callFunction(route: string, postBody?: Record<string, any>): Promise<string> {
 
     const res = await fetch(generateBareUrl('function', route.split("/").pop()), {
         method: "POST",
@@ -257,6 +257,5 @@ export async function callFunction(route: string, postBody?: Record<string, any>
     });
 
     const rawDataText = await res.text();
-
     return rawDataText;
 }
