@@ -1,7 +1,7 @@
 {
   "name": "easybasejs",
   "version": "3.1.1",
-  "description": "Browser and Node.js package for use with EasyBase.io",
+  "description": "Browser and Node.js package for use with Easybase.io",
   "license": "MIT",
   "source": "src/index.ts",
   "main": "dist/index.js",
@@ -40,6 +40,7 @@
   },
   "dependencies": {
     "@glidejs/glide": "^3.4.1",
+    "EasyQB": "git+https://github.com/easybase/EasyQB.git",
     "cross-fetch": "^3.0.6",
     "fast-deep-equal": "^3.1.3"
   }

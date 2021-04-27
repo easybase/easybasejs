@@ -2,6 +2,7 @@ function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'defau
 
 var fetch = _interopDefault(require('cross-fetch'));
 var deepEqual = _interopDefault(require('fast-deep-equal'));
+var easyqb = _interopDefault(require('EasyQB'));
 
 function _extends() {
   _extends = Object.assign || function (target) {
@@ -86,6 +87,7 @@ var POST_TYPES;
   POST_TYPES["SET_ATTRIBUTE"] = "set_attribute";
   POST_TYPES["SIGN_UP"] = "sign_up";
   POST_TYPES["REQUEST_TOKEN"] = "request_token";
+  POST_TYPES["EASY_QB"] = "easyqb";
 })(POST_TYPES || (POST_TYPES = {}));
 
 var GlobalNamespace;
@@ -1651,6 +1653,57 @@ function tableFactory(globals) {
   };
 }
 
+function dbFactory(globals) {
+  var g = globals || _g;
+
+  var _authFactory = authFactory(g),
+      tokenPost = _authFactory.tokenPost;
+
+  var allCallback = function allCallback(trx, tableName) {
+    try {
+      trx.count = "all";
+      trx.tableName = tableName;
+      return Promise.resolve(tokenPost(POST_TYPES.EASY_QB, trx)).then(function (res) {
+        if (res.success) {
+          return res.data;
+        } else {
+          return res;
+        }
+      });
+    } catch (e) {
+      return Promise.reject(e);
+    }
+  };
+
+  var oneCallback = function oneCallback(trx, tableName) {
+    try {
+      trx.count = "one";
+      trx.tableName = tableName;
+      return Promise.resolve(tokenPost(POST_TYPES.EASY_QB, trx)).then(function (res) {
+        if (res.success) {
+          return res.data;
+        } else {
+          return res;
+        }
+      });
+    } catch (e) {
+      return Promise.reject(e);
+    }
+  };
+
+  var db = function db(tableName) {
+    return easyqb({
+      allCallback: allCallback,
+      oneCallback: oneCallback,
+      tableName: tableName || "untable"
+    })(tableName || "untable");
+  };
+
+  return {
+    db: db
+  };
+}
+
 function _catch$2(body, recover) {
   try {
     var result = body();
@@ -1684,6 +1737,9 @@ function EasybaseProvider(_ref) {
       Query = _tableFactory.Query,
       fullTableSize = _tableFactory.fullTableSize,
       tableTypes = _tableFactory.tableTypes;
+
+  var _dbFactory = dbFactory(g),
+      db = _dbFactory.db;
 
   var _utilsFactory = utilsFactory(g),
       log = _utilsFactory.log;
@@ -2040,24 +2096,28 @@ function EasybaseProvider(_ref) {
   };
 
   var c = {
+    /** +++ Will be deprecated */
     configureFrame: configureFrame,
     addRecord: addRecord,
     deleteRecord: deleteRecord,
     sync: sync,
+    Frame: Frame,
+    currentConfiguration: currentConfiguration,
+
+    /** --- */
     updateRecordImage: updateRecordImage,
     updateRecordVideo: updateRecordVideo,
     updateRecordFile: updateRecordFile,
-    Frame: Frame,
     fullTableSize: fullTableSize,
     tableTypes: tableTypes,
-    currentConfiguration: currentConfiguration,
     Query: Query,
     isUserSignedIn: isUserSignedIn,
     signIn: signIn,
     signOut: signOut,
     signUp: signUp,
     setUserAttribute: setUserAttribute,
-    getUserAttributes: getUserAttributes
+    getUserAttributes: getUserAttributes,
+    db: db
   };
   return c;
 }

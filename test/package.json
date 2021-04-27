@@ -5,7 +5,8 @@
   "main": "index.js",
   "source": "index.js",
   "scripts": {
-    "run": "node ./index.js"
+    "test:speed": "node ./index.js",
+    "test:db": "node ./db.js"
   },
   "author": "",
   "license": "ISC",

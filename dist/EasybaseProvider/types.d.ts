@@ -1,3 +1,4 @@
+import { SQW } from "EasyQB/types/sq";
 export interface ConfigureFrameOptions {
     /** Edit starting index from which records will be retrieved from. Useful for paging. */
     offset?: number;
@@ -103,7 +104,8 @@ export declare enum POST_TYPES {
     USER_ATTRIBUTES = "user_attributes",
     SET_ATTRIBUTE = "set_attribute",
     SIGN_UP = "sign_up",
-    REQUEST_TOKEN = "request_token"
+    REQUEST_TOKEN = "request_token",
+    EASY_QB = "easyqb"
 }
 export interface AuthPostResponse {
     success: boolean;
@@ -270,6 +272,12 @@ export interface ContextValue {
      * @return {Promise<Record<string, any>[]>} Isolated array of records in the same form as Frame(). Editing this array has no effect and cannot be synced with your database. Use Frame() for realtime database features.
      */
     Query(options: QueryOptions): Promise<Record<string, any>[]>;
+    /**
+     * Instantiate EasyQB instance for dynamic CRUD query building: https://easybase.github.io/EasyQB/
+     * @param {string} [tableName] Name of your table.
+     * @returns {SQW} EasyQB object for dynamic querying: https://easybase.github.io/EasyQB/
+     */
+    db(tableName?: string): SQW;
 }
 export interface Globals {
     ebconfig: Ebconfig;

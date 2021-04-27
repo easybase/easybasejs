@@ -179,7 +179,6 @@ export default function authFactory(globals?: Globals): any {
         const integrationType = g.ebconfig.integration.split("-")[0].toUpperCase() === "PROJECT" ? "PROJECT" : "REACT";
 
         try {
-
             const res = await fetch(generateBareUrl(integrationType, g.integrationID), {
                 method: "POST",
                 headers: {
@@ -257,7 +256,6 @@ export default function authFactory(globals?: Globals): any {
         const integrationType = g.ebconfig.integration.split("-")[0].toUpperCase() === "PROJECT" ? "PROJECT" : "REACT";
 
         try {
-
             const res = await fetch(generateBareUrl(integrationType, g.integrationID), {
                 method: "POST",
                 headers: {

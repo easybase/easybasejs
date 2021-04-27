@@ -1,5 +1,6 @@
 import fetch from 'cross-fetch';
 import deepEqual from 'fast-deep-equal';
+import easyqb from 'EasyQB';
 
 function _extends() {
   _extends = Object.assign || function (target) {
@@ -36,6 +37,7 @@ var POST_TYPES;
   POST_TYPES["SET_ATTRIBUTE"] = "set_attribute";
   POST_TYPES["SIGN_UP"] = "sign_up";
   POST_TYPES["REQUEST_TOKEN"] = "request_token";
+  POST_TYPES["EASY_QB"] = "easyqb";
 })(POST_TYPES || (POST_TYPES = {}));
 
 var GlobalNamespace;
@@ -1442,6 +1444,47 @@ function tableFactory(globals) {
   };
 }
 
+function dbFactory(globals) {
+  const g = globals || _g;
+  const {
+    tokenPost
+  } = authFactory(g);
+
+  const allCallback = async (trx, tableName) => {
+    trx.count = "all";
+    trx.tableName = tableName;
+    const res = await tokenPost(POST_TYPES.EASY_QB, trx);
+
+    if (res.success) {
+      return res.data;
+    } else {
+      return res;
+    }
+  };
+
+  const oneCallback = async (trx, tableName) => {
+    trx.count = "one";
+    trx.tableName = tableName;
+    const res = await tokenPost(POST_TYPES.EASY_QB, trx);
+
+    if (res.success) {
+      return res.data;
+    } else {
+      return res;
+    }
+  };
+
+  const db = tableName => easyqb({
+    allCallback,
+    oneCallback,
+    tableName: tableName || "untable"
+  })(tableName || "untable");
+
+  return {
+    db
+  };
+}
+
 function EasybaseProvider({
   ebconfig,
   options
@@ -1462,6 +1505,9 @@ function EasybaseProvider({
     fullTableSize,
     tableTypes
   } = tableFactory(g);
+  const {
+    db
+  } = dbFactory(g);
   const {
     log
   } = utilsFactory(g);
@@ -1781,24 +1827,28 @@ function EasybaseProvider({
   };
 
   const c = {
+    /** +++ Will be deprecated */
     configureFrame,
     addRecord,
     deleteRecord,
     sync,
+    Frame,
+    currentConfiguration,
+
+    /** --- */
     updateRecordImage,
     updateRecordVideo,
     updateRecordFile,
-    Frame,
     fullTableSize,
     tableTypes,
-    currentConfiguration,
     Query,
     isUserSignedIn,
     signIn,
     signOut,
     signUp,
     setUserAttribute,
-    getUserAttributes
+    getUserAttributes,
+    db
   };
   return c;
 }

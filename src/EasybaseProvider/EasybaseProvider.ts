@@ -18,6 +18,7 @@ import videoExtensions from "./assets/video-extensions.json";
 import authFactory from "./auth";
 import utilsFactory from "./utils";
 import tableFactory from "./table";
+import dbFactory from './db';
 
 export default function EasybaseProvider({ ebconfig, options }: EasybaseProviderProps): ContextValue {
 
@@ -39,6 +40,8 @@ export default function EasybaseProvider({ ebconfig, options }: EasybaseProvider
         fullTableSize,
         tableTypes
     } = tableFactory(g);
+
+    const { db } = dbFactory(g);
 
     const { log } = utilsFactory(g);
 
@@ -352,24 +355,27 @@ export default function EasybaseProvider({ ebconfig, options }: EasybaseProvider
     }
 
     const c: ContextValue = {
+        /** +++ Will be deprecated */
         configureFrame,
         addRecord,
         deleteRecord,
         sync,
+        Frame,
+        currentConfiguration,
+        /** --- */
         updateRecordImage,
         updateRecordVideo,
         updateRecordFile,
-        Frame,
         fullTableSize,
         tableTypes,
-        currentConfiguration,
         Query,
         isUserSignedIn,
         signIn,
         signOut,
         signUp,
         setUserAttribute,
-        getUserAttributes
+        getUserAttributes,
+        db
     }
 
     return c;
