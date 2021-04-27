@@ -8,9 +8,10 @@ export default function dbFactory(globals?: any): { db: (tableName: string) => S
     const g = globals || _g;
     const { tokenPost } = authFactory(g);
 
-    const allCallback = async (trx: any, tableName: String): Promise<Record<string, any>[] | number> => {
+    const allCallback = async (trx: any, tableName: String, userAssociatedRecordsOnly?: boolean): Promise<Record<string, any>[] | number> => {
         trx.count = "all";
         trx.tableName = tableName;
+        if (userAssociatedRecordsOnly) trx.userAssociatedRecordsOnly = userAssociatedRecordsOnly;
         const res = await tokenPost(POST_TYPES.EASY_QB, trx);
         if (res.success) {
             return res.data;
@@ -19,9 +20,10 @@ export default function dbFactory(globals?: any): { db: (tableName: string) => S
         }
     }
 
-    const oneCallback = async (trx: any, tableName: String): Promise<Record<string, any> | number> => {
+    const oneCallback = async (trx: any, tableName: String, userAssociatedRecordsOnly?: boolean): Promise<Record<string, any> | number> => {
         trx.count = "one";
         trx.tableName = tableName;
+        if (userAssociatedRecordsOnly) trx.userAssociatedRecordsOnly = userAssociatedRecordsOnly;
         const res = await tokenPost(POST_TYPES.EASY_QB, trx);
         if (res.success) {
             return res.data;
@@ -30,6 +32,6 @@ export default function dbFactory(globals?: any): { db: (tableName: string) => S
         }
     }
 
-    const db = (tableName?: string) => easyqb({ allCallback, oneCallback, tableName: tableName || "untable" })(tableName || "untable");
+    const db = (tableName?: string, userAssociatedRecordsOnly?: boolean) => easyqb({ allCallback, oneCallback, userAssociatedRecordsOnly, tableName: tableName || "untable" })(tableName || "untable");
     return { db }
 }

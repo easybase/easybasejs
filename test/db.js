@@ -12,11 +12,10 @@ async function db() {
     // console.log(await table.insert({ "app name": 'should be zero', _position: 0 }).one());
     // console.log(await table.insert({ "app name": 'three', _position: 3 }).one())
     // console.log(await table.insert({ "app name": 'woo1', _position: 0, rating: 54 }, { "app name": 'woo2', _position: 0 }).one());
-    delete table.query;
-    console.log(await table.return().where(e.notLike('App Name', '%2')).one());
+    console.log(await table.return().where(e.like('App Name', '%2')).all());
 
     let page = 0;
-    // let res = await table.return().limit(10).all()
+    // console.log(await table.return().limit(10).all());
     console.log(`1 individual request: ${getMsFromHrTime(process.hrtime(oneTime))} MS`);
 }
 

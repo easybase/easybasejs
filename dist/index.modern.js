@@ -1450,9 +1450,10 @@ function dbFactory(globals) {
     tokenPost
   } = authFactory(g);
 
-  const allCallback = async (trx, tableName) => {
+  const allCallback = async (trx, tableName, userAssociatedRecordsOnly) => {
     trx.count = "all";
     trx.tableName = tableName;
+    if (userAssociatedRecordsOnly) trx.userAssociatedRecordsOnly = userAssociatedRecordsOnly;
     const res = await tokenPost(POST_TYPES.EASY_QB, trx);
 
     if (res.success) {
@@ -1462,9 +1463,10 @@ function dbFactory(globals) {
     }
   };
 
-  const oneCallback = async (trx, tableName) => {
+  const oneCallback = async (trx, tableName, userAssociatedRecordsOnly) => {
     trx.count = "one";
     trx.tableName = tableName;
+    if (userAssociatedRecordsOnly) trx.userAssociatedRecordsOnly = userAssociatedRecordsOnly;
     const res = await tokenPost(POST_TYPES.EASY_QB, trx);
 
     if (res.success) {
@@ -1474,9 +1476,10 @@ function dbFactory(globals) {
     }
   };
 
-  const db = tableName => easyqb({
+  const db = (tableName, userAssociatedRecordsOnly) => easyqb({
     allCallback,
     oneCallback,
+    userAssociatedRecordsOnly,
     tableName: tableName || "untable"
   })(tableName || "untable");
 

@@ -1659,10 +1659,11 @@ function dbFactory(globals) {
   var _authFactory = authFactory(g),
       tokenPost = _authFactory.tokenPost;
 
-  var allCallback = function allCallback(trx, tableName) {
+  var allCallback = function allCallback(trx, tableName, userAssociatedRecordsOnly) {
     try {
       trx.count = "all";
       trx.tableName = tableName;
+      if (userAssociatedRecordsOnly) trx.userAssociatedRecordsOnly = userAssociatedRecordsOnly;
       return Promise.resolve(tokenPost(POST_TYPES.EASY_QB, trx)).then(function (res) {
         if (res.success) {
           return res.data;
@@ -1675,10 +1676,11 @@ function dbFactory(globals) {
     }
   };
 
-  var oneCallback = function oneCallback(trx, tableName) {
+  var oneCallback = function oneCallback(trx, tableName, userAssociatedRecordsOnly) {
     try {
       trx.count = "one";
       trx.tableName = tableName;
+      if (userAssociatedRecordsOnly) trx.userAssociatedRecordsOnly = userAssociatedRecordsOnly;
       return Promise.resolve(tokenPost(POST_TYPES.EASY_QB, trx)).then(function (res) {
         if (res.success) {
           return res.data;
@@ -1691,10 +1693,11 @@ function dbFactory(globals) {
     }
   };
 
-  var db = function db(tableName) {
+  var db = function db(tableName, userAssociatedRecordsOnly) {
     return easyqb({
       allCallback: allCallback,
       oneCallback: oneCallback,
+      userAssociatedRecordsOnly: userAssociatedRecordsOnly,
       tableName: tableName || "untable"
     })(tableName || "untable");
   };
