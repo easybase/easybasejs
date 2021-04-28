@@ -24,7 +24,7 @@ export default function dbFactory(globals?: any): IdbFactory {
         }
     }
 
-    const allCallback = async (trx: any, tableName: String, userAssociatedRecordsOnly?: boolean): Promise<Record<string, any>[] | number> => {
+    const allCallback = async (trx: any, tableName: String, userAssociatedRecordsOnly?: boolean): Promise<Record<string, any>[] | number[]> => {
         trx.count = "all";
         trx.tableName = tableName;
         if (userAssociatedRecordsOnly) trx.userAssociatedRecordsOnly = userAssociatedRecordsOnly;
