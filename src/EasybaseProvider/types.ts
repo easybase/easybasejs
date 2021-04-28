@@ -120,6 +120,12 @@ export enum POST_TYPES {
     EASY_QB = "easyqb"
 }
 
+export enum DB_STATUS {
+    ERROR = "error",
+    PENDING = "pending",
+    SUCCESS = "success"
+}
+
 export interface AuthPostResponse {
     success: boolean;
     data: any;
@@ -293,6 +299,12 @@ export interface ContextValue {
      * @returns {SQW} EasyQB object for dynamic querying: https://easybase.github.io/EasyQB/
      */
     db(tableName?: string, userAssociatedRecordsOnly?: boolean): SQW;
+    /**
+     * Subscribe to db events, invoked by calling `.all` or `.one`: https://easybase.github.io/EasyQB/
+     * @param {function(status?: DB_STATUS, queryType?: string, queryCount?: string):void} [callback] Callback function to execute on db operations.
+     * @returns {function():void} Calling this function unsubscribes your callback function from events.
+     */
+    dbEventListener(callback: (status?: DB_STATUS, queryType?: string, queryCount?: string) => void): () => void;
 }
 
 export interface Globals {

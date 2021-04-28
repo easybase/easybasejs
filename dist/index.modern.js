@@ -40,6 +40,14 @@ var POST_TYPES;
   POST_TYPES["EASY_QB"] = "easyqb";
 })(POST_TYPES || (POST_TYPES = {}));
 
+var DB_STATUS;
+
+(function (DB_STATUS) {
+  DB_STATUS["ERROR"] = "error";
+  DB_STATUS["PENDING"] = "pending";
+  DB_STATUS["SUCCESS"] = "success";
+})(DB_STATUS || (DB_STATUS = {}));
+
 var GlobalNamespace;
 
 (function (GlobalNamespace) {})(GlobalNamespace || (GlobalNamespace = {}));
@@ -1449,16 +1457,32 @@ function dbFactory(globals) {
   const {
     tokenPost
   } = authFactory(g);
+  let _listeners = [];
+
+  const dbEventListener = callback => {
+    _listeners.push(callback);
+
+    return () => {
+      _listeners = _listeners.filter(cb => cb !== callback);
+    };
+  };
 
   const allCallback = async (trx, tableName, userAssociatedRecordsOnly) => {
     trx.count = "all";
     trx.tableName = tableName;
     if (userAssociatedRecordsOnly) trx.userAssociatedRecordsOnly = userAssociatedRecordsOnly;
+
+    _listeners.forEach(cb => cb(DB_STATUS.PENDING, trx.type, "all"));
+
     const res = await tokenPost(POST_TYPES.EASY_QB, trx);
 
     if (res.success) {
+      _listeners.forEach(cb => cb(DB_STATUS.SUCCESS, trx.type, "all"));
+
       return res.data;
     } else {
+      _listeners.forEach(cb => cb(DB_STATUS.ERROR, trx.type, "all"));
+
       return res;
     }
   };
@@ -1467,11 +1491,18 @@ function dbFactory(globals) {
     trx.count = "one";
     trx.tableName = tableName;
     if (userAssociatedRecordsOnly) trx.userAssociatedRecordsOnly = userAssociatedRecordsOnly;
+
+    _listeners.forEach(cb => cb(DB_STATUS.PENDING, trx.type, "one"));
+
     const res = await tokenPost(POST_TYPES.EASY_QB, trx);
 
     if (res.success) {
+      _listeners.forEach(cb => cb(DB_STATUS.SUCCESS, trx.type, "one"));
+
       return res.data;
     } else {
+      _listeners.forEach(cb => cb(DB_STATUS.ERROR, trx.type, "one"));
+
       return res;
     }
   };
@@ -1484,7 +1515,8 @@ function dbFactory(globals) {
   })(tableName || "untable");
 
   return {
-    db
+    db,
+    dbEventListener
   };
 }
 
@@ -1509,7 +1541,8 @@ function EasybaseProvider({
     tableTypes
   } = tableFactory(g);
   const {
-    db
+    db,
+    dbEventListener
   } = dbFactory(g);
   const {
     log
@@ -1851,7 +1884,8 @@ function EasybaseProvider({
     signUp,
     setUserAttribute,
     getUserAttributes,
-    db
+    db,
+    dbEventListener
   };
   return c;
 }

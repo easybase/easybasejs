@@ -90,6 +90,14 @@ var POST_TYPES;
   POST_TYPES["EASY_QB"] = "easyqb";
 })(POST_TYPES || (POST_TYPES = {}));
 
+var DB_STATUS;
+
+(function (DB_STATUS) {
+  DB_STATUS["ERROR"] = "error";
+  DB_STATUS["PENDING"] = "pending";
+  DB_STATUS["SUCCESS"] = "success";
+})(DB_STATUS || (DB_STATUS = {}));
+
 var GlobalNamespace;
 
 (function (GlobalNamespace) {})(GlobalNamespace || (GlobalNamespace = {}));
@@ -1659,15 +1667,40 @@ function dbFactory(globals) {
   var _authFactory = authFactory(g),
       tokenPost = _authFactory.tokenPost;
 
+  var _listeners = [];
+
+  var dbEventListener = function dbEventListener(callback) {
+    _listeners.push(callback);
+
+    return function () {
+      _listeners = _listeners.filter(function (cb) {
+        return cb !== callback;
+      });
+    };
+  };
+
   var allCallback = function allCallback(trx, tableName, userAssociatedRecordsOnly) {
     try {
       trx.count = "all";
       trx.tableName = tableName;
       if (userAssociatedRecordsOnly) trx.userAssociatedRecordsOnly = userAssociatedRecordsOnly;
+
+      _listeners.forEach(function (cb) {
+        return cb(DB_STATUS.PENDING, trx.type, "all");
+      });
+
       return Promise.resolve(tokenPost(POST_TYPES.EASY_QB, trx)).then(function (res) {
         if (res.success) {
+          _listeners.forEach(function (cb) {
+            return cb(DB_STATUS.SUCCESS, trx.type, "all");
+          });
+
           return res.data;
         } else {
+          _listeners.forEach(function (cb) {
+            return cb(DB_STATUS.ERROR, trx.type, "all");
+          });
+
           return res;
         }
       });
@@ -1681,10 +1714,23 @@ function dbFactory(globals) {
       trx.count = "one";
       trx.tableName = tableName;
       if (userAssociatedRecordsOnly) trx.userAssociatedRecordsOnly = userAssociatedRecordsOnly;
+
+      _listeners.forEach(function (cb) {
+        return cb(DB_STATUS.PENDING, trx.type, "one");
+      });
+
       return Promise.resolve(tokenPost(POST_TYPES.EASY_QB, trx)).then(function (res) {
         if (res.success) {
+          _listeners.forEach(function (cb) {
+            return cb(DB_STATUS.SUCCESS, trx.type, "one");
+          });
+
           return res.data;
         } else {
+          _listeners.forEach(function (cb) {
+            return cb(DB_STATUS.ERROR, trx.type, "one");
+          });
+
           return res;
         }
       });
@@ -1703,7 +1749,8 @@ function dbFactory(globals) {
   };
 
   return {
-    db: db
+    db: db,
+    dbEventListener: dbEventListener
   };
 }
 
@@ -1742,7 +1789,8 @@ function EasybaseProvider(_ref) {
       tableTypes = _tableFactory.tableTypes;
 
   var _dbFactory = dbFactory(g),
-      db = _dbFactory.db;
+      db = _dbFactory.db,
+      dbEventListener = _dbFactory.dbEventListener;
 
   var _utilsFactory = utilsFactory(g),
       log = _utilsFactory.log;
@@ -2120,7 +2168,8 @@ function EasybaseProvider(_ref) {
     signUp: signUp,
     setUserAttribute: setUserAttribute,
     getUserAttributes: getUserAttributes,
-    db: db
+    db: db,
+    dbEventListener: dbEventListener
   };
   return c;
 }
