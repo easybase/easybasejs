@@ -9,12 +9,12 @@ const getMsFromHrTime = (diff) => (diff[0] * NS_PER_SEC + diff[1]) * MS_PER_NS;
 async function dbTest() {
     const oneTime = process.hrtime();
     const eb = Easybase.EasybaseProvider({ ebconfig });
-    const table = eb.db();
+    const table = eb.db('REACT TEST');
     const x = eb.dbEventListener((status, queryType, queryCount) => {
         console.log("X: ", status, queryType, queryCount)
     })
     const { e } = table;
-    await table.insert({ "app name": 'should be zero', _position: 0 }).one();
+    // await table.insert({ "app name": 'should be zero', _position: 0 }).one();
     // console.log(await table.insert({ "app name": 'three', _position: 3 }).one())
     // await table.insert({ "app name": 'woo1', _position: 0, rating: 54 }, { "app name": 'woo2', _position: 0 }).one();
     eb.dbEventListener((status, queryType, queryCount) => {
@@ -22,7 +22,7 @@ async function dbTest() {
     })
     x()
 
-    console.log(await table.return().where(e.like('App Name', '%2')).all());
+    console.log(await table.return().where(e.between('rating', 0, 16)).all());
     // await table.return().limit(10).all();
     console.log(`1 individual request: ${getMsFromHrTime(process.hrtime(oneTime))} MS`);
 }

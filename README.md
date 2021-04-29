@@ -46,7 +46,6 @@
   * [Installation](#installation)
 * [Usage](#usage)
 * [Documentation](#documentation)
-* [Types and Options](#types-and-options)
 * [Roadmap](#roadmap)
 * [Contributing](#contributing)
 * [License](#license)
@@ -70,7 +69,7 @@
 
 <!-- GETTING STARTED -->
 ## Getting Started
-Browser and Node.js compatible library for EasyBase. This library supports both the Easybase rest integrations (**GET**, **POST**, **UPDATE**, **DELETE**) and the **NODE** framework integration.
+Browser and Node.js compatible library for Easybase **Projects** and **Node Integrations**. This project also serves as the core for [_easybase-react_](https://github.com/easybase/easybase-react).
 
 ### Prerequisites
 
@@ -96,73 +95,27 @@ npm install easybasejs
 ## Usage
 
 
-### **NODE Framework**
+The node framework integration uses a query builder, [_EasyQB_](https://easybase.github.io/EasyQB/), to execute CRUD operations.
 
-The node framework integration creates a configurable database in your project that synchronizes remote changes and is editable via a live array. [Example walkthrough]() 
-
-The *Frame()* function will point to your database and can be edited as a normal javascript array. Read more below.
-
-<!-- // TODO: Add walkthrough and video --->
+The `db()` function will point to your database. Execute queries with `.all` and `.one`. [Read the documentation for `.db` here](https://easybase.github.io/EasyQB/).
 
 ```javascript
 import Easybase from "easybasejs";
-import ebconfig from "./ebconfig"; // Download from NODE integration
+import ebconfig from "./ebconfig"; // Download from Easybase.io
 
 // Initialize
-const eb = Easybase.EasybaseProvider({ ebconfig });
-eb.configureFrame({ limit: 10, offset: 0 });
-await eb.sync(); // Normalize local and remote changes
-console.log(eb.Frame());
+const table = Easybase.EasybaseProvider({ ebconfig }).db();
+const { e } = table; // Expressions
 
-// Edit entry
-eb.Frame(2).rating = 10;
-await eb.sync();
-console.log(eb.Frame());
+// Delete 1 record where 'app name' equals 'MyAppRecord'
+await table.delete.where(e.eq('app name', 'MyAppRecord')).one();
 
-// Delete entry
-eb.Frame().pop();
-await eb.sync();
-console.log(eb.Frame());
-
-// Add example entry
-eb.Frame().push({ app_name: "Glaseo", rating: 15, isUpdated: false });
-await eb.sync();
-console.log(eb.Frame());
-
-// Next 10 entries
-eb.configureFrame({ limit: 10, offset: 10 });
-await eb.sync();
-console.log(eb.Frame());
+// Basic select example 'rating' is greater than 15, limited to 10 records.
+const records = await table.return().where(e.gt('rating', 15)).limit(10).all();
+console.log(records);
 ```
 
 <br />
-
-### **REST integrations**
-
-* Node
-
-```typescript
-import Easybase from 'easybasejs';
-const { get, post, update, Delete } = Easybase;
-
-let offset = null;
-const limit = 10;
-
-const data = await get("s5aF3-8ne-DaG7K5x", offset, limit);
-
-console.log(data); // [ { profile_picture, home, meeting_time }, { profile_picture, home, meeting_time }, ... ]
-```
-
-* Browser:
-```javascript
-var offset = null;
-var limit = 10;
-
-EasyBase.get("s5aF3-8ne-DaG7K5x", offset, limit)
-    .then(data => {
-        document.body.innerText = JSON.stringify(data);
-    });
-```
 
 ### **Cloud Functions**
 
