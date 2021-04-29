@@ -22,7 +22,7 @@ async function dbTest() {
     })
     x()
 
-    await table.return().where(e.like('App Name', '%2')).all();
+    console.log(await table.return().where(e.like('App Name', '%2')).all());
     // await table.return().limit(10).all();
     console.log(`1 individual request: ${getMsFromHrTime(process.hrtime(oneTime))} MS`);
 }

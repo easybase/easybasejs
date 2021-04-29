@@ -1740,12 +1740,21 @@ function dbFactory(globals) {
   };
 
   var db = function db(tableName, userAssociatedRecordsOnly) {
-    return easyqb({
-      allCallback: allCallback,
-      oneCallback: oneCallback,
-      userAssociatedRecordsOnly: userAssociatedRecordsOnly,
-      tableName: tableName || "untable"
-    })(tableName || "untable");
+    if (tableName && typeof tableName === "string") {
+      return easyqb({
+        allCallback: allCallback,
+        oneCallback: oneCallback,
+        userAssociatedRecordsOnly: userAssociatedRecordsOnly,
+        tableName: tableName.toUpperCase()
+      })(tableName.replace(/\s/g, '_').toUpperCase());
+    } else {
+      return easyqb({
+        allCallback: allCallback,
+        oneCallback: oneCallback,
+        userAssociatedRecordsOnly: userAssociatedRecordsOnly,
+        tableName: "untable"
+      })("untable");
+    }
   };
 
   return {

@@ -54,7 +54,14 @@ export default function dbFactory(globals?: any): IdbFactory {
         }
     }
 
-    const db = (tableName?: string, userAssociatedRecordsOnly?: boolean) => easyqb({ allCallback, oneCallback, userAssociatedRecordsOnly, tableName: tableName || "untable" })(tableName || "untable");
+    const db = (tableName?: string, userAssociatedRecordsOnly?: boolean) => {
+        if (tableName && typeof tableName === "string") {
+            return easyqb({ allCallback, oneCallback, userAssociatedRecordsOnly, tableName: tableName.toUpperCase() })(tableName.replace(/\s/g, '_').toUpperCase());
+        } else {
+            return easyqb({ allCallback, oneCallback, userAssociatedRecordsOnly, tableName: "untable" })("untable");
+        }
+    }
+
     return {
         db,
         dbEventListener
