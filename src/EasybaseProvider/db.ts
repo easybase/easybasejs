@@ -18,7 +18,7 @@ export default function dbFactory(globals?: Globals): IdbFactory {
 
     const _listeners: Record<string, (status?: DB_STATUS, queryType?: string, executeCount?: EXECUTE_COUNT, tableName?: string | null, returned?: any) => void> = {};
 
-    function _runListeners(...params) {
+    function _runListeners(...params: any[]) {
         for (const cb of Object.values(_listeners)) {
             cb(...params)
         }
