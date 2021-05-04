@@ -41,7 +41,11 @@ export default function EasybaseProvider({ ebconfig, options }: EasybaseProvider
         tableTypes
     } = tableFactory(g);
 
-    const { db, dbEventListener } = dbFactory(g);
+    const {
+        db,
+        dbEventListener,
+        e
+    } = dbFactory(g);
 
     const { log } = utilsFactory(g);
 
@@ -376,7 +380,8 @@ export default function EasybaseProvider({ ebconfig, options }: EasybaseProvider
         setUserAttribute,
         getUserAttributes,
         db,
-        dbEventListener
+        dbEventListener,
+        e
     }
 
     return c;

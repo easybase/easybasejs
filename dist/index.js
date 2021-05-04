@@ -1766,7 +1766,8 @@ function dbFactory(globals) {
 
   return {
     db: db,
-    dbEventListener: dbEventListener
+    dbEventListener: dbEventListener,
+    e: easyqb().e
   };
 }
 
@@ -1806,7 +1807,8 @@ function EasybaseProvider(_ref) {
 
   var _dbFactory = dbFactory(g),
       db = _dbFactory.db,
-      dbEventListener = _dbFactory.dbEventListener;
+      dbEventListener = _dbFactory.dbEventListener,
+      e = _dbFactory.e;
 
   var _utilsFactory = utilsFactory(g),
       log = _utilsFactory.log;
@@ -2185,7 +2187,8 @@ function EasybaseProvider(_ref) {
     setUserAttribute: setUserAttribute,
     getUserAttributes: getUserAttributes,
     db: db,
-    dbEventListener: dbEventListener
+    dbEventListener: dbEventListener,
+    e: e
   };
   return c;
 }

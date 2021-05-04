@@ -1534,7 +1534,8 @@ function dbFactory(globals) {
 
   return {
     db,
-    dbEventListener
+    dbEventListener,
+    e: easyqb().e
   };
 }
 
@@ -1560,7 +1561,8 @@ function EasybaseProvider({
   } = tableFactory(g);
   const {
     db,
-    dbEventListener
+    dbEventListener,
+    e
   } = dbFactory(g);
   const {
     log
@@ -1903,7 +1905,8 @@ function EasybaseProvider({
     setUserAttribute,
     getUserAttributes,
     db,
-    dbEventListener
+    dbEventListener,
+    e
   };
   return c;
 }

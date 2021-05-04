@@ -1,4 +1,5 @@
 import { SQW } from "EasyQB/types/sq";
+import { NewExpression } from "EasyQB/types/expression";
 
 export interface ConfigureFrameOptions {
     /** Edit starting index from which records will be retrieved from. Useful for paging. */
@@ -310,6 +311,10 @@ export interface ContextValue {
      * @returns {function():void} Calling this function unsubscribes your callback function from events.
      */
     dbEventListener(callback: (status?: DB_STATUS, queryType?: string, executeCount?: EXECUTE_COUNT, tableName?: string | null, returned?: any) => void): () => void;
+    /**
+     * Expressions and operations builder for `.db()`, used to create complex conditions, aggregators, and clauses. https://easybase.github.io/EasyQB/docs/operations.html
+     */
+    e: NewExpression;
 }
 
 export interface Globals {
