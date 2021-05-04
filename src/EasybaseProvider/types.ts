@@ -126,6 +126,11 @@ export enum DB_STATUS {
     SUCCESS = "success"
 }
 
+export enum EXECUTE_COUNT {
+    ALL = "all",
+    ONE = "one"
+}
+
 export interface AuthPostResponse {
     success: boolean;
     data: any;
@@ -301,10 +306,10 @@ export interface ContextValue {
     db(tableName?: string, userAssociatedRecordsOnly?: boolean): SQW;
     /**
      * Subscribe to db events, invoked by calling `.all` or `.one`: https://easybase.github.io/EasyQB/
-     * @param {function(status?: DB_STATUS, queryType?: string, queryCount?: string):void} [callback] Callback function to execute on db operations.
+     * @param {function(status?: DB_STATUS, queryType?: string, executeCount?: EXECUTE_COUNT, tableName?: string | null, returned?: any):void} [callback] Callback function to execute on db operations.
      * @returns {function():void} Calling this function unsubscribes your callback function from events.
      */
-    dbEventListener(callback: (status?: DB_STATUS, queryType?: string, queryCount?: string) => void): () => void;
+    dbEventListener(callback: (status?: DB_STATUS, queryType?: string, executeCount?: EXECUTE_COUNT, tableName?: string | null, returned?: any) => void): () => void;
 }
 
 export interface Globals {

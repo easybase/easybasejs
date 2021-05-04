@@ -48,6 +48,13 @@ var DB_STATUS;
   DB_STATUS["SUCCESS"] = "success";
 })(DB_STATUS || (DB_STATUS = {}));
 
+var EXECUTE_COUNT;
+
+(function (EXECUTE_COUNT) {
+  EXECUTE_COUNT["ALL"] = "all";
+  EXECUTE_COUNT["ONE"] = "one";
+})(EXECUTE_COUNT || (EXECUTE_COUNT = {}));
+
 var GlobalNamespace;
 
 (function (GlobalNamespace) {})(GlobalNamespace || (GlobalNamespace = {}));
@@ -1472,16 +1479,16 @@ function dbFactory(globals) {
     trx.tableName = tableName;
     if (userAssociatedRecordsOnly) trx.userAssociatedRecordsOnly = userAssociatedRecordsOnly;
 
-    _listeners.forEach(cb => cb(DB_STATUS.PENDING, trx.type, "all"));
+    _listeners.forEach(cb => cb(DB_STATUS.PENDING, trx.type, EXECUTE_COUNT.ALL, tableName !== "untable" ? tableName : null));
 
     const res = await tokenPost(POST_TYPES.EASY_QB, trx);
 
     if (res.success) {
-      _listeners.forEach(cb => cb(DB_STATUS.SUCCESS, trx.type, "all"));
+      _listeners.forEach(cb => cb(DB_STATUS.SUCCESS, trx.type, EXECUTE_COUNT.ALL, tableName !== "untable" ? tableName : null, res.data));
 
       return res.data;
     } else {
-      _listeners.forEach(cb => cb(DB_STATUS.ERROR, trx.type, "all"));
+      _listeners.forEach(cb => cb(DB_STATUS.ERROR, trx.type, EXECUTE_COUNT.ALL, tableName !== "untable" ? tableName : null));
 
       return res;
     }
@@ -1492,16 +1499,16 @@ function dbFactory(globals) {
     trx.tableName = tableName;
     if (userAssociatedRecordsOnly) trx.userAssociatedRecordsOnly = userAssociatedRecordsOnly;
 
-    _listeners.forEach(cb => cb(DB_STATUS.PENDING, trx.type, "one"));
+    _listeners.forEach(cb => cb(DB_STATUS.PENDING, trx.type, EXECUTE_COUNT.ONE, tableName !== "untable" ? tableName : null));
 
     const res = await tokenPost(POST_TYPES.EASY_QB, trx);
 
     if (res.success) {
-      _listeners.forEach(cb => cb(DB_STATUS.SUCCESS, trx.type, "one"));
+      _listeners.forEach(cb => cb(DB_STATUS.SUCCESS, trx.type, EXECUTE_COUNT.ONE, tableName !== "untable" ? tableName : null, res.data));
 
       return res.data;
     } else {
-      _listeners.forEach(cb => cb(DB_STATUS.ERROR, trx.type, "one"));
+      _listeners.forEach(cb => cb(DB_STATUS.ERROR, trx.type, EXECUTE_COUNT.ONE, tableName !== "untable" ? tableName : null));
 
       return res;
     }
