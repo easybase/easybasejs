@@ -1464,13 +1464,20 @@ function dbFactory(globals) {
   const {
     tokenPost
   } = authFactory(g);
-  let _listeners = [];
+  let _listenerIndex = 0;
+  const _listeners = {};
+
+  function _runListeners(...params) {
+    for (const cb of Object.values(_listeners)) {
+      cb(...params);
+    }
+  }
 
   const dbEventListener = callback => {
-    _listeners.push(callback);
-
+    const currKey = '' + _listenerIndex++;
+    _listeners[currKey] = callback;
     return () => {
-      _listeners = _listeners.filter(cb => cb !== callback);
+      delete _listeners[currKey];
     };
   };
 
@@ -1479,16 +1486,16 @@ function dbFactory(globals) {
     trx.tableName = tableName;
     if (userAssociatedRecordsOnly) trx.userAssociatedRecordsOnly = userAssociatedRecordsOnly;
 
-    _listeners.forEach(cb => cb(DB_STATUS.PENDING, trx.type, EXECUTE_COUNT.ALL, tableName !== "untable" ? tableName : null));
+    _runListeners(DB_STATUS.PENDING, trx.type, EXECUTE_COUNT.ALL, tableName !== "untable" ? tableName : null);
 
     const res = await tokenPost(POST_TYPES.EASY_QB, trx);
 
     if (res.success) {
-      _listeners.forEach(cb => cb(DB_STATUS.SUCCESS, trx.type, EXECUTE_COUNT.ALL, tableName !== "untable" ? tableName : null, res.data));
+      _runListeners(DB_STATUS.SUCCESS, trx.type, EXECUTE_COUNT.ALL, tableName !== "untable" ? tableName : null, res.data);
 
       return res.data;
     } else {
-      _listeners.forEach(cb => cb(DB_STATUS.ERROR, trx.type, EXECUTE_COUNT.ALL, tableName !== "untable" ? tableName : null));
+      _runListeners(DB_STATUS.ERROR, trx.type, EXECUTE_COUNT.ALL, tableName !== "untable" ? tableName : null);
 
       return res;
     }
@@ -1499,16 +1506,16 @@ function dbFactory(globals) {
     trx.tableName = tableName;
     if (userAssociatedRecordsOnly) trx.userAssociatedRecordsOnly = userAssociatedRecordsOnly;
 
-    _listeners.forEach(cb => cb(DB_STATUS.PENDING, trx.type, EXECUTE_COUNT.ONE, tableName !== "untable" ? tableName : null));
+    _runListeners(DB_STATUS.PENDING, trx.type, EXECUTE_COUNT.ONE, tableName !== "untable" ? tableName : null);
 
     const res = await tokenPost(POST_TYPES.EASY_QB, trx);
 
     if (res.success) {
-      _listeners.forEach(cb => cb(DB_STATUS.SUCCESS, trx.type, EXECUTE_COUNT.ONE, tableName !== "untable" ? tableName : null, res.data));
+      _runListeners(DB_STATUS.SUCCESS, trx.type, EXECUTE_COUNT.ONE, tableName !== "untable" ? tableName : null, res.data);
 
       return res.data;
     } else {
-      _listeners.forEach(cb => cb(DB_STATUS.ERROR, trx.type, EXECUTE_COUNT.ONE, tableName !== "untable" ? tableName : null));
+      _runListeners(DB_STATUS.ERROR, trx.type, EXECUTE_COUNT.ONE, tableName !== "untable" ? tableName : null);
 
       return res;
     }

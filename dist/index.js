@@ -1674,15 +1674,21 @@ function dbFactory(globals) {
   var _authFactory = authFactory(g),
       tokenPost = _authFactory.tokenPost;
 
-  var _listeners = [];
+  var _listenerIndex = 0;
+  var _listeners = {};
+
+  function _runListeners() {
+    for (var _i = 0, _Object$values = Object.values(_listeners); _i < _Object$values.length; _i++) {
+      var cb = _Object$values[_i];
+      cb.apply(void 0, [].slice.call(arguments));
+    }
+  }
 
   var dbEventListener = function dbEventListener(callback) {
-    _listeners.push(callback);
-
+    var currKey = '' + _listenerIndex++;
+    _listeners[currKey] = callback;
     return function () {
-      _listeners = _listeners.filter(function (cb) {
-        return cb !== callback;
-      });
+      delete _listeners[currKey];
     };
   };
 
@@ -1692,21 +1698,15 @@ function dbFactory(globals) {
       trx.tableName = tableName;
       if (userAssociatedRecordsOnly) trx.userAssociatedRecordsOnly = userAssociatedRecordsOnly;
 
-      _listeners.forEach(function (cb) {
-        return cb(DB_STATUS.PENDING, trx.type, EXECUTE_COUNT.ALL, tableName !== "untable" ? tableName : null);
-      });
+      _runListeners(DB_STATUS.PENDING, trx.type, EXECUTE_COUNT.ALL, tableName !== "untable" ? tableName : null);
 
       return Promise.resolve(tokenPost(POST_TYPES.EASY_QB, trx)).then(function (res) {
         if (res.success) {
-          _listeners.forEach(function (cb) {
-            return cb(DB_STATUS.SUCCESS, trx.type, EXECUTE_COUNT.ALL, tableName !== "untable" ? tableName : null, res.data);
-          });
+          _runListeners(DB_STATUS.SUCCESS, trx.type, EXECUTE_COUNT.ALL, tableName !== "untable" ? tableName : null, res.data);
 
           return res.data;
         } else {
-          _listeners.forEach(function (cb) {
-            return cb(DB_STATUS.ERROR, trx.type, EXECUTE_COUNT.ALL, tableName !== "untable" ? tableName : null);
-          });
+          _runListeners(DB_STATUS.ERROR, trx.type, EXECUTE_COUNT.ALL, tableName !== "untable" ? tableName : null);
 
           return res;
         }
@@ -1722,21 +1722,15 @@ function dbFactory(globals) {
       trx.tableName = tableName;
       if (userAssociatedRecordsOnly) trx.userAssociatedRecordsOnly = userAssociatedRecordsOnly;
 
-      _listeners.forEach(function (cb) {
-        return cb(DB_STATUS.PENDING, trx.type, EXECUTE_COUNT.ONE, tableName !== "untable" ? tableName : null);
-      });
+      _runListeners(DB_STATUS.PENDING, trx.type, EXECUTE_COUNT.ONE, tableName !== "untable" ? tableName : null);
 
       return Promise.resolve(tokenPost(POST_TYPES.EASY_QB, trx)).then(function (res) {
         if (res.success) {
-          _listeners.forEach(function (cb) {
-            return cb(DB_STATUS.SUCCESS, trx.type, EXECUTE_COUNT.ONE, tableName !== "untable" ? tableName : null, res.data);
-          });
+          _runListeners(DB_STATUS.SUCCESS, trx.type, EXECUTE_COUNT.ONE, tableName !== "untable" ? tableName : null, res.data);
 
           return res.data;
         } else {
-          _listeners.forEach(function (cb) {
-            return cb(DB_STATUS.ERROR, trx.type, EXECUTE_COUNT.ONE, tableName !== "untable" ? tableName : null);
-          });
+          _runListeners(DB_STATUS.ERROR, trx.type, EXECUTE_COUNT.ONE, tableName !== "untable" ? tableName : null);
 
           return res;
         }

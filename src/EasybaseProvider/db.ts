@@ -14,13 +14,21 @@ interface IdbFactory {
 export default function dbFactory(globals?: Globals): IdbFactory {
     const g = globals || _g;
     const { tokenPost } = authFactory(g);
+    let _listenerIndex = 0;
 
-    let _listeners: ((status?: DB_STATUS, queryType?: string, executeCount?: EXECUTE_COUNT, tableName?: string | null, returned?: any) => void)[] = [];
+    const _listeners: Record<string, (status?: DB_STATUS, queryType?: string, executeCount?: EXECUTE_COUNT, tableName?: string | null, returned?: any) => void> = {};
+
+    function _runListeners(...params) {
+        for (const cb of Object.values(_listeners)) {
+            cb(...params)
+        }
+    }
 
     const dbEventListener = (callback: (status?: DB_STATUS, queryType?: string, executeCount?: EXECUTE_COUNT, tableName?: string | null, returned?: any) => void): () => void => {
-        _listeners.push(callback);
+        const currKey = '' + _listenerIndex++;
+        _listeners[currKey] = callback;
         return () => {
-            _listeners = _listeners.filter(cb => cb !== callback)
+            delete _listeners[currKey]
         }
     }
 
@@ -28,13 +36,13 @@ export default function dbFactory(globals?: Globals): IdbFactory {
         trx.count = "all";
         trx.tableName = tableName;
         if (userAssociatedRecordsOnly) trx.userAssociatedRecordsOnly = userAssociatedRecordsOnly;
-        _listeners.forEach(cb => cb(DB_STATUS.PENDING, trx.type, EXECUTE_COUNT.ALL, tableName !== "untable" ? tableName : null))
+        _runListeners(DB_STATUS.PENDING, trx.type, EXECUTE_COUNT.ALL, tableName !== "untable" ? tableName : null);
         const res = await tokenPost(POST_TYPES.EASY_QB, trx);
         if (res.success) {
-            _listeners.forEach(cb => cb(DB_STATUS.SUCCESS, trx.type, EXECUTE_COUNT.ALL, tableName !== "untable" ? tableName : null, res.data))
+            _runListeners(DB_STATUS.SUCCESS, trx.type, EXECUTE_COUNT.ALL, tableName !== "untable" ? tableName : null, res.data);
             return res.data;
         } else {
-            _listeners.forEach(cb => cb(DB_STATUS.ERROR, trx.type, EXECUTE_COUNT.ALL, tableName !== "untable" ? tableName : null))
+            _runListeners(DB_STATUS.ERROR, trx.type, EXECUTE_COUNT.ALL, tableName !== "untable" ? tableName : null);
             return res;
         }
     }
@@ -43,13 +51,13 @@ export default function dbFactory(globals?: Globals): IdbFactory {
         trx.count = "one";
         trx.tableName = tableName;
         if (userAssociatedRecordsOnly) trx.userAssociatedRecordsOnly = userAssociatedRecordsOnly;
-        _listeners.forEach(cb => cb(DB_STATUS.PENDING, trx.type, EXECUTE_COUNT.ONE, tableName !== "untable" ? tableName : null))
+        _runListeners(DB_STATUS.PENDING, trx.type, EXECUTE_COUNT.ONE, tableName !== "untable" ? tableName : null);
         const res = await tokenPost(POST_TYPES.EASY_QB, trx);
         if (res.success) {
-            _listeners.forEach(cb => cb(DB_STATUS.SUCCESS, trx.type, EXECUTE_COUNT.ONE, tableName !== "untable" ? tableName : null, res.data))
+            _runListeners(DB_STATUS.SUCCESS, trx.type, EXECUTE_COUNT.ONE, tableName !== "untable" ? tableName : null, res.data);
             return res.data;
         } else {
-            _listeners.forEach(cb => cb(DB_STATUS.ERROR, trx.type, EXECUTE_COUNT.ONE, tableName !== "untable" ? tableName : null))
+            _runListeners(DB_STATUS.ERROR, trx.type, EXECUTE_COUNT.ONE, tableName !== "untable" ? tableName : null);
             return res;
         }
     }
