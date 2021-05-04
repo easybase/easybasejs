@@ -1,1 +1,2 @@
-export default function utilsFactory(globals?: any): any;
+import { Globals } from "./types";
+export default function utilsFactory(globals?: Globals): any;

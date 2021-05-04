@@ -2,16 +2,14 @@ import _g from "./g";
 import easyqb from 'EasyQB';
 import { SQW } from "EasyQB/types/sq";
 import authFactory from "./auth";
-import { POST_TYPES, DB_STATUS } from "./types";
-
-
+import { POST_TYPES, DB_STATUS, Globals } from "./types";
 
 interface IdbFactory {
     db: (tableName?: string, userAssociatedRecordsOnly?: boolean) => SQW;
     dbEventListener: (callback: (status?: DB_STATUS, queryType?: string, queryCount?: string) => void) => () => void;
 }
 
-export default function dbFactory(globals?: any): IdbFactory {
+export default function dbFactory(globals?: Globals): IdbFactory {
     const g = globals || _g;
     const { tokenPost } = authFactory(g);
 
@@ -56,7 +54,7 @@ export default function dbFactory(globals?: any): IdbFactory {
 
     const db = (tableName?: string, userAssociatedRecordsOnly?: boolean) => {
         if (tableName && typeof tableName === "string") {
-            return easyqb({ allCallback, oneCallback, userAssociatedRecordsOnly, tableName: tableName.toUpperCase() })(tableName.replace(/\s/g, '_').toUpperCase());
+            return easyqb({ allCallback, oneCallback, userAssociatedRecordsOnly, tableName: tableName.toUpperCase() })(tableName.replace(/[^0-9a-zA-Z]/g, '_').toUpperCase());
         } else {
             return easyqb({ allCallback, oneCallback, userAssociatedRecordsOnly, tableName: "untable" })("untable");
         }

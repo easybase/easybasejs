@@ -1,6 +1,7 @@
 import _g from "./g";
+import { Globals } from "./types";
 
-export default function utilsFactory(globals?: any): any {
+export default function utilsFactory(globals?: Globals): any {
     const g = globals || _g;
 
     const generateBareUrl = (type: string, integrationID: string): string => `https://api.easybase.io/${type}/${integrationID}`;

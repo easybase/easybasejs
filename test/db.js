@@ -1,6 +1,5 @@
 import Easybase from "easybasejs";
-import ebconfig from "./ebconfig.js";
-import ebconfig_dates from "./ebconfig_dates.js";
+import ebconfig from "./ebconfig-movie-ratings";
 
 const NS_PER_SEC = 1e9;
 const MS_PER_NS = 1e-6;
@@ -9,7 +8,7 @@ const getMsFromHrTime = (diff) => (diff[0] * NS_PER_SEC + diff[1]) * MS_PER_NS;
 async function dbTest() {
     const oneTime = process.hrtime();
     const eb = Easybase.EasybaseProvider({ ebconfig });
-    const table = eb.db('REACT TEST');
+    const table = eb.db();
     const x = eb.dbEventListener((status, queryType, queryCount) => {
         console.log("X: ", status, queryType, queryCount)
     })
@@ -22,7 +21,7 @@ async function dbTest() {
     })
     x()
 
-    console.log(await table.return().where(e.between('rating', 0, 16)).all());
+    console.log(await table.return().where(e.between('rating', 0, 100)).all());
     // await table.return().limit(10).all();
     console.log(`1 individual request: ${getMsFromHrTime(process.hrtime(oneTime))} MS`);
 }

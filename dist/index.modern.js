@@ -1514,7 +1514,7 @@ function dbFactory(globals) {
         oneCallback,
         userAssociatedRecordsOnly,
         tableName: tableName.toUpperCase()
-      })(tableName.replace(/\s/g, '_').toUpperCase());
+      })(tableName.replace(/[^0-9a-zA-Z]/g, '_').toUpperCase());
     } else {
       return easyqb({
         allCallback,
