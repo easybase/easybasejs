@@ -118,7 +118,7 @@ export default function authFactory(globals?: Globals): any {
     }
 
     const resetUserPassword = async (newPassword: string): Promise<StatusResponse> => {
-        if (typeof newPassword !== "string" || newPassword.length < 100) {
+        if (typeof newPassword !== "string" || newPassword.length > 100) {
             return {
                 success: false,
                 message: "newPassword must be of type string"
