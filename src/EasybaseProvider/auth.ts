@@ -116,6 +116,30 @@ export default function authFactory(globals?: Globals): any {
             };
         }
     }
+
+    const resetUserPassword = async (newPassword: string): Promise<StatusResponse> => {
+        if (typeof newPassword !== "string" || newPassword.length < 100) {
+            return {
+                success: false,
+                message: "newPassword must be of type string"
+            };
+        }
+        
+        try {
+            const setAttrsRes = await tokenPost(POST_TYPES.RESET_PASSWORD, { newPassword });
+
+            return {
+                success: setAttrsRes.success,
+                message: JSON.stringify(setAttrsRes.data)
+            };
+        } catch (error) {
+            return {
+                success: false,
+                message: "Error",
+                error
+            };
+        }
+    }
     
     const isUserSignedIn = (): boolean => g.token.length > 0;
 
@@ -322,6 +346,7 @@ export default function authFactory(globals?: Globals): any {
         getUserAttributes,
         isUserSignedIn,
         signIn,
-        signOut
+        signOut,
+        resetUserPassword
     }
 }

@@ -88,6 +88,7 @@ var POST_TYPES;
   POST_TYPES["SIGN_UP"] = "sign_up";
   POST_TYPES["REQUEST_TOKEN"] = "request_token";
   POST_TYPES["EASY_QB"] = "easyqb";
+  POST_TYPES["RESET_PASSWORD"] = "reset_password";
 })(POST_TYPES || (POST_TYPES = {}));
 
 var DB_STATUS;
@@ -1326,6 +1327,36 @@ function authFactory(globals) {
     }
   };
 
+  var resetUserPassword = function resetUserPassword(newPassword) {
+    try {
+      if (typeof newPassword !== "string" || newPassword.length < 100) {
+        return Promise.resolve({
+          success: false,
+          message: "newPassword must be of type string"
+        });
+      }
+
+      return Promise.resolve(_catch(function () {
+        return Promise.resolve(tokenPost(POST_TYPES.RESET_PASSWORD, {
+          newPassword: newPassword
+        })).then(function (setAttrsRes) {
+          return {
+            success: setAttrsRes.success,
+            message: JSON.stringify(setAttrsRes.data)
+          };
+        });
+      }, function (error) {
+        return {
+          success: false,
+          message: "Error",
+          error: error
+        };
+      }));
+    } catch (e) {
+      return Promise.reject(e);
+    }
+  };
+
   var isUserSignedIn = function isUserSignedIn() {
     return g.token.length > 0;
   };
@@ -1585,7 +1616,8 @@ function authFactory(globals) {
     getUserAttributes: getUserAttributes,
     isUserSignedIn: isUserSignedIn,
     signIn: signIn,
-    signOut: signOut
+    signOut: signOut,
+    resetUserPassword: resetUserPassword
   };
 }
 
@@ -1792,7 +1824,8 @@ function EasybaseProvider(_ref) {
       getUserAttributes = _authFactory.getUserAttributes,
       isUserSignedIn = _authFactory.isUserSignedIn,
       signIn = _authFactory.signIn,
-      signOut = _authFactory.signOut;
+      signOut = _authFactory.signOut,
+      resetUserPassword = _authFactory.resetUserPassword;
 
   var _tableFactory = tableFactory(g),
       Query = _tableFactory.Query,
@@ -2063,8 +2096,6 @@ function EasybaseProvider(_ref) {
               return Promise.resolve(tokenPost(POST_TYPES.SYNC_STACK, _extends({
                 stack: _observedChangeStack
               }, _frameConfiguration))).then(function (res) {
-                console.log(res.data);
-
                 if (res.success) {
                   _observedChangeStack.length = 0;
                 }
@@ -2178,6 +2209,7 @@ function EasybaseProvider(_ref) {
     signIn: signIn,
     signOut: signOut,
     signUp: signUp,
+    resetUserPassword: resetUserPassword,
     setUserAttribute: setUserAttribute,
     getUserAttributes: getUserAttributes,
     db: db,

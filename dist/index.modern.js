@@ -38,6 +38,7 @@ var POST_TYPES;
   POST_TYPES["SIGN_UP"] = "sign_up";
   POST_TYPES["REQUEST_TOKEN"] = "request_token";
   POST_TYPES["EASY_QB"] = "easyqb";
+  POST_TYPES["RESET_PASSWORD"] = "reset_password";
 })(POST_TYPES || (POST_TYPES = {}));
 
 var DB_STATUS;
@@ -1207,6 +1208,31 @@ function authFactory(globals) {
     }
   };
 
+  const resetUserPassword = async newPassword => {
+    if (typeof newPassword !== "string" || newPassword.length < 100) {
+      return {
+        success: false,
+        message: "newPassword must be of type string"
+      };
+    }
+
+    try {
+      const setAttrsRes = await tokenPost(POST_TYPES.RESET_PASSWORD, {
+        newPassword
+      });
+      return {
+        success: setAttrsRes.success,
+        message: JSON.stringify(setAttrsRes.data)
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: "Error",
+        error
+      };
+    }
+  };
+
   const isUserSignedIn = () => g.token.length > 0;
 
   const signOut = () => {
@@ -1403,7 +1429,8 @@ function authFactory(globals) {
     getUserAttributes,
     isUserSignedIn,
     signIn,
-    signOut
+    signOut,
+    resetUserPassword
   };
 }
 
@@ -1559,7 +1586,8 @@ function EasybaseProvider({
     getUserAttributes,
     isUserSignedIn,
     signIn,
-    signOut
+    signOut,
+    resetUserPassword
   } = authFactory(g);
   const {
     Query,
@@ -1777,7 +1805,6 @@ function EasybaseProvider({
         const res = await tokenPost(POST_TYPES.SYNC_STACK, _extends({
           stack: _observedChangeStack
         }, _frameConfiguration));
-        console.log(res.data);
 
         if (res.success) {
           _observedChangeStack.length = 0;
@@ -1909,6 +1936,7 @@ function EasybaseProvider({
     signIn,
     signOut,
     signUp,
+    resetUserPassword,
     setUserAttribute,
     getUserAttributes,
     db,

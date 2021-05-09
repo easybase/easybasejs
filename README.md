@@ -52,10 +52,8 @@
 * [Contact](#contact)
 
 
-
 <!-- ABOUT THE PROJECT -->
 ## About The Project
-
 
 
 ### Built With
@@ -94,7 +92,6 @@ npm install easybasejs
 <!-- USAGE EXAMPLES -->
 ## Usage
 
-
 The node framework integration uses a query builder, [_EasyQB_](https://easybase.github.io/EasyQB/), to execute CRUD operations.
 
 The `db()` function will point to your database. Execute queries with `.all` and `.one`. [Read the documentation for `.db` here](https://easybase.github.io/EasyQB/).
@@ -114,6 +111,8 @@ await table.delete.where(e.eq('app name', 'MyAppRecord')).one();
 const records = await table.return().where(e.gt('rating', 15)).limit(10).all();
 console.log(records);
 ```
+
+A detailed walkthrough of [using serverless database is available here](https://easybase.io/react/).
 
 <br />
 
@@ -161,12 +160,10 @@ Contributions are what make the open source community such an amazing place to b
 4. Push to the Branch (`git push origin feature/EasybaseFeature`)
 5. Open a Pull Request
 
-
 <!-- LICENSE -->
 ## License
 
 Distributed under the MIT License. See `LICENSE` for more information.
-
 
 
 <!-- CONTACT -->
@@ -175,8 +172,6 @@ Distributed under the MIT License. See `LICENSE` for more information.
 Your Name - [@easybase_io](https://twitter.com/easybase_io) - hello@easybase.io
 
 Project Link: [https://github.com/easybase/easybasejs](https://github.com/easybase/easybasejs)
-
-
 
 
 <!-- MARKDOWN LINKS & IMAGES -->

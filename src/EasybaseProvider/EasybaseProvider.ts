@@ -32,7 +32,8 @@ export default function EasybaseProvider({ ebconfig, options }: EasybaseProvider
         getUserAttributes,
         isUserSignedIn,
         signIn,
-        signOut
+        signOut,
+        resetUserPassword
     } = authFactory(g);
 
     const {
@@ -245,7 +246,6 @@ export default function EasybaseProvider({ ebconfig, options }: EasybaseProvider
                     stack: _observedChangeStack,
                     ..._frameConfiguration
                 });
-                console.log(res.data);
                 if (res.success) {
                     _observedChangeStack.length = 0;
                 }
@@ -377,6 +377,7 @@ export default function EasybaseProvider({ ebconfig, options }: EasybaseProvider
         signIn,
         signOut,
         signUp,
+        resetUserPassword,
         setUserAttribute,
         getUserAttributes,
         db,

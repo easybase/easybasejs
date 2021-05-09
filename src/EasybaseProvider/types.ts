@@ -118,7 +118,8 @@ export enum POST_TYPES {
     SET_ATTRIBUTE = "set_attribute",
     SIGN_UP = "sign_up",
     REQUEST_TOKEN = "request_token",
-    EASY_QB = "easyqb"
+    EASY_QB = "easyqb",
+    RESET_PASSWORD = "reset_password"
 }
 
 export enum DB_STATUS {
@@ -161,6 +162,13 @@ export interface ContextValue {
      * @return {Promise<StatusResponse>} Promise<StatusResponse>
      */
     setUserAttribute(key: string, value: string): Promise<StatusResponse>;
+    /**
+     * Reset the currently signed-in user's password to a new string.
+     * @async
+     * @param {string} newPassword New user password
+     * @return {Promise<StatusResponse>} Promise<StatusResponse>
+     */
+    resetUserPassword(newPassword: string): Promise<StatusResponse>;
     /**
      * Sign in a user that already exists for a project.
      * @abstract
