@@ -1,4 +1,4 @@
-import { POST_TYPES, AuthPostResponse, Globals, StatusResponse } from "./types";
+import { POST_TYPES, AuthPostResponse, Globals, StatusResponse, EmailTemplate } from "./types";
 import _g from "./g";
 import utilsFactory from "./utils";
 import fetch from 'cross-fetch';
@@ -27,6 +27,47 @@ export default function authFactory(globals?: Globals): any {
             return {
                 success: setAttrsRes.success,
                 message: JSON.stringify(setAttrsRes.data)
+            };
+        } catch (error) {
+            return {
+                success: false,
+                message: "Error",
+                error
+            };
+        }
+    }
+
+    const forgotPassword = async (username: string, emailTemplate?: EmailTemplate): Promise<StatusResponse> => {
+        try {
+            const setAttrsRes = await tokenPost(POST_TYPES.FORGOT_PASSWORD_SEND, {
+                username,
+                emailTemplate
+            });
+
+            return {
+                success: setAttrsRes.success,
+                message: setAttrsRes.data
+            };
+        } catch (error) {
+            return {
+                success: false,
+                message: "Error",
+                error
+            };
+        }
+    }
+
+    const forgotPasswordConfirm = async (code: string, username: string, newPassword: string): Promise<StatusResponse> => {
+        try {
+            const setAttrsRes = await tokenPost(POST_TYPES.FORGOT_PASSWORD_CONFIRM, {
+                username,
+                code,
+                newPassword
+            });
+
+            return {
+                success: setAttrsRes.success,
+                message: setAttrsRes.data
             };
         } catch (error) {
             return {
@@ -347,6 +388,8 @@ export default function authFactory(globals?: Globals): any {
         isUserSignedIn,
         signIn,
         signOut,
-        resetUserPassword
+        resetUserPassword,
+        forgotPassword,
+        forgotPasswordConfirm
     }
 }

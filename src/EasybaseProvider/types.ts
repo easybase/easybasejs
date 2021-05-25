@@ -103,6 +103,17 @@ export interface StatusResponse {
     error?: Error;
 }
 
+export interface EmailTemplate {
+    /** Optional header of email that will be sent to user with verification code */
+    greeting?: string;
+    /** Optional name of application for placement within email */
+    appName?: string;
+    /** Optional 'from' address for verification email */
+    from?: string;
+    /** Optional footer of verification email often used for disclaimers. Can be a valid HTML string */
+    footer?: string;
+}
+
 export enum POST_TYPES {
     UPLOAD_ATTACHMENT = "upload_attachment",
     HANDSHAKE = "handshake",
@@ -119,7 +130,9 @@ export enum POST_TYPES {
     SIGN_UP = "sign_up",
     REQUEST_TOKEN = "request_token",
     EASY_QB = "easyqb",
-    RESET_PASSWORD = "reset_password"
+    RESET_PASSWORD = "reset_password",
+    FORGOT_PASSWORD_SEND = "forgot_password_send",
+    FORGOT_PASSWORD_CONFIRM = "forgot_password_confirm"
 }
 
 export enum DB_STATUS {
@@ -323,6 +336,26 @@ export interface ContextValue {
      * Expressions and operations builder for `.db()`, used to create complex conditions, aggregators, and clauses. https://easybase.github.io/EasyQB/docs/operations.html
      */
     e: NewExpression;
+    /**
+     * @async
+     * Trigger an email to the given username with a verification code to reset the user's password. This verification 
+     * code is used in the `forgotPasswordConfirm` function, along with a new password. **The username must be the user's email address**.
+     * @param {string} username A username which must also be a valid email address
+     * @param {EmailTemplate} emailTemplate A username which must also be a valid email address
+     * @return {Promise<StatusResponse>} A StatusResponse corresponding to the successful sending of a verification code email
+     */
+    forgotPassword(username: string, emailTemplate?: EmailTemplate): Promise<StatusResponse>
+    /**
+     * @async
+     * Confirm the resetting of an unauthenticated users password. This function is invoked after `forgotpassword` is used to trigger
+     * an email containing a verification code to the given username [*which must also be an email*]. The user's randomly generated
+     * verification code from their email is passed in the first parameter. 
+     * @param {string} code Verification code found in the email sent from the `forgotPassword` function
+     * @param {string} username The same username (email) used in the `forgotPassword` function
+     * @param {string} newPassword The new password for the corresponding verified user
+     * @return {Promise<StatusResponse>} A StatusResponse corresponding to the successful setting of a new password
+     */
+    forgotPasswordConfirm(code: string, username: string, newPassword: string): Promise<StatusResponse>
 }
 
 export interface Globals {

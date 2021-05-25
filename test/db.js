@@ -23,7 +23,7 @@ async function dbTest() {
     x()
 
     // console.log(await table.return().where(e.between('rating', 0, 16)).all());
-    await table.return().limit(10).all();
+    console.log(await table.return().limit(10).orderBy({ by: "_position", sort: "desc" }).all());
     console.log(`1 individual request: ${getMsFromHrTime(process.hrtime(oneTime))} MS`);
 }
 

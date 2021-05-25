@@ -33,7 +33,9 @@ export default function EasybaseProvider({ ebconfig, options }: EasybaseProvider
         isUserSignedIn,
         signIn,
         signOut,
-        resetUserPassword
+        resetUserPassword,
+        forgotPassword,
+        forgotPasswordConfirm
     } = authFactory(g);
 
     const {
@@ -382,7 +384,9 @@ export default function EasybaseProvider({ ebconfig, options }: EasybaseProvider
         getUserAttributes,
         db,
         dbEventListener,
-        e
+        e,
+        forgotPassword,
+        forgotPasswordConfirm
     }
 
     return c;
