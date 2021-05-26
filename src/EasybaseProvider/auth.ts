@@ -8,6 +8,12 @@ export default function authFactory(globals?: Globals): any {
 
     const { generateBareUrl, generateAuthBody, log } = utilsFactory(g);
 
+    function _clearTokens() {
+        g.token = "";
+        g.refreshToken = "";
+        g.newTokenCallback();
+    }
+
     const getUserAttributes = async (): Promise<Record<string, string>> => {
         try {
             const attrsRes = await tokenPost(POST_TYPES.USER_ATTRIBUTES);
@@ -259,24 +265,25 @@ export default function authFactory(globals?: Globals): any {
         const resData = await res.json();
 
         if ({}.hasOwnProperty.call(resData, 'ErrorCode') || {}.hasOwnProperty.call(resData, 'code')) {
-            if (resData.code === "JWT EXPIRED") {
+            if (resData.ErrorCode === "TokenExpired") {
                 if (integrationType === "PROJECT") {
-                    const req_res = await tokenPost(POST_TYPES.REQUEST_TOKEN, {
-                        refreshToken: g.refreshToken,
-                        token: g.token
-                    });
-
-                    if (req_res.success) {
-                        g.token = req_res.data.token
-                        g.newTokenCallback();
-                        return tokenPost(postType, body);
-                    } else {
-                        g.token = "";
-                        g.refreshToken = "";
-                        g.newTokenCallback();
+                    try {
+                        const req_res = await tokenPost(POST_TYPES.REQUEST_TOKEN, {
+                            refreshToken: g.refreshToken,
+                            token: g.token
+                        });
+                        if (req_res.success) {
+                            g.token = req_res.data.token
+                            g.newTokenCallback();
+                            return tokenPost(postType, body);
+                        } else {
+                            throw new Error(req_res.data || "Error");
+                        }
+                    } catch (error) {
+                        _clearTokens();
                         return {
                             success: false,
-                            data: req_res.data
+                            data: error.message || error
                         }
                     }
                 } else {
@@ -324,24 +331,26 @@ export default function authFactory(globals?: Globals): any {
         const resData = await res.json();
 
         if ({}.hasOwnProperty.call(resData, 'ErrorCode') || {}.hasOwnProperty.call(resData, 'code')) {
-            if (resData.code === "JWT EXPIRED") {
+            if (resData.ErrorCode === "TokenExpired") {
                 if (integrationType === "PROJECT") {
-                    const req_res = await tokenPost(POST_TYPES.REQUEST_TOKEN, {
-                        refreshToken: g.refreshToken,
-                        token: g.token
-                    });
-
-                    if (req_res.success) {
-                        g.token = req_res.data.token
-                        g.newTokenCallback();
-                        return tokenPostAttachment(formData, customHeaders);
-                    } else {
-                        g.token = "";
-                        g.refreshToken = "";
-                        g.newTokenCallback();
+                    try {
+                        const req_res = await tokenPost(POST_TYPES.REQUEST_TOKEN, {
+                            refreshToken: g.refreshToken,
+                            token: g.token
+                        });
+    
+                        if (req_res.success) {
+                            g.token = req_res.data.token
+                            g.newTokenCallback();
+                            return tokenPostAttachment(formData, customHeaders);
+                        } else {
+                            throw new Error(req_res.data || "Error");
+                        }   
+                    } catch (error) {
+                        _clearTokens();
                         return {
                             success: false,
-                            data: req_res.data
+                            data: error.message || error
                         }
                     }
                 } else {
