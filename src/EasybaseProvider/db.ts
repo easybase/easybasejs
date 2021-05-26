@@ -47,7 +47,7 @@ export default function dbFactory(globals?: Globals): IdbFactory {
                 return res;
             }
         } catch (error) {
-            console.error(error)
+            console.warn(error)
             _runListeners(DB_STATUS.ERROR, trx.type, EXECUTE_COUNT.ALL, tableName !== "untable" ? tableName : null);
             return [];
         }
@@ -68,7 +68,7 @@ export default function dbFactory(globals?: Globals): IdbFactory {
                 return res;
             }
         } catch (error) {
-            console.error(error)
+            console.warn(error)
             _runListeners(DB_STATUS.ERROR, trx.type, EXECUTE_COUNT.ONE, tableName !== "untable" ? tableName : null);
             return {};
         }

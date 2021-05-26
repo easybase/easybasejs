@@ -19,7 +19,7 @@ export default function authFactory(globals?: Globals): any {
             const attrsRes = await tokenPost(POST_TYPES.USER_ATTRIBUTES);
             return attrsRes.data;
         } catch (error) {
-            console.error(error)
+            log(error)
             return error;
         }
     }

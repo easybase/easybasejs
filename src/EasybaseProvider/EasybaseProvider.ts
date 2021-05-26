@@ -53,7 +53,7 @@ export default function EasybaseProvider({ ebconfig, options }: EasybaseProvider
     const { log } = utilsFactory(g);
 
     if (typeof ebconfig !== 'object' || ebconfig === null || ebconfig === undefined) {
-        console.error("No ebconfig object passed. do `import ebconfig from \"ebconfig.js\"` and pass it to the Easybase provider");
+        console.error("No ebconfig object passed. do `import ebconfig from \"./ebconfig.js\"` and pass it to the Easybase provider");
         return;
     } else if (!ebconfig.integration) {
         console.error("Invalid ebconfig object passed. Download ebconfig.js from Easybase.io and try again.");
