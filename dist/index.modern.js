@@ -39,6 +39,8 @@ var POST_TYPES;
   POST_TYPES["REQUEST_TOKEN"] = "request_token";
   POST_TYPES["EASY_QB"] = "easyqb";
   POST_TYPES["RESET_PASSWORD"] = "reset_password";
+  POST_TYPES["FORGOT_PASSWORD_SEND"] = "forgot_password_send";
+  POST_TYPES["FORGOT_PASSWORD_CONFIRM"] = "forgot_password_confirm";
 })(POST_TYPES || (POST_TYPES = {}));
 
 var DB_STATUS;
@@ -1129,6 +1131,45 @@ function authFactory(globals) {
     }
   };
 
+  const forgotPassword = async (username, emailTemplate) => {
+    try {
+      const setAttrsRes = await tokenPost(POST_TYPES.FORGOT_PASSWORD_SEND, {
+        username,
+        emailTemplate
+      });
+      return {
+        success: setAttrsRes.success,
+        message: setAttrsRes.data
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: "Error",
+        error
+      };
+    }
+  };
+
+  const forgotPasswordConfirm = async (code, username, newPassword) => {
+    try {
+      const setAttrsRes = await tokenPost(POST_TYPES.FORGOT_PASSWORD_CONFIRM, {
+        username,
+        code,
+        newPassword
+      });
+      return {
+        success: setAttrsRes.success,
+        message: setAttrsRes.data
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: "Error",
+        error
+      };
+    }
+  };
+
   const signUp = async (newUserID, password, userAttributes) => {
     try {
       const signUpRes = await tokenPost(POST_TYPES.SIGN_UP, {
@@ -1209,7 +1250,7 @@ function authFactory(globals) {
   };
 
   const resetUserPassword = async newPassword => {
-    if (typeof newPassword !== "string" || newPassword.length < 100) {
+    if (typeof newPassword !== "string" || newPassword.length > 100) {
       return {
         success: false,
         message: "newPassword must be of type string"
@@ -1430,7 +1471,9 @@ function authFactory(globals) {
     isUserSignedIn,
     signIn,
     signOut,
-    resetUserPassword
+    resetUserPassword,
+    forgotPassword,
+    forgotPasswordConfirm
   };
 }
 
@@ -1587,7 +1630,9 @@ function EasybaseProvider({
     isUserSignedIn,
     signIn,
     signOut,
-    resetUserPassword
+    resetUserPassword,
+    forgotPassword,
+    forgotPasswordConfirm
   } = authFactory(g);
   const {
     Query,
@@ -1941,7 +1986,9 @@ function EasybaseProvider({
     getUserAttributes,
     db,
     dbEventListener,
-    e
+    e,
+    forgotPassword,
+    forgotPasswordConfirm
   };
   return c;
 }

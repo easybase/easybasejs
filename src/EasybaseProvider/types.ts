@@ -108,8 +108,6 @@ export interface EmailTemplate {
     greeting?: string;
     /** Optional name of application for placement within email */
     appName?: string;
-    /** Optional 'from' address for verification email */
-    from?: string;
     /** Optional footer of verification email often used for disclaimers. Can be a valid HTML string */
     footer?: string;
 }

@@ -89,6 +89,8 @@ var POST_TYPES;
   POST_TYPES["REQUEST_TOKEN"] = "request_token";
   POST_TYPES["EASY_QB"] = "easyqb";
   POST_TYPES["RESET_PASSWORD"] = "reset_password";
+  POST_TYPES["FORGOT_PASSWORD_SEND"] = "forgot_password_send";
+  POST_TYPES["FORGOT_PASSWORD_CONFIRM"] = "forgot_password_confirm";
 })(POST_TYPES || (POST_TYPES = {}));
 
 var DB_STATUS;
@@ -1238,6 +1240,55 @@ function authFactory(globals) {
     }
   };
 
+  var forgotPassword = function forgotPassword(username, emailTemplate) {
+    try {
+      return Promise.resolve(_catch(function () {
+        return Promise.resolve(tokenPost(POST_TYPES.FORGOT_PASSWORD_SEND, {
+          username: username,
+          emailTemplate: emailTemplate
+        })).then(function (setAttrsRes) {
+          return {
+            success: setAttrsRes.success,
+            message: setAttrsRes.data
+          };
+        });
+      }, function (error) {
+        return {
+          success: false,
+          message: "Error",
+          error: error
+        };
+      }));
+    } catch (e) {
+      return Promise.reject(e);
+    }
+  };
+
+  var forgotPasswordConfirm = function forgotPasswordConfirm(code, username, newPassword) {
+    try {
+      return Promise.resolve(_catch(function () {
+        return Promise.resolve(tokenPost(POST_TYPES.FORGOT_PASSWORD_CONFIRM, {
+          username: username,
+          code: code,
+          newPassword: newPassword
+        })).then(function (setAttrsRes) {
+          return {
+            success: setAttrsRes.success,
+            message: setAttrsRes.data
+          };
+        });
+      }, function (error) {
+        return {
+          success: false,
+          message: "Error",
+          error: error
+        };
+      }));
+    } catch (e) {
+      return Promise.reject(e);
+    }
+  };
+
   var signUp = function signUp(newUserID, password, userAttributes) {
     try {
       return Promise.resolve(_catch(function () {
@@ -1329,7 +1380,7 @@ function authFactory(globals) {
 
   var resetUserPassword = function resetUserPassword(newPassword) {
     try {
-      if (typeof newPassword !== "string" || newPassword.length < 100) {
+      if (typeof newPassword !== "string" || newPassword.length > 100) {
         return Promise.resolve({
           success: false,
           message: "newPassword must be of type string"
@@ -1617,7 +1668,9 @@ function authFactory(globals) {
     isUserSignedIn: isUserSignedIn,
     signIn: signIn,
     signOut: signOut,
-    resetUserPassword: resetUserPassword
+    resetUserPassword: resetUserPassword,
+    forgotPassword: forgotPassword,
+    forgotPasswordConfirm: forgotPasswordConfirm
   };
 }
 
@@ -1825,7 +1878,9 @@ function EasybaseProvider(_ref) {
       isUserSignedIn = _authFactory.isUserSignedIn,
       signIn = _authFactory.signIn,
       signOut = _authFactory.signOut,
-      resetUserPassword = _authFactory.resetUserPassword;
+      resetUserPassword = _authFactory.resetUserPassword,
+      forgotPassword = _authFactory.forgotPassword,
+      forgotPasswordConfirm = _authFactory.forgotPasswordConfirm;
 
   var _tableFactory = tableFactory(g),
       Query = _tableFactory.Query,
@@ -2214,7 +2269,9 @@ function EasybaseProvider(_ref) {
     getUserAttributes: getUserAttributes,
     db: db,
     dbEventListener: dbEventListener,
-    e: e
+    e: e,
+    forgotPassword: forgotPassword,
+    forgotPasswordConfirm: forgotPasswordConfirm
   };
   return c;
 }
