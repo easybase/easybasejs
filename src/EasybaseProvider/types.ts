@@ -339,7 +339,7 @@ export interface ContextValue {
      * Trigger an email to the given username with a verification code to reset the user's password. This verification 
      * code is used in the `forgotPasswordConfirm` function, along with a new password. **The username must be the user's email address**.
      * @param {string} username A username which must also be a valid email address
-     * @param {EmailTemplate} emailTemplate A username which must also be a valid email address
+     * @param {EmailTemplate} emailTemplate Optional details for the formatting & content of the verification email
      * @return {Promise<StatusResponse>} A StatusResponse corresponding to the successful sending of a verification code email
      */
     forgotPassword(username: string, emailTemplate?: EmailTemplate): Promise<StatusResponse>
