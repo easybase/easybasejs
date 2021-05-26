@@ -1207,13 +1207,18 @@ function authFactory(globals) {
       log = _utilsFactory.log;
 
   var getUserAttributes = function getUserAttributes() {
-    return Promise.resolve(_catch(function () {
-      return Promise.resolve(tokenPost(POST_TYPES.USER_ATTRIBUTES)).then(function (attrsRes) {
-        return attrsRes.data;
-      });
-    }, function (error) {
-      return error;
-    }));
+    try {
+      return Promise.resolve(_catch(function () {
+        return Promise.resolve(tokenPost(POST_TYPES.USER_ATTRIBUTES)).then(function (attrsRes) {
+          return attrsRes.data;
+        });
+      }, function (error) {
+        console.error(error);
+        return error;
+      }));
+    } catch (e) {
+      return Promise.reject(e);
+    }
   };
 
   var setUserAttribute = function setUserAttribute(key, value) {
@@ -1231,8 +1236,8 @@ function authFactory(globals) {
       }, function (error) {
         return {
           success: false,
-          message: "Error",
-          error: error
+          message: error.message || "Error",
+          errorCode: error.errorCode || undefined
         };
       }));
     } catch (e) {
@@ -1255,8 +1260,8 @@ function authFactory(globals) {
       }, function (error) {
         return {
           success: false,
-          message: "Error",
-          error: error
+          message: error.message || "Error",
+          errorCode: error.errorCode || undefined
         };
       }));
     } catch (e) {
@@ -1280,8 +1285,8 @@ function authFactory(globals) {
       }, function (error) {
         return {
           success: false,
-          message: "Error",
-          error: error
+          message: error.message || "Error",
+          errorCode: error.errorCode || undefined
         };
       }));
     } catch (e) {
@@ -1305,8 +1310,8 @@ function authFactory(globals) {
       }, function (error) {
         return {
           success: false,
-          message: "Error",
-          error: error
+          message: error.message || "Error",
+          errorCode: error.errorCode || undefined
         };
       }));
     } catch (e) {
@@ -1366,11 +1371,10 @@ function authFactory(globals) {
           });
         });
       }, function (error) {
-        console.error(error);
         return {
           success: false,
-          message: error,
-          error: error
+          message: error.message || "Error",
+          errorCode: error.errorCode || undefined
         };
       }));
     } catch (e) {
@@ -1399,8 +1403,8 @@ function authFactory(globals) {
       }, function (error) {
         return {
           success: false,
-          message: "Error",
-          error: error
+          message: error.message || "Error",
+          errorCode: error.errorCode || undefined
         };
       }));
     } catch (e) {
@@ -1468,94 +1472,78 @@ function authFactory(globals) {
 
   var tokenPost = function tokenPost(postType, body) {
     try {
-      var _temp7 = function _temp7() {
+      var _temp5 = function _temp5() {
         var integrationType = g.ebconfig.integration.split("-")[0].toUpperCase() === "PROJECT" ? "PROJECT" : "REACT";
-        return _catch(function () {
-          return Promise.resolve(fetch(generateBareUrl(integrationType, g.integrationID), {
-            method: "POST",
-            headers: {
-              'Eb-Post-Req': postType,
-              'Accept': 'application/json',
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(_extends({
-              _auth: generateAuthBody()
-            }, body))
-          })).then(function (res) {
-            return Promise.resolve(res.json()).then(function (resData) {
-              var _exit;
+        return Promise.resolve(fetch(generateBareUrl(integrationType, g.integrationID), {
+          method: "POST",
+          headers: {
+            'Eb-Post-Req': postType,
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(_extends({
+            _auth: generateAuthBody()
+          }, body))
+        })).then(function (res) {
+          return Promise.resolve(res.json()).then(function (resData) {
+            var _exit;
 
-              if ({}.hasOwnProperty.call(resData, 'ErrorCode') || {}.hasOwnProperty.call(resData, 'code')) {
-                var _temp9 = function _temp9(_result2) {
-                  return _exit ? _result2 : {
-                    success: false,
-                    data: resData.body
-                  };
+            if ({}.hasOwnProperty.call(resData, 'ErrorCode') || {}.hasOwnProperty.call(resData, 'code')) {
+              if (resData.code === "JWT EXPIRED") {
+                var _temp7 = function _temp7(_result) {
+                  return _exit ? _result : tokenPost(postType, body);
                 };
 
-                var _temp10 = function () {
-                  if (resData.code === "JWT EXPIRED") {
-                    var _temp11 = function _temp11(_result) {
-                      if (_exit) return _result;
-                      _exit = 1;
-                      return tokenPost(postType, body);
-                    };
-
-                    var _temp12 = function () {
-                      if (integrationType === "PROJECT") {
-                        return Promise.resolve(tokenPost(POST_TYPES.REQUEST_TOKEN, {
-                          refreshToken: g.refreshToken,
-                          token: g.token
-                        })).then(function (req_res) {
-                          if (req_res.success) {
-                            g.token = req_res.data.token;
-                            g.newTokenCallback();
-                            _exit = 1;
-                            return tokenPost(postType, body);
-                          } else {
-                            g.token = "";
-                            g.refreshToken = "";
-                            g.newTokenCallback();
-                            _exit = 1;
-                            return {
-                              success: false,
-                              data: req_res.data
-                            };
-                          }
-                        });
+                var _temp8 = function () {
+                  if (integrationType === "PROJECT") {
+                    return Promise.resolve(tokenPost(POST_TYPES.REQUEST_TOKEN, {
+                      refreshToken: g.refreshToken,
+                      token: g.token
+                    })).then(function (req_res) {
+                      if (req_res.success) {
+                        g.token = req_res.data.token;
+                        g.newTokenCallback();
+                        _exit = 1;
+                        return tokenPost(postType, body);
                       } else {
-                        return Promise.resolve(initAuth()).then(function () {});
+                        g.token = "";
+                        g.refreshToken = "";
+                        g.newTokenCallback();
+                        _exit = 1;
+                        return {
+                          success: false,
+                          data: req_res.data
+                        };
                       }
-                    }();
-
-                    return _temp12 && _temp12.then ? _temp12.then(_temp11) : _temp11(_temp12);
+                    });
+                  } else {
+                    return Promise.resolve(initAuth()).then(function () {});
                   }
                 }();
 
-                return _temp10 && _temp10.then ? _temp10.then(_temp9) : _temp9(_temp10);
+                return _temp8 && _temp8.then ? _temp8.then(_temp7) : _temp7(_temp8);
               } else {
-                return {
-                  success: resData.success,
-                  data: resData.body
-                };
+                var err = new Error(resData.body || resData.ErrorCode || resData.code || "Error");
+                err.errorCode = resData.ErrorCode || resData.code;
+                throw err;
               }
-            });
+            } else {
+              return {
+                success: resData.success,
+                data: resData.body
+              };
+            }
           });
-        }, function (error) {
-          return {
-            success: false,
-            data: error
-          };
         });
       };
 
-      var _temp8 = function () {
+      var _temp6 = function () {
         if (!g.mounted) {
           return Promise.resolve(initAuth()).then(function () {});
         }
       }();
 
-      return Promise.resolve(_temp8 && _temp8.then ? _temp8.then(_temp7) : _temp7(_temp8));
+      return Promise.resolve(_temp6 && _temp6.then ? _temp6.then(_temp5) : _temp5(_temp6));
     } catch (e) {
       return Promise.reject(e);
     }
@@ -1563,7 +1551,7 @@ function authFactory(globals) {
 
   var tokenPostAttachment = function tokenPostAttachment(formData, customHeaders) {
     try {
-      var _temp19 = function _temp19() {
+      var _temp13 = function _temp13() {
         var regularAuthbody = generateAuthBody();
         var attachmentAuth = {
           'Eb-token': regularAuthbody.token,
@@ -1571,88 +1559,72 @@ function authFactory(globals) {
           'Eb-now': regularAuthbody.now
         };
         var integrationType = g.ebconfig.integration.split("-")[0].toUpperCase() === "PROJECT" ? "PROJECT" : "REACT";
-        return _catch(function () {
-          return Promise.resolve(fetch(generateBareUrl(integrationType, g.integrationID), {
-            method: "POST",
-            headers: _extends({
-              'Eb-Post-Req': POST_TYPES.UPLOAD_ATTACHMENT
-            }, customHeaders, attachmentAuth),
-            body: formData
-          })).then(function (res) {
-            return Promise.resolve(res.json()).then(function (resData) {
-              var _exit2;
+        return Promise.resolve(fetch(generateBareUrl(integrationType, g.integrationID), {
+          method: "POST",
+          headers: _extends({
+            'Eb-Post-Req': POST_TYPES.UPLOAD_ATTACHMENT
+          }, customHeaders, attachmentAuth),
+          body: formData
+        })).then(function (res) {
+          return Promise.resolve(res.json()).then(function (resData) {
+            var _exit2;
 
-              if ({}.hasOwnProperty.call(resData, 'ErrorCode') || {}.hasOwnProperty.call(resData, 'code')) {
-                var _temp21 = function _temp21(_result4) {
-                  return _exit2 ? _result4 : {
-                    success: false,
-                    data: resData.body
-                  };
+            if ({}.hasOwnProperty.call(resData, 'ErrorCode') || {}.hasOwnProperty.call(resData, 'code')) {
+              if (resData.code === "JWT EXPIRED") {
+                var _temp15 = function _temp15(_result2) {
+                  return _exit2 ? _result2 : tokenPostAttachment(formData, customHeaders);
                 };
 
-                var _temp22 = function () {
-                  if (resData.code === "JWT EXPIRED") {
-                    var _temp23 = function _temp23(_result3) {
-                      if (_exit2) return _result3;
-                      _exit2 = 1;
-                      return tokenPostAttachment(formData, customHeaders);
-                    };
-
-                    var _temp24 = function () {
-                      if (integrationType === "PROJECT") {
-                        return Promise.resolve(tokenPost(POST_TYPES.REQUEST_TOKEN, {
-                          refreshToken: g.refreshToken,
-                          token: g.token
-                        })).then(function (req_res) {
-                          if (req_res.success) {
-                            g.token = req_res.data.token;
-                            g.newTokenCallback();
-                            _exit2 = 1;
-                            return tokenPostAttachment(formData, customHeaders);
-                          } else {
-                            g.token = "";
-                            g.refreshToken = "";
-                            g.newTokenCallback();
-                            _exit2 = 1;
-                            return {
-                              success: false,
-                              data: req_res.data
-                            };
-                          }
-                        });
+                var _temp16 = function () {
+                  if (integrationType === "PROJECT") {
+                    return Promise.resolve(tokenPost(POST_TYPES.REQUEST_TOKEN, {
+                      refreshToken: g.refreshToken,
+                      token: g.token
+                    })).then(function (req_res) {
+                      if (req_res.success) {
+                        g.token = req_res.data.token;
+                        g.newTokenCallback();
+                        _exit2 = 1;
+                        return tokenPostAttachment(formData, customHeaders);
                       } else {
-                        return Promise.resolve(initAuth()).then(function () {});
+                        g.token = "";
+                        g.refreshToken = "";
+                        g.newTokenCallback();
+                        _exit2 = 1;
+                        return {
+                          success: false,
+                          data: req_res.data
+                        };
                       }
-                    }();
-
-                    return _temp24 && _temp24.then ? _temp24.then(_temp23) : _temp23(_temp24);
+                    });
+                  } else {
+                    return Promise.resolve(initAuth()).then(function () {});
                   }
                 }();
 
-                return _temp22 && _temp22.then ? _temp22.then(_temp21) : _temp21(_temp22);
+                return _temp16 && _temp16.then ? _temp16.then(_temp15) : _temp15(_temp16);
               } else {
-                return {
-                  success: resData.success,
-                  data: resData.body
-                };
+                var err = new Error(resData.body || resData.ErrorCode || resData.code || "Error");
+                err.errorCode = resData.ErrorCode || resData.code;
+                throw err;
               }
-            });
+            } else {
+              return {
+                success: resData.success,
+                data: resData.body
+              };
+            }
           });
-        }, function (error) {
-          return {
-            success: false,
-            data: error
-          };
         });
       };
 
-      var _temp20 = function () {
+      var _temp14 = function () {
         if (!g.mounted) {
           return Promise.resolve(initAuth()).then(function () {});
         }
       }();
 
-      return Promise.resolve(_temp20 && _temp20.then ? _temp20.then(_temp19) : _temp19(_temp20));
+      return Promise.resolve(_temp14 && _temp14.then ? _temp14.then(_temp13) : _temp13(_temp14));
     } catch (e) {
       return Promise.reject(e);
     }
@@ -1672,20 +1644,6 @@ function authFactory(globals) {
     forgotPassword: forgotPassword,
     forgotPasswordConfirm: forgotPasswordConfirm
   };
-}
-
-function _catch$1(body, recover) {
-  try {
-    var result = body();
-  } catch (e) {
-    return recover(e);
-  }
-
-  if (result && result.then) {
-    return result.then(void 0, recover);
-  }
-
-  return result;
 }
 
 function tableFactory(globals) {
@@ -1734,13 +1692,13 @@ function tableFactory(globals) {
 
       var fullOptions = _extends({}, defaultOptions, options);
 
-      return Promise.resolve(_catch$1(function () {
-        return Promise.resolve(tokenPost(POST_TYPES.GET_QUERY, fullOptions)).then(function (res) {
+      return Promise.resolve(tokenPost(POST_TYPES.GET_QUERY, fullOptions)).then(function (res) {
+        if (res.success) {
           return res.data;
-        });
-      }, function () {
-        return [];
-      }));
+        } else {
+          return [];
+        }
+      });
     } catch (e) {
       return Promise.reject(e);
     }
@@ -1751,6 +1709,20 @@ function tableFactory(globals) {
     fullTableSize: fullTableSize,
     tableTypes: tableTypes
   };
+}
+
+function _catch$1(body, recover) {
+  try {
+    var result = body();
+  } catch (e) {
+    return recover(e);
+  }
+
+  if (result && result.then) {
+    return result.then(void 0, recover);
+  }
+
+  return result;
 }
 
 function dbFactory(globals) {
@@ -1785,17 +1757,23 @@ function dbFactory(globals) {
 
       _runListeners(DB_STATUS.PENDING, trx.type, EXECUTE_COUNT.ALL, tableName !== "untable" ? tableName : null);
 
-      return Promise.resolve(tokenPost(POST_TYPES.EASY_QB, trx)).then(function (res) {
-        if (res.success) {
-          _runListeners(DB_STATUS.SUCCESS, trx.type, EXECUTE_COUNT.ALL, tableName !== "untable" ? tableName : null, res.data);
+      return Promise.resolve(_catch$1(function () {
+        return Promise.resolve(tokenPost(POST_TYPES.EASY_QB, trx)).then(function (res) {
+          if (res.success) {
+            _runListeners(DB_STATUS.SUCCESS, trx.type, EXECUTE_COUNT.ALL, tableName !== "untable" ? tableName : null, res.data);
 
-          return res.data;
-        } else {
-          _runListeners(DB_STATUS.ERROR, trx.type, EXECUTE_COUNT.ALL, tableName !== "untable" ? tableName : null);
+            return res.data;
+          } else {
+            _runListeners(DB_STATUS.ERROR, trx.type, EXECUTE_COUNT.ALL, tableName !== "untable" ? tableName : null);
 
-          return res;
-        }
-      });
+            return res;
+          }
+        });
+      }, function (error) {
+        console.error(error);
+
+        _runListeners(DB_STATUS.ERROR, trx.type, EXECUTE_COUNT.ALL, tableName !== "untable" ? tableName : null);
+      }));
     } catch (e) {
       return Promise.reject(e);
     }
@@ -1809,17 +1787,23 @@ function dbFactory(globals) {
 
       _runListeners(DB_STATUS.PENDING, trx.type, EXECUTE_COUNT.ONE, tableName !== "untable" ? tableName : null);
 
-      return Promise.resolve(tokenPost(POST_TYPES.EASY_QB, trx)).then(function (res) {
-        if (res.success) {
-          _runListeners(DB_STATUS.SUCCESS, trx.type, EXECUTE_COUNT.ONE, tableName !== "untable" ? tableName : null, res.data);
+      return Promise.resolve(_catch$1(function () {
+        return Promise.resolve(tokenPost(POST_TYPES.EASY_QB, trx)).then(function (res) {
+          if (res.success) {
+            _runListeners(DB_STATUS.SUCCESS, trx.type, EXECUTE_COUNT.ONE, tableName !== "untable" ? tableName : null, res.data);
 
-          return res.data;
-        } else {
-          _runListeners(DB_STATUS.ERROR, trx.type, EXECUTE_COUNT.ONE, tableName !== "untable" ? tableName : null);
+            return res.data;
+          } else {
+            _runListeners(DB_STATUS.ERROR, trx.type, EXECUTE_COUNT.ONE, tableName !== "untable" ? tableName : null);
 
-          return res;
-        }
-      });
+            return res;
+          }
+        });
+      }, function (error) {
+        console.error(error);
+
+        _runListeners(DB_STATUS.ERROR, trx.type, EXECUTE_COUNT.ONE, tableName !== "untable" ? tableName : null);
+      }));
     } catch (e) {
       return Promise.reject(e);
     }
@@ -1992,12 +1976,12 @@ function EasybaseProvider(_ref) {
               message: res.data
             };
           });
-        }, function (err) {
-          console.error("Easybase Error: deleteRecord failed ", err);
+        }, function (error) {
+          console.error("Easybase Error: deleteRecord failed ", error);
           return {
             success: false,
-            message: "Easybase Error: deleteRecord failed " + err,
-            error: err
+            message: "Easybase Error: deleteRecord failed " + error,
+            errorCode: error.errorCode || undefined
           };
         }));
       }
@@ -2023,12 +2007,12 @@ function EasybaseProvider(_ref) {
             success: res.success
           };
         });
-      }, function (err) {
-        console.error("Easybase Error: addRecord failed ", err);
+      }, function (error) {
+        console.error("Easybase Error: addRecord failed ", error);
         return {
-          message: "Easybase Error: addRecord failed " + err,
+          message: "Easybase Error: addRecord failed " + error,
           success: false,
-          error: err
+          errorCode: error.errorCode || undefined
         };
       }));
     } catch (e) {
@@ -2063,13 +2047,13 @@ function EasybaseProvider(_ref) {
             }
           }); // Check if the array recieved from db is the same as frame
           // If not, update it and send useFrameEffect
-        }, function (err) {
-          console.error("Easybase Error: get failed ", err);
+        }, function (error) {
+          console.error("Easybase Error: get failed ", error);
           isSyncing = false;
           return {
             success: false,
-            message: "Easybase Error: get failed " + err,
-            error: err
+            message: "Easybase Error: get failed " + error,
+            errorCode: error.errorCode || undefined
           };
         });
       };

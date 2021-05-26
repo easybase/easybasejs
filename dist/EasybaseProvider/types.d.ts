@@ -89,7 +89,7 @@ export interface StatusResponse {
     /** Readable description of the the operation's status */
     message: string;
     /** Will represent a corresponding error if an error was thrown during the operation. */
-    error?: Error;
+    errorCode?: string;
 }
 export interface EmailTemplate {
     /** Optional header of email that will be sent to user with verification code */

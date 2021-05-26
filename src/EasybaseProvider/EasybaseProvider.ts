@@ -142,12 +142,12 @@ export default function EasybaseProvider({ ebconfig, options }: EasybaseProvider
                     success: res.success,
                     message: res.data
                 }
-            } catch (err) {
-                console.error("Easybase Error: deleteRecord failed ", err);
+            } catch (error) {
+                console.error("Easybase Error: deleteRecord failed ", error);
                 return {
                     success: false,
-                    message: "Easybase Error: deleteRecord failed " + err,
-                    error: err
+                    message: "Easybase Error: deleteRecord failed " + error,
+                    errorCode: error.errorCode || undefined
                 }
             }
         }
@@ -168,12 +168,12 @@ export default function EasybaseProvider({ ebconfig, options }: EasybaseProvider
                 message: res.data,
                 success: res.success
             }
-        } catch (err) {
-            console.error("Easybase Error: addRecord failed ", err);
+        } catch (error) {
+            console.error("Easybase Error: addRecord failed ", error);
             return {
-                message: "Easybase Error: addRecord failed " + err,
+                message: "Easybase Error: addRecord failed " + error,
                 success: false,
-                error: err
+                errorCode: error.errorCode || undefined
             }
         }
     }
@@ -276,13 +276,13 @@ export default function EasybaseProvider({ ebconfig, options }: EasybaseProvider
                     success: true
                 }
             }
-        } catch (err) {
-            console.error("Easybase Error: get failed ", err);
+        } catch (error) {
+            console.error("Easybase Error: get failed ", error);
             isSyncing = false;
             return {
                 success: false,
-                message: "Easybase Error: get failed " + err,
-                error: err
+                message: "Easybase Error: get failed " + error,
+                errorCode: error.errorCode || undefined
             }
         }
     }

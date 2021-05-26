@@ -11,8 +11,9 @@ export default function authFactory(globals?: Globals): any {
     const getUserAttributes = async (): Promise<Record<string, string>> => {
         try {
             const attrsRes = await tokenPost(POST_TYPES.USER_ATTRIBUTES);
-            return attrsRes.data;   
+            return attrsRes.data;
         } catch (error) {
+            console.error(error)
             return error;
         }
     }
@@ -31,8 +32,8 @@ export default function authFactory(globals?: Globals): any {
         } catch (error) {
             return {
                 success: false,
-                message: "Error",
-                error
+                message: error.message || "Error",
+                errorCode: error.errorCode || undefined
             };
         }
     }
@@ -51,8 +52,8 @@ export default function authFactory(globals?: Globals): any {
         } catch (error) {
             return {
                 success: false,
-                message: "Error",
-                error
+                message: error.message || "Error",
+                errorCode: error.errorCode || undefined
             };
         }
     }
@@ -72,8 +73,8 @@ export default function authFactory(globals?: Globals): any {
         } catch (error) {
             return {
                 success: false,
-                message: "Error",
-                error
+                message: error.message || "Error",
+                errorCode: error.errorCode || undefined
             };
         }
     }
@@ -88,12 +89,12 @@ export default function authFactory(globals?: Globals): any {
             return {
                 success: signUpRes.success,
                 message: signUpRes.data
-            }   
+            }
         } catch (error) {
             return {
                 success: false,
-                message: "Error",
-                error
+                message: error.message || "Error",
+                errorCode: error.errorCode || undefined
             }
         }
     }
@@ -101,7 +102,7 @@ export default function authFactory(globals?: Globals): any {
     const signIn = async (userID: string, password: string): Promise<StatusResponse> => {
         const t1 = Date.now();
         g.session = Math.floor(100000000 + Math.random() * 900000000);
-    
+
         const integrationType = g.ebconfig.integration.split("-")[0].toUpperCase() === "PROJECT" ? "PROJECT" : "REACT";
 
         try {
@@ -122,7 +123,7 @@ export default function authFactory(globals?: Globals): any {
             });
 
             const resData = await res.json();
-    
+
             if (resData.token) {
                 g.token = resData.token;
                 g.refreshToken = resData.refreshToken;
@@ -149,11 +150,10 @@ export default function authFactory(globals?: Globals): any {
                 };
             }
         } catch (error) {
-            console.error(error);
             return {
                 success: false,
-                message: error,
-                error
+                message: error.message || "Error",
+                errorCode: error.errorCode || undefined
             };
         }
     }
@@ -165,7 +165,7 @@ export default function authFactory(globals?: Globals): any {
                 message: "newPassword must be of type string"
             };
         }
-        
+
         try {
             const setAttrsRes = await tokenPost(POST_TYPES.RESET_PASSWORD, { newPassword });
 
@@ -176,12 +176,12 @@ export default function authFactory(globals?: Globals): any {
         } catch (error) {
             return {
                 success: false,
-                message: "Error",
-                error
+                message: error.message || "Error",
+                errorCode: error.errorCode || undefined
             };
         }
     }
-    
+
     const isUserSignedIn = (): boolean => g.token.length > 0;
 
     const signOut = (): void => {
@@ -192,9 +192,9 @@ export default function authFactory(globals?: Globals): any {
     const initAuth = async (): Promise<boolean> => {
         const t1 = Date.now();
         g.session = Math.floor(100000000 + Math.random() * 900000000);
-    
+
         log(`Handshaking on${g.instance} instance`);
-    
+
         const integrationType = g.ebconfig.integration.split("-")[0].toUpperCase() === "PROJECT" ? "PROJECT" : "REACT";
 
         try {
@@ -215,7 +215,7 @@ export default function authFactory(globals?: Globals): any {
             });
 
             const resData = await res.json();
-    
+
             if (resData.token) {
                 g.token = resData.token;
                 g.mounted = true;
@@ -235,7 +235,7 @@ export default function authFactory(globals?: Globals): any {
             return false;
         }
     }
-    
+
     const tokenPost = async (postType: POST_TYPES, body?: {}): Promise<AuthPostResponse> => {
         if (!g.mounted) {
             await initAuth();
@@ -243,141 +243,124 @@ export default function authFactory(globals?: Globals): any {
 
         const integrationType = g.ebconfig.integration.split("-")[0].toUpperCase() === "PROJECT" ? "PROJECT" : "REACT";
 
-        try {
-            const res = await fetch(generateBareUrl(integrationType, g.integrationID), {
-                method: "POST",
-                headers: {
-                    'Eb-Post-Req': postType,
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    _auth: generateAuthBody(),
-                    ...body
-                })
-            });
+        const res = await fetch(generateBareUrl(integrationType, g.integrationID), {
+            method: "POST",
+            headers: {
+                'Eb-Post-Req': postType,
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                _auth: generateAuthBody(),
+                ...body
+            })
+        });
 
-            const resData = await res.json();
+        const resData = await res.json();
 
-            if ({}.hasOwnProperty.call(resData, 'ErrorCode') || {}.hasOwnProperty.call(resData, 'code')) {
-                if (resData.code === "JWT EXPIRED") {
-                    if (integrationType === "PROJECT") {
-                        const req_res = await tokenPost(POST_TYPES.REQUEST_TOKEN, {
-                            refreshToken: g.refreshToken,
-                            token: g.token
-                        });
+        if ({}.hasOwnProperty.call(resData, 'ErrorCode') || {}.hasOwnProperty.call(resData, 'code')) {
+            if (resData.code === "JWT EXPIRED") {
+                if (integrationType === "PROJECT") {
+                    const req_res = await tokenPost(POST_TYPES.REQUEST_TOKEN, {
+                        refreshToken: g.refreshToken,
+                        token: g.token
+                    });
 
-                        if (req_res.success) {
-                            g.token = req_res.data.token
-                            g.newTokenCallback();
-                            return tokenPost(postType, body);
-                        } else {
-                            g.token = "";
-                            g.refreshToken = "";
-                            g.newTokenCallback();
-                            return {
-                                success: false,
-                                data: req_res.data
-                            }
-                        }
+                    if (req_res.success) {
+                        g.token = req_res.data.token
+                        g.newTokenCallback();
+                        return tokenPost(postType, body);
                     } else {
-                        await initAuth();
+                        g.token = "";
+                        g.refreshToken = "";
+                        g.newTokenCallback();
+                        return {
+                            success: false,
+                            data: req_res.data
+                        }
                     }
-                    return tokenPost(postType, body);
+                } else {
+                    await initAuth();
                 }
-    
-                return {
-                    success: false,
-                    data: resData.body
-                }
+                return tokenPost(postType, body);
             } else {
-                return {
-                    success: resData.success,
-                    data: resData.body
-                }
+                const err = new Error(resData.body || resData.ErrorCode || resData.code || "Error");
+                (err as any).errorCode = resData.ErrorCode || resData.code;
+                throw err;
             }
-        } catch (error) {
+        } else {
             return {
-                success: false,
-                data: error
+                success: resData.success,
+                data: resData.body
             }
         }
     }
-    
-    const tokenPostAttachment = async (formData: FormData, customHeaders: {}): Promise<AuthPostResponse> => {
 
+    const tokenPostAttachment = async (formData: FormData, customHeaders: {}): Promise<AuthPostResponse> => {
         if (!g.mounted) {
             await initAuth();
         }
 
         const regularAuthbody = generateAuthBody();
-    
+
         const attachmentAuth = {
             'Eb-token': regularAuthbody.token,
             'Eb-token-time': regularAuthbody.token_time,
             'Eb-now': regularAuthbody.now
         };
-    
+
         const integrationType = g.ebconfig.integration.split("-")[0].toUpperCase() === "PROJECT" ? "PROJECT" : "REACT";
 
-        try {
-            const res = await fetch(generateBareUrl(integrationType, g.integrationID), {
-                method: "POST",
-                headers: {
-                    'Eb-Post-Req': POST_TYPES.UPLOAD_ATTACHMENT,
-                    ...customHeaders,
-                    ...attachmentAuth
-                },
-                body: formData
-            });
+        const res = await fetch(generateBareUrl(integrationType, g.integrationID), {
+            method: "POST",
+            headers: {
+                'Eb-Post-Req': POST_TYPES.UPLOAD_ATTACHMENT,
+                ...customHeaders,
+                ...attachmentAuth
+            },
+            body: formData
+        });
 
-            const resData = await res.json();
+        const resData = await res.json();
 
-            if ({}.hasOwnProperty.call(resData, 'ErrorCode') || {}.hasOwnProperty.call(resData, 'code')) {
-                if (resData.code === "JWT EXPIRED") {
-                    if (integrationType === "PROJECT") {
-                        const req_res = await tokenPost(POST_TYPES.REQUEST_TOKEN, {
-                            refreshToken: g.refreshToken,
-                            token: g.token
-                        });
+        if ({}.hasOwnProperty.call(resData, 'ErrorCode') || {}.hasOwnProperty.call(resData, 'code')) {
+            if (resData.code === "JWT EXPIRED") {
+                if (integrationType === "PROJECT") {
+                    const req_res = await tokenPost(POST_TYPES.REQUEST_TOKEN, {
+                        refreshToken: g.refreshToken,
+                        token: g.token
+                    });
 
-                        if (req_res.success) {
-                            g.token = req_res.data.token
-                            g.newTokenCallback();
-                            return tokenPostAttachment(formData, customHeaders);
-                        } else {
-                            g.token = "";
-                            g.refreshToken = "";
-                            g.newTokenCallback();
-                            return {
-                                success: false,
-                                data: req_res.data
-                            }
-                        }
+                    if (req_res.success) {
+                        g.token = req_res.data.token
+                        g.newTokenCallback();
+                        return tokenPostAttachment(formData, customHeaders);
                     } else {
-                        await initAuth();
+                        g.token = "";
+                        g.refreshToken = "";
+                        g.newTokenCallback();
+                        return {
+                            success: false,
+                            data: req_res.data
+                        }
                     }
-                    return tokenPostAttachment(formData, customHeaders);
+                } else {
+                    await initAuth();
                 }
-    
-                return {
-                    success: false,
-                    data: resData.body
-                }
+                return tokenPostAttachment(formData, customHeaders);
             } else {
-                return {
-                    success: resData.success,
-                    data: resData.body
-                }
+                const err = new Error(resData.body || resData.ErrorCode || resData.code || "Error");
+                (err as any).errorCode = resData.ErrorCode || resData.code;
+                throw err;
             }
-        } catch (error) {
+        } else {
             return {
-                success: false,
-                data: error
+                success: resData.success,
+                data: resData.body
             }
         }
     }
-    
+
     return {
         initAuth,
         tokenPost,

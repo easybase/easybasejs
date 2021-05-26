@@ -19,11 +19,11 @@ export default function tableFactory(globals?: Globals): any {
         }
     
         const fullOptions: QueryOptions = { ...defaultOptions, ...options };
-    
-        try {
-            const res = await tokenPost(POST_TYPES.GET_QUERY, fullOptions);
+
+        const res = await tokenPost(POST_TYPES.GET_QUERY, fullOptions);
+        if (res.success) {
             return res.data
-        } catch (error) {
+        } else {
             return [];
         }
     }

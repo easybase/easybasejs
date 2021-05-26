@@ -1108,6 +1108,7 @@ function authFactory(globals) {
       const attrsRes = await tokenPost(POST_TYPES.USER_ATTRIBUTES);
       return attrsRes.data;
     } catch (error) {
+      console.error(error);
       return error;
     }
   };
@@ -1125,8 +1126,8 @@ function authFactory(globals) {
     } catch (error) {
       return {
         success: false,
-        message: "Error",
-        error
+        message: error.message || "Error",
+        errorCode: error.errorCode || undefined
       };
     }
   };
@@ -1144,8 +1145,8 @@ function authFactory(globals) {
     } catch (error) {
       return {
         success: false,
-        message: "Error",
-        error
+        message: error.message || "Error",
+        errorCode: error.errorCode || undefined
       };
     }
   };
@@ -1164,8 +1165,8 @@ function authFactory(globals) {
     } catch (error) {
       return {
         success: false,
-        message: "Error",
-        error
+        message: error.message || "Error",
+        errorCode: error.errorCode || undefined
       };
     }
   };
@@ -1184,8 +1185,8 @@ function authFactory(globals) {
     } catch (error) {
       return {
         success: false,
-        message: "Error",
-        error
+        message: error.message || "Error",
+        errorCode: error.errorCode || undefined
       };
     }
   };
@@ -1240,11 +1241,10 @@ function authFactory(globals) {
         };
       }
     } catch (error) {
-      console.error(error);
       return {
         success: false,
-        message: error,
-        error
+        message: error.message || "Error",
+        errorCode: error.errorCode || undefined
       };
     }
   };
@@ -1268,8 +1268,8 @@ function authFactory(globals) {
     } catch (error) {
       return {
         success: false,
-        message: "Error",
-        error
+        message: error.message || "Error",
+        errorCode: error.errorCode || undefined
       };
     }
   };
@@ -1331,63 +1331,54 @@ function authFactory(globals) {
     }
 
     const integrationType = g.ebconfig.integration.split("-")[0].toUpperCase() === "PROJECT" ? "PROJECT" : "REACT";
+    const res = await fetch(generateBareUrl(integrationType, g.integrationID), {
+      method: "POST",
+      headers: {
+        'Eb-Post-Req': postType,
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(_extends({
+        _auth: generateAuthBody()
+      }, body))
+    });
+    const resData = await res.json();
 
-    try {
-      const res = await fetch(generateBareUrl(integrationType, g.integrationID), {
-        method: "POST",
-        headers: {
-          'Eb-Post-Req': postType,
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(_extends({
-          _auth: generateAuthBody()
-        }, body))
-      });
-      const resData = await res.json();
+    if ({}.hasOwnProperty.call(resData, 'ErrorCode') || {}.hasOwnProperty.call(resData, 'code')) {
+      if (resData.code === "JWT EXPIRED") {
+        if (integrationType === "PROJECT") {
+          const req_res = await tokenPost(POST_TYPES.REQUEST_TOKEN, {
+            refreshToken: g.refreshToken,
+            token: g.token
+          });
 
-      if ({}.hasOwnProperty.call(resData, 'ErrorCode') || {}.hasOwnProperty.call(resData, 'code')) {
-        if (resData.code === "JWT EXPIRED") {
-          if (integrationType === "PROJECT") {
-            const req_res = await tokenPost(POST_TYPES.REQUEST_TOKEN, {
-              refreshToken: g.refreshToken,
-              token: g.token
-            });
-
-            if (req_res.success) {
-              g.token = req_res.data.token;
-              g.newTokenCallback();
-              return tokenPost(postType, body);
-            } else {
-              g.token = "";
-              g.refreshToken = "";
-              g.newTokenCallback();
-              return {
-                success: false,
-                data: req_res.data
-              };
-            }
+          if (req_res.success) {
+            g.token = req_res.data.token;
+            g.newTokenCallback();
+            return tokenPost(postType, body);
           } else {
-            await initAuth();
+            g.token = "";
+            g.refreshToken = "";
+            g.newTokenCallback();
+            return {
+              success: false,
+              data: req_res.data
+            };
           }
-
-          return tokenPost(postType, body);
+        } else {
+          await initAuth();
         }
 
-        return {
-          success: false,
-          data: resData.body
-        };
+        return tokenPost(postType, body);
       } else {
-        return {
-          success: resData.success,
-          data: resData.body
-        };
+        const err = new Error(resData.body || resData.ErrorCode || resData.code || "Error");
+        err.errorCode = resData.ErrorCode || resData.code;
+        throw err;
       }
-    } catch (error) {
+    } else {
       return {
-        success: false,
-        data: error
+        success: resData.success,
+        data: resData.body
       };
     }
   };
@@ -1404,59 +1395,50 @@ function authFactory(globals) {
       'Eb-now': regularAuthbody.now
     };
     const integrationType = g.ebconfig.integration.split("-")[0].toUpperCase() === "PROJECT" ? "PROJECT" : "REACT";
+    const res = await fetch(generateBareUrl(integrationType, g.integrationID), {
+      method: "POST",
+      headers: _extends({
+        'Eb-Post-Req': POST_TYPES.UPLOAD_ATTACHMENT
+      }, customHeaders, attachmentAuth),
+      body: formData
+    });
+    const resData = await res.json();
 
-    try {
-      const res = await fetch(generateBareUrl(integrationType, g.integrationID), {
-        method: "POST",
-        headers: _extends({
-          'Eb-Post-Req': POST_TYPES.UPLOAD_ATTACHMENT
-        }, customHeaders, attachmentAuth),
-        body: formData
-      });
-      const resData = await res.json();
+    if ({}.hasOwnProperty.call(resData, 'ErrorCode') || {}.hasOwnProperty.call(resData, 'code')) {
+      if (resData.code === "JWT EXPIRED") {
+        if (integrationType === "PROJECT") {
+          const req_res = await tokenPost(POST_TYPES.REQUEST_TOKEN, {
+            refreshToken: g.refreshToken,
+            token: g.token
+          });
 
-      if ({}.hasOwnProperty.call(resData, 'ErrorCode') || {}.hasOwnProperty.call(resData, 'code')) {
-        if (resData.code === "JWT EXPIRED") {
-          if (integrationType === "PROJECT") {
-            const req_res = await tokenPost(POST_TYPES.REQUEST_TOKEN, {
-              refreshToken: g.refreshToken,
-              token: g.token
-            });
-
-            if (req_res.success) {
-              g.token = req_res.data.token;
-              g.newTokenCallback();
-              return tokenPostAttachment(formData, customHeaders);
-            } else {
-              g.token = "";
-              g.refreshToken = "";
-              g.newTokenCallback();
-              return {
-                success: false,
-                data: req_res.data
-              };
-            }
+          if (req_res.success) {
+            g.token = req_res.data.token;
+            g.newTokenCallback();
+            return tokenPostAttachment(formData, customHeaders);
           } else {
-            await initAuth();
+            g.token = "";
+            g.refreshToken = "";
+            g.newTokenCallback();
+            return {
+              success: false,
+              data: req_res.data
+            };
           }
-
-          return tokenPostAttachment(formData, customHeaders);
+        } else {
+          await initAuth();
         }
 
-        return {
-          success: false,
-          data: resData.body
-        };
+        return tokenPostAttachment(formData, customHeaders);
       } else {
-        return {
-          success: resData.success,
-          data: resData.body
-        };
+        const err = new Error(resData.body || resData.ErrorCode || resData.code || "Error");
+        err.errorCode = resData.ErrorCode || resData.code;
+        throw err;
       }
-    } catch (error) {
+    } else {
       return {
-        success: false,
-        data: error
+        success: resData.success,
+        data: resData.body
       };
     }
   };
@@ -1490,10 +1472,11 @@ function tableFactory(globals) {
 
     const fullOptions = _extends({}, defaultOptions, options);
 
-    try {
-      const res = await tokenPost(POST_TYPES.GET_QUERY, fullOptions);
+    const res = await tokenPost(POST_TYPES.GET_QUERY, fullOptions);
+
+    if (res.success) {
       return res.data;
-    } catch (error) {
+    } else {
       return [];
     }
   };
@@ -1558,16 +1541,22 @@ function dbFactory(globals) {
 
     _runListeners(DB_STATUS.PENDING, trx.type, EXECUTE_COUNT.ALL, tableName !== "untable" ? tableName : null);
 
-    const res = await tokenPost(POST_TYPES.EASY_QB, trx);
+    try {
+      const res = await tokenPost(POST_TYPES.EASY_QB, trx);
 
-    if (res.success) {
-      _runListeners(DB_STATUS.SUCCESS, trx.type, EXECUTE_COUNT.ALL, tableName !== "untable" ? tableName : null, res.data);
+      if (res.success) {
+        _runListeners(DB_STATUS.SUCCESS, trx.type, EXECUTE_COUNT.ALL, tableName !== "untable" ? tableName : null, res.data);
 
-      return res.data;
-    } else {
+        return res.data;
+      } else {
+        _runListeners(DB_STATUS.ERROR, trx.type, EXECUTE_COUNT.ALL, tableName !== "untable" ? tableName : null);
+
+        return res;
+      }
+    } catch (error) {
+      console.error(error);
+
       _runListeners(DB_STATUS.ERROR, trx.type, EXECUTE_COUNT.ALL, tableName !== "untable" ? tableName : null);
-
-      return res;
     }
   };
 
@@ -1578,16 +1567,22 @@ function dbFactory(globals) {
 
     _runListeners(DB_STATUS.PENDING, trx.type, EXECUTE_COUNT.ONE, tableName !== "untable" ? tableName : null);
 
-    const res = await tokenPost(POST_TYPES.EASY_QB, trx);
+    try {
+      const res = await tokenPost(POST_TYPES.EASY_QB, trx);
 
-    if (res.success) {
-      _runListeners(DB_STATUS.SUCCESS, trx.type, EXECUTE_COUNT.ONE, tableName !== "untable" ? tableName : null, res.data);
+      if (res.success) {
+        _runListeners(DB_STATUS.SUCCESS, trx.type, EXECUTE_COUNT.ONE, tableName !== "untable" ? tableName : null, res.data);
 
-      return res.data;
-    } else {
+        return res.data;
+      } else {
+        _runListeners(DB_STATUS.ERROR, trx.type, EXECUTE_COUNT.ONE, tableName !== "untable" ? tableName : null);
+
+        return res;
+      }
+    } catch (error) {
+      console.error(error);
+
       _runListeners(DB_STATUS.ERROR, trx.type, EXECUTE_COUNT.ONE, tableName !== "untable" ? tableName : null);
-
-      return res;
     }
   };
 
@@ -1736,12 +1731,12 @@ function EasybaseProvider({
           success: res.success,
           message: res.data
         };
-      } catch (err) {
-        console.error("Easybase Error: deleteRecord failed ", err);
+      } catch (error) {
+        console.error("Easybase Error: deleteRecord failed ", error);
         return {
           success: false,
-          message: "Easybase Error: deleteRecord failed " + err,
-          error: err
+          message: "Easybase Error: deleteRecord failed " + error,
+          errorCode: error.errorCode || undefined
         };
       }
     }
@@ -1762,12 +1757,12 @@ function EasybaseProvider({
         message: res.data,
         success: res.success
       };
-    } catch (err) {
-      console.error("Easybase Error: addRecord failed ", err);
+    } catch (error) {
+      console.error("Easybase Error: addRecord failed ", error);
       return {
-        message: "Easybase Error: addRecord failed " + err,
+        message: "Easybase Error: addRecord failed " + error,
         success: false,
-        error: err
+        errorCode: error.errorCode || undefined
       };
     }
   }; // Only allow the deletion of one element at a time
@@ -1879,13 +1874,13 @@ function EasybaseProvider({
           success: true
         };
       }
-    } catch (err) {
-      console.error("Easybase Error: get failed ", err);
+    } catch (error) {
+      console.error("Easybase Error: get failed ", error);
       isSyncing = false;
       return {
         success: false,
-        message: "Easybase Error: get failed " + err,
-        error: err
+        message: "Easybase Error: get failed " + error,
+        errorCode: error.errorCode || undefined
       };
     }
   };

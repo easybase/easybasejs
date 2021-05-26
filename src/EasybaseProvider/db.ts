@@ -37,13 +37,18 @@ export default function dbFactory(globals?: Globals): IdbFactory {
         trx.tableName = tableName;
         if (userAssociatedRecordsOnly) trx.userAssociatedRecordsOnly = userAssociatedRecordsOnly;
         _runListeners(DB_STATUS.PENDING, trx.type, EXECUTE_COUNT.ALL, tableName !== "untable" ? tableName : null);
-        const res = await tokenPost(POST_TYPES.EASY_QB, trx);
-        if (res.success) {
-            _runListeners(DB_STATUS.SUCCESS, trx.type, EXECUTE_COUNT.ALL, tableName !== "untable" ? tableName : null, res.data);
-            return res.data;
-        } else {
+        try {
+            const res = await tokenPost(POST_TYPES.EASY_QB, trx);
+            if (res.success) {
+                _runListeners(DB_STATUS.SUCCESS, trx.type, EXECUTE_COUNT.ALL, tableName !== "untable" ? tableName : null, res.data);
+                return res.data;
+            } else {
+                _runListeners(DB_STATUS.ERROR, trx.type, EXECUTE_COUNT.ALL, tableName !== "untable" ? tableName : null);
+                return res;
+            }
+        } catch (error) {
+            console.error(error)
             _runListeners(DB_STATUS.ERROR, trx.type, EXECUTE_COUNT.ALL, tableName !== "untable" ? tableName : null);
-            return res;
         }
     }
 
@@ -52,13 +57,18 @@ export default function dbFactory(globals?: Globals): IdbFactory {
         trx.tableName = tableName;
         if (userAssociatedRecordsOnly) trx.userAssociatedRecordsOnly = userAssociatedRecordsOnly;
         _runListeners(DB_STATUS.PENDING, trx.type, EXECUTE_COUNT.ONE, tableName !== "untable" ? tableName : null);
-        const res = await tokenPost(POST_TYPES.EASY_QB, trx);
-        if (res.success) {
-            _runListeners(DB_STATUS.SUCCESS, trx.type, EXECUTE_COUNT.ONE, tableName !== "untable" ? tableName : null, res.data);
-            return res.data;
-        } else {
+        try {
+            const res = await tokenPost(POST_TYPES.EASY_QB, trx);
+            if (res.success) {
+                _runListeners(DB_STATUS.SUCCESS, trx.type, EXECUTE_COUNT.ONE, tableName !== "untable" ? tableName : null, res.data);
+                return res.data;
+            } else {
+                _runListeners(DB_STATUS.ERROR, trx.type, EXECUTE_COUNT.ONE, tableName !== "untable" ? tableName : null);
+                return res;
+            }
+        } catch (error) {
+            console.error(error)
             _runListeners(DB_STATUS.ERROR, trx.type, EXECUTE_COUNT.ONE, tableName !== "untable" ? tableName : null);
-            return res;
         }
     }
 
