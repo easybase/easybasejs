@@ -6,8 +6,7 @@
   "source": "index.js",
   "scripts": {
     "test:speed": "node ./index.js",
-    "test:db": "node ./db.js",
-    "test": "echo 'No test specified' || true"
+    "test:db": "node ./db.js"
   },
   "author": "",
   "license": "ISC",
