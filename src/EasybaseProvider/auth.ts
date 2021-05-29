@@ -152,13 +152,14 @@ export default function authFactory(globals?: Globals): any {
             } else {
                 return {
                     success: false,
-                    message: "Could not sign in user"
+                    message: "Could not sign in user",
+                    errorCode: resData.ErrorCode || undefined
                 };
             }
         } catch (error) {
             return {
                 success: false,
-                message: error.message || "Error",
+                message: error.message || "Could not sign in user",
                 errorCode: error.errorCode || undefined
             };
         }

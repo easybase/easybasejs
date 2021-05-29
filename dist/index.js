@@ -1206,6 +1206,12 @@ function authFactory(globals) {
       generateAuthBody = _utilsFactory.generateAuthBody,
       log = _utilsFactory.log;
 
+  function _clearTokens() {
+    g.token = "";
+    g.refreshToken = "";
+    g.newTokenCallback();
+  }
+
   var getUserAttributes = function getUserAttributes() {
     try {
       return Promise.resolve(_catch(function () {
@@ -1213,7 +1219,7 @@ function authFactory(globals) {
           return attrsRes.data;
         });
       }, function (error) {
-        console.error(error);
+        log(error);
         return error;
       }));
     } catch (e) {
@@ -1365,7 +1371,8 @@ function authFactory(globals) {
             } else {
               return {
                 success: false,
-                message: "Could not sign in user"
+                message: "Could not sign in user",
+                errorCode: resData.ErrorCode || undefined
               };
             }
           });
@@ -1373,7 +1380,7 @@ function authFactory(globals) {
       }, function (error) {
         return {
           success: false,
-          message: error.message || "Error",
+          message: error.message || "Could not sign in user",
           errorCode: error.errorCode || undefined
         };
       }));
@@ -1489,32 +1496,35 @@ function authFactory(globals) {
             var _exit;
 
             if ({}.hasOwnProperty.call(resData, 'ErrorCode') || {}.hasOwnProperty.call(resData, 'code')) {
-              if (resData.code === "JWT EXPIRED") {
+              if (resData.ErrorCode === "TokenExpired") {
                 var _temp7 = function _temp7(_result) {
                   return _exit ? _result : tokenPost(postType, body);
                 };
 
                 var _temp8 = function () {
                   if (integrationType === "PROJECT") {
-                    return Promise.resolve(tokenPost(POST_TYPES.REQUEST_TOKEN, {
-                      refreshToken: g.refreshToken,
-                      token: g.token
-                    })).then(function (req_res) {
-                      if (req_res.success) {
-                        g.token = req_res.data.token;
-                        g.newTokenCallback();
-                        _exit = 1;
-                        return tokenPost(postType, body);
-                      } else {
-                        g.token = "";
-                        g.refreshToken = "";
-                        g.newTokenCallback();
-                        _exit = 1;
-                        return {
-                          success: false,
-                          data: req_res.data
-                        };
-                      }
+                    return _catch(function () {
+                      return Promise.resolve(tokenPost(POST_TYPES.REQUEST_TOKEN, {
+                        refreshToken: g.refreshToken,
+                        token: g.token
+                      })).then(function (req_res) {
+                        if (req_res.success) {
+                          g.token = req_res.data.token;
+                          g.newTokenCallback();
+                          _exit = 1;
+                          return tokenPost(postType, body);
+                        } else {
+                          throw new Error(req_res.data || "Error");
+                        }
+                      });
+                    }, function (error) {
+                      _clearTokens();
+
+                      _exit = 1;
+                      return {
+                        success: false,
+                        data: error.message || error
+                      };
                     });
                   } else {
                     return Promise.resolve(initAuth()).then(function () {});
@@ -1570,32 +1580,35 @@ function authFactory(globals) {
             var _exit2;
 
             if ({}.hasOwnProperty.call(resData, 'ErrorCode') || {}.hasOwnProperty.call(resData, 'code')) {
-              if (resData.code === "JWT EXPIRED") {
+              if (resData.ErrorCode === "TokenExpired") {
                 var _temp15 = function _temp15(_result2) {
                   return _exit2 ? _result2 : tokenPostAttachment(formData, customHeaders);
                 };
 
                 var _temp16 = function () {
                   if (integrationType === "PROJECT") {
-                    return Promise.resolve(tokenPost(POST_TYPES.REQUEST_TOKEN, {
-                      refreshToken: g.refreshToken,
-                      token: g.token
-                    })).then(function (req_res) {
-                      if (req_res.success) {
-                        g.token = req_res.data.token;
-                        g.newTokenCallback();
-                        _exit2 = 1;
-                        return tokenPostAttachment(formData, customHeaders);
-                      } else {
-                        g.token = "";
-                        g.refreshToken = "";
-                        g.newTokenCallback();
-                        _exit2 = 1;
-                        return {
-                          success: false,
-                          data: req_res.data
-                        };
-                      }
+                    return _catch(function () {
+                      return Promise.resolve(tokenPost(POST_TYPES.REQUEST_TOKEN, {
+                        refreshToken: g.refreshToken,
+                        token: g.token
+                      })).then(function (req_res) {
+                        if (req_res.success) {
+                          g.token = req_res.data.token;
+                          g.newTokenCallback();
+                          _exit2 = 1;
+                          return tokenPostAttachment(formData, customHeaders);
+                        } else {
+                          throw new Error(req_res.data || "Error");
+                        }
+                      });
+                    }, function (error) {
+                      _clearTokens();
+
+                      _exit2 = 1;
+                      return {
+                        success: false,
+                        data: error.message || error
+                      };
                     });
                   } else {
                     return Promise.resolve(initAuth()).then(function () {});
@@ -1770,9 +1783,11 @@ function dbFactory(globals) {
           }
         });
       }, function (error) {
-        console.error(error);
+        console.warn(error);
 
         _runListeners(DB_STATUS.ERROR, trx.type, EXECUTE_COUNT.ALL, tableName !== "untable" ? tableName : null);
+
+        return [];
       }));
     } catch (e) {
       return Promise.reject(e);
@@ -1800,9 +1815,11 @@ function dbFactory(globals) {
           }
         });
       }, function (error) {
-        console.error(error);
+        console.warn(error);
 
         _runListeners(DB_STATUS.ERROR, trx.type, EXECUTE_COUNT.ONE, tableName !== "untable" ? tableName : null);
+
+        return {};
       }));
     } catch (e) {
       return Promise.reject(e);
@@ -1880,7 +1897,7 @@ function EasybaseProvider(_ref) {
       log = _utilsFactory.log;
 
   if (typeof ebconfig !== 'object' || ebconfig === null || ebconfig === undefined) {
-    console.error("No ebconfig object passed. do `import ebconfig from \"ebconfig.js\"` and pass it to the Easybase provider");
+    console.error("No ebconfig object passed. do `import ebconfig from \"./ebconfig.js\"` and pass it to the Easybase provider");
     return;
   } else if (!ebconfig.integration) {
     console.error("Invalid ebconfig object passed. Download ebconfig.js from Easybase.io and try again.");

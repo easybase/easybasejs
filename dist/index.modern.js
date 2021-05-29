@@ -1103,12 +1103,18 @@ function authFactory(globals) {
     log
   } = utilsFactory(g);
 
+  function _clearTokens() {
+    g.token = "";
+    g.refreshToken = "";
+    g.newTokenCallback();
+  }
+
   const getUserAttributes = async () => {
     try {
       const attrsRes = await tokenPost(POST_TYPES.USER_ATTRIBUTES);
       return attrsRes.data;
     } catch (error) {
-      console.error(error);
+      log(error);
       return error;
     }
   };
@@ -1237,13 +1243,14 @@ function authFactory(globals) {
       } else {
         return {
           success: false,
-          message: "Could not sign in user"
+          message: "Could not sign in user",
+          errorCode: resData.ErrorCode || undefined
         };
       }
     } catch (error) {
       return {
         success: false,
-        message: error.message || "Error",
+        message: error.message || "Could not sign in user",
         errorCode: error.errorCode || undefined
       };
     }
@@ -1345,24 +1352,27 @@ function authFactory(globals) {
     const resData = await res.json();
 
     if ({}.hasOwnProperty.call(resData, 'ErrorCode') || {}.hasOwnProperty.call(resData, 'code')) {
-      if (resData.code === "JWT EXPIRED") {
+      if (resData.ErrorCode === "TokenExpired") {
         if (integrationType === "PROJECT") {
-          const req_res = await tokenPost(POST_TYPES.REQUEST_TOKEN, {
-            refreshToken: g.refreshToken,
-            token: g.token
-          });
+          try {
+            const req_res = await tokenPost(POST_TYPES.REQUEST_TOKEN, {
+              refreshToken: g.refreshToken,
+              token: g.token
+            });
 
-          if (req_res.success) {
-            g.token = req_res.data.token;
-            g.newTokenCallback();
-            return tokenPost(postType, body);
-          } else {
-            g.token = "";
-            g.refreshToken = "";
-            g.newTokenCallback();
+            if (req_res.success) {
+              g.token = req_res.data.token;
+              g.newTokenCallback();
+              return tokenPost(postType, body);
+            } else {
+              throw new Error(req_res.data || "Error");
+            }
+          } catch (error) {
+            _clearTokens();
+
             return {
               success: false,
-              data: req_res.data
+              data: error.message || error
             };
           }
         } else {
@@ -1405,24 +1415,27 @@ function authFactory(globals) {
     const resData = await res.json();
 
     if ({}.hasOwnProperty.call(resData, 'ErrorCode') || {}.hasOwnProperty.call(resData, 'code')) {
-      if (resData.code === "JWT EXPIRED") {
+      if (resData.ErrorCode === "TokenExpired") {
         if (integrationType === "PROJECT") {
-          const req_res = await tokenPost(POST_TYPES.REQUEST_TOKEN, {
-            refreshToken: g.refreshToken,
-            token: g.token
-          });
+          try {
+            const req_res = await tokenPost(POST_TYPES.REQUEST_TOKEN, {
+              refreshToken: g.refreshToken,
+              token: g.token
+            });
 
-          if (req_res.success) {
-            g.token = req_res.data.token;
-            g.newTokenCallback();
-            return tokenPostAttachment(formData, customHeaders);
-          } else {
-            g.token = "";
-            g.refreshToken = "";
-            g.newTokenCallback();
+            if (req_res.success) {
+              g.token = req_res.data.token;
+              g.newTokenCallback();
+              return tokenPostAttachment(formData, customHeaders);
+            } else {
+              throw new Error(req_res.data || "Error");
+            }
+          } catch (error) {
+            _clearTokens();
+
             return {
               success: false,
-              data: req_res.data
+              data: error.message || error
             };
           }
         } else {
@@ -1554,9 +1567,11 @@ function dbFactory(globals) {
         return res;
       }
     } catch (error) {
-      console.error(error);
+      console.warn(error);
 
       _runListeners(DB_STATUS.ERROR, trx.type, EXECUTE_COUNT.ALL, tableName !== "untable" ? tableName : null);
+
+      return [];
     }
   };
 
@@ -1580,9 +1595,11 @@ function dbFactory(globals) {
         return res;
       }
     } catch (error) {
-      console.error(error);
+      console.warn(error);
 
       _runListeners(DB_STATUS.ERROR, trx.type, EXECUTE_COUNT.ONE, tableName !== "untable" ? tableName : null);
+
+      return {};
     }
   };
 
@@ -1644,7 +1661,7 @@ function EasybaseProvider({
   } = utilsFactory(g);
 
   if (typeof ebconfig !== 'object' || ebconfig === null || ebconfig === undefined) {
-    console.error("No ebconfig object passed. do `import ebconfig from \"ebconfig.js\"` and pass it to the Easybase provider");
+    console.error("No ebconfig object passed. do `import ebconfig from \"./ebconfig.js\"` and pass it to the Easybase provider");
     return;
   } else if (!ebconfig.integration) {
     console.error("Invalid ebconfig object passed. Download ebconfig.js from Easybase.io and try again.");
