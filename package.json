@@ -6,7 +6,6 @@
   "source": "src/index.ts",
   "main": "dist/index.js",
   "module": "dist/index.modern.js",
-  "unpkg": "dist/index.umd.js",
   "scripts": {
     "type-check": "tsc --noEmit",
     "type-check:watch": "npm run type-check -- --watch",
@@ -23,7 +22,7 @@
     "type": "git",
     "url": "git+https://github.com/easybase/easybasejs.git"
   },
-  "author": "EasyBase",
+  "author": "Easybase",
   "bugs": {
     "url": "https://github.com/easybase/easybasejs/issues"
   },
@@ -41,8 +40,8 @@
   },
   "dependencies": {
     "@glidejs/glide": "^3.4.1",
-    "EasyQB": "git+https://github.com/easybase/EasyQB.git",
     "cross-fetch": "^3.0.6",
+    "easyqb": "^1.0.20",
     "fast-deep-equal": "^3.1.3"
   }
 }
