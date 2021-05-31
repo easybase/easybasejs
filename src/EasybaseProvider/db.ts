@@ -1,7 +1,7 @@
 import _g from "./g";
-import easyqb from 'EasyQB';
-import { SQW } from "EasyQB/types/sq";
-import { NewExpression } from "EasyQB/types/expression";
+import easyqb from 'easyqb';
+import { SQW } from "easyqb/types/sq";
+import { NewExpression } from "easyqb/types/expression";
 import authFactory from "./auth";
 import { POST_TYPES, DB_STATUS, Globals, EXECUTE_COUNT } from "./types";
 

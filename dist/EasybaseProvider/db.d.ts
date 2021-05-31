@@ -1,5 +1,5 @@
-import { SQW } from "EasyQB/types/sq";
-import { NewExpression } from "EasyQB/types/expression";
+import { SQW } from "easyqb/types/sq";
+import { NewExpression } from "easyqb/types/expression";
 import { DB_STATUS, Globals, EXECUTE_COUNT } from "./types";
 interface IdbFactory {
     db: (tableName?: string, userAssociatedRecordsOnly?: boolean) => SQW;

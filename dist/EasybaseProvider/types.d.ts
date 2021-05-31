@@ -1,5 +1,5 @@
-import { SQW } from "EasyQB/types/sq";
-import { NewExpression } from "EasyQB/types/expression";
+import { SQW } from "easyqb/types/sq";
+import { NewExpression } from "easyqb/types/expression";
 export interface ConfigureFrameOptions {
     /** Edit starting index from which records will be retrieved from. Useful for paging. */
     offset?: number;
