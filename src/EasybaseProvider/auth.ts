@@ -165,7 +165,7 @@ export default function authFactory(globals?: Globals): any {
         }
     }
 
-    const resetUserPassword = async (newPassword: string): Promise<StatusResponse> => {
+    const resetUserPassword = async (currentPassword: string, newPassword: string): Promise<StatusResponse> => {
         if (typeof newPassword !== "string" || newPassword.length > 100) {
             return {
                 success: false,
@@ -173,8 +173,15 @@ export default function authFactory(globals?: Globals): any {
             };
         }
 
+        if (typeof currentPassword !== "string" || currentPassword.length > 100) {
+            return {
+                success: false,
+                message: "currentPassword must be of type string"
+            };
+        }
+
         try {
-            const setAttrsRes = await tokenPost(POST_TYPES.RESET_PASSWORD, { newPassword });
+            const setAttrsRes = await tokenPost(POST_TYPES.RESET_PASSWORD, { currentPassword, newPassword });
 
             return {
                 success: setAttrsRes.success,
