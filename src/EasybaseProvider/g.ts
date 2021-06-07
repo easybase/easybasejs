@@ -10,6 +10,7 @@ namespace GlobalNamespace {
     export let instance: string;
     export let mounted: boolean;
     export let newTokenCallback: () => {};
+    export let userID: string;
 }
 
 const _g: Globals = { ...GlobalNamespace };

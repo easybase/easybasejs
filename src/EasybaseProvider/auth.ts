@@ -12,6 +12,7 @@ export default function authFactory(globals?: Globals): any {
         g.token = "";
         g.refreshToken = "";
         g.newTokenCallback();
+        g.userID = undefined;
     }
 
     const getUserAttributes = async (): Promise<Record<string, string>> => {
@@ -134,6 +135,7 @@ export default function authFactory(globals?: Globals): any {
                 g.token = resData.token;
                 g.refreshToken = resData.refreshToken;
                 g.newTokenCallback();
+                g.userID = resData.userID;
                 g.mounted = true;
                 const validTokenRes = await tokenPost(POST_TYPES.VALID_TOKEN);
                 const elapsed = Date.now() - t1;
@@ -196,11 +198,12 @@ export default function authFactory(globals?: Globals): any {
         }
     }
 
-    const isUserSignedIn = (): boolean => g.token.length > 0;
+    const userID = (): string | undefined => g.userID || undefined;
 
     const signOut = (): void => {
         g.token = "";
         g.newTokenCallback();
+        g.userID = undefined;
     }
 
     const initAuth = async (): Promise<boolean> => {
@@ -212,7 +215,6 @@ export default function authFactory(globals?: Globals): any {
         const integrationType = g.ebconfig.integration.split("-")[0].toUpperCase() === "PROJECT" ? "PROJECT" : "REACT";
 
         try {
-
             const res = await fetch(generateBareUrl(integrationType, g.integrationID), {
                 method: "POST",
                 headers: {
@@ -385,11 +387,11 @@ export default function authFactory(globals?: Globals): any {
         signUp,
         setUserAttribute,
         getUserAttributes,
-        isUserSignedIn,
         signIn,
         signOut,
         resetUserPassword,
         forgotPassword,
-        forgotPasswordConfirm
+        forgotPasswordConfirm,
+        userID
     }
 }

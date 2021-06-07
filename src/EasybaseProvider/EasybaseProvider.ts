@@ -21,7 +21,6 @@ import tableFactory from "./table";
 import dbFactory from './db';
 
 export default function EasybaseProvider({ ebconfig, options }: EasybaseProviderProps): ContextValue {
-
     const g = gFactory();
 
     const {
@@ -30,12 +29,12 @@ export default function EasybaseProvider({ ebconfig, options }: EasybaseProvider
         signUp,
         setUserAttribute,
         getUserAttributes,
-        isUserSignedIn,
         signIn,
         signOut,
         resetUserPassword,
         forgotPassword,
-        forgotPasswordConfirm
+        forgotPasswordConfirm,
+        userID
     } = authFactory(g);
 
     const {
@@ -375,7 +374,6 @@ export default function EasybaseProvider({ ebconfig, options }: EasybaseProvider
         fullTableSize,
         tableTypes,
         Query,
-        isUserSignedIn,
         signIn,
         signOut,
         signUp,
@@ -386,7 +384,8 @@ export default function EasybaseProvider({ ebconfig, options }: EasybaseProvider
         dbEventListener,
         e,
         forgotPassword,
-        forgotPasswordConfirm
+        forgotPasswordConfirm,
+        userID
     }
 
     return c;

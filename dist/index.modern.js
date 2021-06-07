@@ -1107,6 +1107,7 @@ function authFactory(globals) {
     g.token = "";
     g.refreshToken = "";
     g.newTokenCallback();
+    g.userID = undefined;
   }
 
   const getUserAttributes = async () => {
@@ -1224,6 +1225,7 @@ function authFactory(globals) {
         g.token = resData.token;
         g.refreshToken = resData.refreshToken;
         g.newTokenCallback();
+        g.userID = resData.userID;
         g.mounted = true;
         const validTokenRes = await tokenPost(POST_TYPES.VALID_TOKEN);
         const elapsed = Date.now() - t1;
@@ -1289,11 +1291,12 @@ function authFactory(globals) {
     }
   };
 
-  const isUserSignedIn = () => g.token.length > 0;
+  const userID = () => g.userID || undefined;
 
   const signOut = () => {
     g.token = "";
     g.newTokenCallback();
+    g.userID = undefined;
   };
 
   const initAuth = async () => {
@@ -1471,12 +1474,12 @@ function authFactory(globals) {
     signUp,
     setUserAttribute,
     getUserAttributes,
-    isUserSignedIn,
     signIn,
     signOut,
     resetUserPassword,
     forgotPassword,
-    forgotPasswordConfirm
+    forgotPasswordConfirm,
+    userID
   };
 }
 
@@ -1647,12 +1650,12 @@ function EasybaseProvider({
     signUp,
     setUserAttribute,
     getUserAttributes,
-    isUserSignedIn,
     signIn,
     signOut,
     resetUserPassword,
     forgotPassword,
-    forgotPasswordConfirm
+    forgotPasswordConfirm,
+    userID
   } = authFactory(g);
   const {
     Query,
@@ -1997,7 +2000,6 @@ function EasybaseProvider({
     fullTableSize,
     tableTypes,
     Query,
-    isUserSignedIn,
     signIn,
     signOut,
     signUp,
@@ -2008,7 +2010,8 @@ function EasybaseProvider({
     dbEventListener,
     e,
     forgotPassword,
-    forgotPasswordConfirm
+    forgotPasswordConfirm,
+    userID
   };
   return c;
 }

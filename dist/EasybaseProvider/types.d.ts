@@ -134,10 +134,6 @@ export interface AuthPostResponse {
 }
 export interface ContextValue {
     /**
-     * Check if a user is currently signed in.
-     */
-    isUserSignedIn(): boolean;
-    /**
      * Signs out the current user.
      */
     signOut(): void;
@@ -338,6 +334,11 @@ export interface ContextValue {
      * @return {Promise<StatusResponse>} A StatusResponse corresponding to the successful setting of a new password
      */
     forgotPasswordConfirm(code: string, username: string, newPassword: string): Promise<StatusResponse>;
+    /**
+     * Retrieve the currently signed-in user's ID.
+     * @return {string | undefined} The currently signed-in user's ID (username), otherwise undefined.
+     */
+    userID(): string | undefined;
 }
 export interface Globals {
     ebconfig: Ebconfig;
@@ -349,4 +350,5 @@ export interface Globals {
     instance: string;
     mounted: boolean;
     newTokenCallback(): void;
+    userID: string;
 }

@@ -1216,6 +1216,7 @@ function authFactory(globals) {
     g.token = "";
     g.refreshToken = "";
     g.newTokenCallback();
+    g.userID = undefined;
   }
 
   var getUserAttributes = function getUserAttributes() {
@@ -1357,6 +1358,7 @@ function authFactory(globals) {
               g.token = resData.token;
               g.refreshToken = resData.refreshToken;
               g.newTokenCallback();
+              g.userID = resData.userID;
               g.mounted = true;
               return Promise.resolve(tokenPost(POST_TYPES.VALID_TOKEN)).then(function (validTokenRes) {
                 var elapsed = Date.now() - t1;
@@ -1433,13 +1435,14 @@ function authFactory(globals) {
     }
   };
 
-  var isUserSignedIn = function isUserSignedIn() {
-    return g.token.length > 0;
+  var userID = function userID() {
+    return g.userID || undefined;
   };
 
   var signOut = function signOut() {
     g.token = "";
     g.newTokenCallback();
+    g.userID = undefined;
   };
 
   var initAuth = function initAuth() {
@@ -1664,12 +1667,12 @@ function authFactory(globals) {
     signUp: signUp,
     setUserAttribute: setUserAttribute,
     getUserAttributes: getUserAttributes,
-    isUserSignedIn: isUserSignedIn,
     signIn: signIn,
     signOut: signOut,
     resetUserPassword: resetUserPassword,
     forgotPassword: forgotPassword,
-    forgotPasswordConfirm: forgotPasswordConfirm
+    forgotPasswordConfirm: forgotPasswordConfirm,
+    userID: userID
   };
 }
 
@@ -1890,12 +1893,12 @@ function EasybaseProvider(_ref) {
       signUp = _authFactory.signUp,
       setUserAttribute = _authFactory.setUserAttribute,
       getUserAttributes = _authFactory.getUserAttributes,
-      isUserSignedIn = _authFactory.isUserSignedIn,
       signIn = _authFactory.signIn,
       signOut = _authFactory.signOut,
       resetUserPassword = _authFactory.resetUserPassword,
       forgotPassword = _authFactory.forgotPassword,
-      forgotPasswordConfirm = _authFactory.forgotPasswordConfirm;
+      forgotPasswordConfirm = _authFactory.forgotPasswordConfirm,
+      userID = _authFactory.userID;
 
   var _tableFactory = tableFactory(g),
       Query = _tableFactory.Query,
@@ -2275,7 +2278,6 @@ function EasybaseProvider(_ref) {
     fullTableSize: fullTableSize,
     tableTypes: tableTypes,
     Query: Query,
-    isUserSignedIn: isUserSignedIn,
     signIn: signIn,
     signOut: signOut,
     signUp: signUp,
@@ -2286,7 +2288,8 @@ function EasybaseProvider(_ref) {
     dbEventListener: dbEventListener,
     e: e,
     forgotPassword: forgotPassword,
-    forgotPasswordConfirm: forgotPasswordConfirm
+    forgotPasswordConfirm: forgotPasswordConfirm,
+    userID: userID
   };
   return c;
 }
