@@ -368,5 +368,5 @@ export interface Globals {
     instance: string;
     mounted: boolean;
     newTokenCallback(): void;
-    userID: string;
+    userID: string | undefined;
 }
