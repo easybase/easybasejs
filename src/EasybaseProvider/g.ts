@@ -10,6 +10,11 @@ namespace GlobalNamespace {
     export let mounted: boolean;
     export let newTokenCallback: () => {};
     export let userID: string;
+    export let GA_AUTH_SALT: string | undefined;
+    export let analyticsEnabled: boolean;
+    export let analyticsPageview: () => {};
+    export let analyticsEvent: () => {};
+    export let analyticsIdentify: () => {};
 }
 
 const _g: Globals = { ...GlobalNamespace };

@@ -350,4 +350,9 @@ export interface Globals {
     mounted: boolean;
     newTokenCallback(): void;
     userID: string | undefined;
+    GA_AUTH_SALT: string | undefined;
+    analyticsEnabled: boolean;
+    analyticsPageview(page: string): void;
+    analyticsEvent(event: string, params?: Record<string, any>): void;
+    analyticsIdentify(hashedUserId: string): void;
 }

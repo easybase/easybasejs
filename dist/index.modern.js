@@ -1120,6 +1120,7 @@ function authFactory(globals) {
   const getUserAttributes = async () => {
     try {
       const attrsRes = await tokenPost(POST_TYPES.USER_ATTRIBUTES);
+      g.analyticsEnabled && g.analyticsEvent('getUserAttributes');
       return attrsRes.data;
     } catch (error) {
       log(error);
@@ -1133,6 +1134,7 @@ function authFactory(globals) {
         key,
         value
       });
+      g.analyticsEnabled && g.analyticsEvent('setUserAttribute');
       return {
         success: setAttrsRes.success,
         message: JSON.stringify(setAttrsRes.data)
@@ -1152,6 +1154,7 @@ function authFactory(globals) {
         username,
         emailTemplate
       });
+      g.analyticsEnabled && g.analyticsEvent('forgotPassword');
       return {
         success: setAttrsRes.success,
         message: setAttrsRes.data
@@ -1172,6 +1175,7 @@ function authFactory(globals) {
         code,
         newPassword
       });
+      g.analyticsEnabled && g.analyticsEvent('forgotPasswordConfirm');
       return {
         success: setAttrsRes.success,
         message: setAttrsRes.data
@@ -1192,6 +1196,7 @@ function authFactory(globals) {
         password,
         userAttributes
       });
+      g.analyticsEnabled && g.analyticsEvent('signUp');
       return {
         success: signUpRes.success,
         message: signUpRes.data
@@ -1234,11 +1239,23 @@ function authFactory(globals) {
         g.newTokenCallback();
         g.userID = resData.userID;
         g.mounted = true;
-        const validTokenRes = await tokenPost(POST_TYPES.VALID_TOKEN);
+        const [validTokenRes, {
+          hash
+        }, {
+          fromUtf8
+        }] = await Promise.all([tokenPost(POST_TYPES.VALID_TOKEN), import('fast-sha256'), import('@aws-sdk/util-utf8-browser')]);
         const elapsed = Date.now() - t1;
 
         if (validTokenRes.success) {
           log("Valid auth initiation in " + elapsed + "ms");
+
+          if (g.analyticsEnabled) {
+            const hashOut = hash(fromUtf8(g.GA_AUTH_SALT + resData.userID));
+            const hexHash = Array.prototype.map.call(hashOut, x => ('00' + x.toString(16)).slice(-2)).join('');
+            g.analyticsIdentify(hexHash);
+            g.analyticsEvent('signIn');
+          }
+
           return {
             success: true,
             message: "Successfully signed in user"
@@ -1285,6 +1302,7 @@ function authFactory(globals) {
         currentPassword,
         newPassword
       });
+      g.analyticsEnabled && g.analyticsEvent('resetUserPassword');
       return {
         success: setAttrsRes.success,
         message: JSON.stringify(setAttrsRes.data)

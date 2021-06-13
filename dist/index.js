@@ -1,5 +1,24 @@
 function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
 
+function _interopNamespace(e) {
+  if (e && e.__esModule) { return e; } else {
+    var n = {};
+    if (e) {
+      Object.keys(e).forEach(function (k) {
+        var d = Object.getOwnPropertyDescriptor(e, k);
+        Object.defineProperty(n, k, d.get ? d : {
+          enumerable: true,
+          get: function () {
+            return e[k];
+          }
+        });
+      });
+    }
+    n['default'] = e;
+    return n;
+  }
+}
+
 var fetch = _interopDefault(require('cross-fetch'));
 var deepEqual = _interopDefault(require('fast-deep-equal'));
 var easyqb = _interopDefault(require('easyqb'));
@@ -1229,6 +1248,7 @@ function authFactory(globals) {
     try {
       return Promise.resolve(_catch(function () {
         return Promise.resolve(tokenPost(POST_TYPES.USER_ATTRIBUTES)).then(function (attrsRes) {
+          g.analyticsEnabled && g.analyticsEvent('getUserAttributes');
           return attrsRes.data;
         });
       }, function (error) {
@@ -1247,6 +1267,7 @@ function authFactory(globals) {
           key: key,
           value: value
         })).then(function (setAttrsRes) {
+          g.analyticsEnabled && g.analyticsEvent('setUserAttribute');
           return {
             success: setAttrsRes.success,
             message: JSON.stringify(setAttrsRes.data)
@@ -1271,6 +1292,7 @@ function authFactory(globals) {
           username: username,
           emailTemplate: emailTemplate
         })).then(function (setAttrsRes) {
+          g.analyticsEnabled && g.analyticsEvent('forgotPassword');
           return {
             success: setAttrsRes.success,
             message: setAttrsRes.data
@@ -1296,6 +1318,7 @@ function authFactory(globals) {
           code: code,
           newPassword: newPassword
         })).then(function (setAttrsRes) {
+          g.analyticsEnabled && g.analyticsEvent('forgotPasswordConfirm');
           return {
             success: setAttrsRes.success,
             message: setAttrsRes.data
@@ -1321,6 +1344,7 @@ function authFactory(globals) {
           password: password,
           userAttributes: userAttributes
         })).then(function (signUpRes) {
+          g.analyticsEnabled && g.analyticsEvent('signUp');
           return {
             success: signUpRes.success,
             message: signUpRes.data
@@ -1366,11 +1390,24 @@ function authFactory(globals) {
               g.newTokenCallback();
               g.userID = resData.userID;
               g.mounted = true;
-              return Promise.resolve(tokenPost(POST_TYPES.VALID_TOKEN)).then(function (validTokenRes) {
+              return Promise.resolve(Promise.all([tokenPost(POST_TYPES.VALID_TOKEN), new Promise(function (resolve) { resolve(_interopNamespace(require('fast-sha256'))); }), new Promise(function (resolve) { resolve(_interopNamespace(require('@aws-sdk/util-utf8-browser'))); })])).then(function (_ref) {
+                var validTokenRes = _ref[0],
+                    hash = _ref[1].hash,
+                    fromUtf8 = _ref[2].fromUtf8;
                 var elapsed = Date.now() - t1;
 
                 if (validTokenRes.success) {
                   log("Valid auth initiation in " + elapsed + "ms");
+
+                  if (g.analyticsEnabled) {
+                    var hashOut = hash(fromUtf8(g.GA_AUTH_SALT + resData.userID));
+                    var hexHash = Array.prototype.map.call(hashOut, function (x) {
+                      return ('00' + x.toString(16)).slice(-2);
+                    }).join('');
+                    g.analyticsIdentify(hexHash);
+                    g.analyticsEvent('signIn');
+                  }
+
                   return {
                     success: true,
                     message: "Successfully signed in user"
@@ -1424,6 +1461,7 @@ function authFactory(globals) {
           currentPassword: currentPassword,
           newPassword: newPassword
         })).then(function (setAttrsRes) {
+          g.analyticsEnabled && g.analyticsEvent('resetUserPassword');
           return {
             success: setAttrsRes.success,
             message: JSON.stringify(setAttrsRes.data)
