@@ -69,7 +69,8 @@ function gFactory({
 }) {
   const defaultG = {
     options: _extends({}, options),
-    ebconfig: ebconfig
+    ebconfig: ebconfig,
+    GA_USER_ID_SALT: "m83WnAPrq"
   };
   return _extends({}, GlobalNamespace, defaultG);
 }
@@ -1252,7 +1253,7 @@ function authFactory(globals) {
           log("Valid auth initiation in " + elapsed + "ms");
 
           if (g.analyticsEnabled) {
-            const hashOut = hash(fromUtf8(g.GA_AUTH_SALT + resData.userID));
+            const hashOut = hash(fromUtf8(g.GA_USER_ID_SALT + resData.userID));
             const hexHash = Array.prototype.map.call(hashOut, x => ('00' + x.toString(16)).slice(-2)).join('');
             g.analyticsIdentify(hexHash);
             g.analyticsEvent('login', {

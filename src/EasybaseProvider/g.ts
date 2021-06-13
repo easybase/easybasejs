@@ -10,10 +10,10 @@ namespace GlobalNamespace {
     export let mounted: boolean;
     export let newTokenCallback: () => {};
     export let userID: string;
-    export let GA_AUTH_SALT: string | undefined;
     export let analyticsEnabled: boolean;
     export let analyticsEvent: () => {};
     export let analyticsIdentify: () => {};
+    export let GA_USER_ID_SALT: string; // https://support.google.com/analytics/answer/6366371?hl=en#hashed
 }
 
 const _g: Globals = { ...GlobalNamespace };
@@ -24,6 +24,7 @@ export function gFactory({ ebconfig, options }: EasybaseProviderProps): Globals 
     const defaultG = {
         options: { ...options },
         ebconfig: ebconfig,
+        GA_USER_ID_SALT: "m83WnAPrq"
     }
     return { ...GlobalNamespace, ...defaultG } as Globals;
 }

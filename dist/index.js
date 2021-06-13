@@ -143,7 +143,8 @@ function gFactory(_ref) {
       options = _ref.options;
   var defaultG = {
     options: _extends({}, options),
-    ebconfig: ebconfig
+    ebconfig: ebconfig,
+    GA_USER_ID_SALT: "m83WnAPrq"
   };
   return _extends({}, GlobalNamespace, defaultG);
 }
@@ -1402,7 +1403,7 @@ function authFactory(globals) {
                   log("Valid auth initiation in " + elapsed + "ms");
 
                   if (g.analyticsEnabled) {
-                    var hashOut = hash(fromUtf8(g.GA_AUTH_SALT + resData.userID));
+                    var hashOut = hash(fromUtf8(g.GA_USER_ID_SALT + resData.userID));
                     var hexHash = Array.prototype.map.call(hashOut, function (x) {
                       return ('00' + x.toString(16)).slice(-2);
                     }).join('');

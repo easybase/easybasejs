@@ -144,7 +144,7 @@ export default function authFactory(globals?: Globals): any {
                 if (validTokenRes.success) {
                     log("Valid auth initiation in " + elapsed + "ms");
                     if (g.analyticsEnabled) {
-                        const hashOut = hash(fromUtf8(g.GA_AUTH_SALT + resData.userID));
+                        const hashOut = hash(fromUtf8(g.GA_USER_ID_SALT + resData.userID));
                         const hexHash = Array.prototype.map.call(hashOut, x => ('00' + x.toString(16)).slice(-2)).join('');
                         g.analyticsIdentify(hexHash);
                         g.analyticsEvent('login', { method: "Easybase" });
