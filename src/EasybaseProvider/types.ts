@@ -370,7 +370,6 @@ export interface Globals {
     userID: string | undefined;
     GA_AUTH_SALT: string | undefined; // https://support.google.com/analytics/answer/6366371?hl=en#hashed
     analyticsEnabled: boolean;
-    analyticsPageview(page: string): void;
-    analyticsEvent(event: string, params?: Record<string, any>): void;
+    analyticsEvent(eventTitle: string, params?: Record<string, any>): void;
     analyticsIdentify(hashedUserId: string): void;
 }

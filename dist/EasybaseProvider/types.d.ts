@@ -346,13 +346,12 @@ export interface Globals {
     refreshToken: string;
     session: number;
     options: EasybaseProviderPropsOptions;
-    instance: string;
+    instance: "Node" | "React" | "React Native";
     mounted: boolean;
     newTokenCallback(): void;
     userID: string | undefined;
     GA_AUTH_SALT: string | undefined;
     analyticsEnabled: boolean;
-    analyticsPageview(page: string): void;
-    analyticsEvent(event: string, params?: Record<string, any>): void;
+    analyticsEvent(eventTitle: string, params?: Record<string, any>): void;
     analyticsIdentify(hashedUserId: string): void;
 }

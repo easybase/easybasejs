@@ -12,7 +12,6 @@ namespace GlobalNamespace {
     export let userID: string;
     export let GA_AUTH_SALT: string | undefined;
     export let analyticsEnabled: boolean;
-    export let analyticsPageview: () => {};
     export let analyticsEvent: () => {};
     export let analyticsIdentify: () => {};
 }
