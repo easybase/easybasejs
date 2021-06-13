@@ -3,8 +3,6 @@ import _g from "./g";
 import utilsFactory from "./utils";
 import fetch from 'cross-fetch';
 
-const GA_AUTH_HASH = "p8YpJmWxF" // https://support.google.com/analytics/answer/6366371?hl=en#hashed
-
 export default function authFactory(globals?: Globals): any {
     const g = globals || _g;
 
@@ -147,12 +145,12 @@ export default function authFactory(globals?: Globals): any {
                     log("Valid auth initiation in " + elapsed + "ms");
                     if (g.analytics) {
                         import('@aws-crypto/sha256-universal').then(c => {
-                            const hash = new c.Sha256;
-                            hash.update(GA_AUTH_HASH + resData.userID);
+                            const hash = new c.Sha256();
+                            hash.update(g.GA_AUTH_SALT + resData.userID);
                             hash.digest().then(hashOut => {
                                 const hexHash = Array.prototype.map.call(hashOut, x => ('00' + x.toString(16)).slice(-2)).join('');
-                                g.analytics.track('signIn');
-                                g.analytics.identify(hexHash);
+                                g.analytics?.track('signIn');
+                                g.analytics?.identify(hexHash);
                             });
                         })
                     }

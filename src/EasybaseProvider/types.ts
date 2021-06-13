@@ -373,4 +373,5 @@ export interface Globals {
     newTokenCallback(): void;
     userID: string | undefined;
     analytics: AnalyticsInstance | undefined;
+    GA_AUTH_SALT: string | undefined; // https://support.google.com/analytics/answer/6366371?hl=en#hashed
 }

@@ -14,6 +14,7 @@ namespace GlobalNamespace {
     export let newTokenCallback: () => {};
     export let userID: string;
     export let analytics: AnalyticsInstance;
+    export let GA_AUTH_SALT: string; // https://support.google.com/analytics/answer/6366371?hl=en#hashed
 }
 
 const _g: Globals = { ...GlobalNamespace };
@@ -36,7 +37,7 @@ export function gFactory(integration: string, options?: EasybaseProviderPropsOpt
                     })
                 ]
             })
-            return { ...GlobalNamespace, analytics } as Globals;
+            return { ...GlobalNamespace, analytics, GA_AUTH_SALT: "p8YpJmWxF" } as Globals;
         }
     } else {
         return { ...GlobalNamespace } as Globals;

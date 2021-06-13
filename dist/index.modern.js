@@ -80,7 +80,8 @@ function gFactory(integration, options) {
         })]
       });
       return _extends({}, GlobalNamespace, {
-        analytics
+        analytics,
+        GA_AUTH_SALT: "p8YpJmWxF"
       });
     }
   } else {
@@ -1116,8 +1117,6 @@ function utilsFactory(globals) {
   };
 }
 
-const GA_AUTH_HASH = "p8YpJmWxF"; // https://support.google.com/analytics/answer/6366371?hl=en#hashed
-
 function authFactory(globals) {
   const g = globals || _g;
   const {
@@ -1264,11 +1263,13 @@ function authFactory(globals) {
           if (g.analytics) {
             import('@aws-crypto/sha256-universal').then(c => {
               const hash = new c.Sha256();
-              hash.update(GA_AUTH_HASH + resData.userID);
+              hash.update(g.GA_AUTH_SALT + resData.userID);
               hash.digest().then(hashOut => {
+                var _g$analytics, _g$analytics2;
+
                 const hexHash = Array.prototype.map.call(hashOut, x => ('00' + x.toString(16)).slice(-2)).join('');
-                g.analytics.track('signIn');
-                g.analytics.identify(hexHash);
+                (_g$analytics = g.analytics) == null ? void 0 : _g$analytics.track('signIn');
+                (_g$analytics2 = g.analytics) == null ? void 0 : _g$analytics2.identify(hexHash);
               });
             });
           }

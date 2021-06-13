@@ -355,4 +355,5 @@ export interface Globals {
     newTokenCallback(): void;
     userID: string | undefined;
     analytics: AnalyticsInstance | undefined;
+    GA_AUTH_SALT: string | undefined;
 }
