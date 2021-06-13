@@ -1120,7 +1120,7 @@ function authFactory(globals) {
   const getUserAttributes = async () => {
     try {
       const attrsRes = await tokenPost(POST_TYPES.USER_ATTRIBUTES);
-      g.analyticsEnabled && g.analyticsEvent('getUserAttributes');
+      g.analyticsEnabled && g.analyticsEvent('get_user_attributes');
       return attrsRes.data;
     } catch (error) {
       log(error);
@@ -1134,7 +1134,7 @@ function authFactory(globals) {
         key,
         value
       });
-      g.analyticsEnabled && g.analyticsEvent('setUserAttribute');
+      g.analyticsEnabled && g.analyticsEvent('set_user_attribute');
       return {
         success: setAttrsRes.success,
         message: JSON.stringify(setAttrsRes.data)
@@ -1154,7 +1154,7 @@ function authFactory(globals) {
         username,
         emailTemplate
       });
-      g.analyticsEnabled && g.analyticsEvent('forgotPassword');
+      g.analyticsEnabled && g.analyticsEvent('forgot_password');
       return {
         success: setAttrsRes.success,
         message: setAttrsRes.data
@@ -1175,7 +1175,7 @@ function authFactory(globals) {
         code,
         newPassword
       });
-      g.analyticsEnabled && g.analyticsEvent('forgotPasswordConfirm');
+      g.analyticsEnabled && g.analyticsEvent('forgot_password_confirm');
       return {
         success: setAttrsRes.success,
         message: setAttrsRes.data
@@ -1196,7 +1196,9 @@ function authFactory(globals) {
         password,
         userAttributes
       });
-      g.analyticsEnabled && g.analyticsEvent('signUp');
+      g.analyticsEnabled && g.analyticsEvent('sign_up', {
+        method: "Easybase"
+      });
       return {
         success: signUpRes.success,
         message: signUpRes.data
@@ -1253,7 +1255,9 @@ function authFactory(globals) {
             const hashOut = hash(fromUtf8(g.GA_AUTH_SALT + resData.userID));
             const hexHash = Array.prototype.map.call(hashOut, x => ('00' + x.toString(16)).slice(-2)).join('');
             g.analyticsIdentify(hexHash);
-            g.analyticsEvent('signIn');
+            g.analyticsEvent('login', {
+              method: "Easybase"
+            });
           }
 
           return {
@@ -1302,7 +1306,7 @@ function authFactory(globals) {
         currentPassword,
         newPassword
       });
-      g.analyticsEnabled && g.analyticsEvent('resetUserPassword');
+      g.analyticsEnabled && g.analyticsEvent('reset_user_password');
       return {
         success: setAttrsRes.success,
         message: JSON.stringify(setAttrsRes.data)
