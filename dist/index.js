@@ -140,27 +140,33 @@ var GlobalNamespace;
 (function (GlobalNamespace) {})(GlobalNamespace || (GlobalNamespace = {}));
 
 var _g = _extends({}, GlobalNamespace);
-function gFactory(integration, options) {
-  if (integration && options && options.googleAnalyticsId) {
+function gFactory(ebconfig, options) {
+  var defaultParams = {
+    options: _extends({}, options),
+    integrationID: ebconfig.integration,
+    ebconfig: ebconfig
+  };
+
+  if (ebconfig.integration && options && options.googleAnalyticsId) {
     if (options.googleAnalyticsId.startsWith("G-")) {
       // TODO: handle GA4 https://github.com/DavidWells/analytics
       console.error("Google Analytics 4 tracking Id detected. This version is not supported, please use Universal Analytics instead – https://support.google.com/analytics/answer/10269537?hl=en");
-      return _extends({}, GlobalNamespace);
+      return _extends({}, GlobalNamespace, defaultParams);
     } else {
       var analytics = Analytics({
-        app: integration,
+        app: ebconfig.integration,
         plugins: [googleAnalytics({
           trackingId: options.googleAnalyticsId,
           debug: process ? process.env.NODE_ENV === 'development' : false
         })]
       });
-      return _extends({}, GlobalNamespace, {
+      return _extends({}, GlobalNamespace, defaultParams, {
         analytics: analytics,
         GA_AUTH_SALT: "p8YpJmWxF"
       });
     }
   } else {
-    return _extends({}, GlobalNamespace);
+    return _extends({}, GlobalNamespace, defaultParams);
   }
 }
 
@@ -1422,8 +1428,8 @@ function authFactory(globals) {
                         var hexHash = Array.prototype.map.call(hashOut, function (x) {
                           return ('00' + x.toString(16)).slice(-2);
                         }).join('');
-                        (_g$analytics = g.analytics) == null ? void 0 : _g$analytics.track('signIn');
-                        (_g$analytics2 = g.analytics) == null ? void 0 : _g$analytics2.identify(hexHash);
+                        (_g$analytics = g.analytics) == null ? void 0 : _g$analytics.identify(hexHash);
+                        (_g$analytics2 = g.analytics) == null ? void 0 : _g$analytics2.track('signIn');
                       });
                     });
                   }
@@ -1958,7 +1964,7 @@ function EasybaseProvider(_ref) {
     return;
   }
 
-  var g = gFactory(ebconfig.integration, options);
+  var g = gFactory(ebconfig, options);
 
   var _authFactory = authFactory(g),
       tokenPost = _authFactory.tokenPost,
@@ -1992,10 +1998,6 @@ function EasybaseProvider(_ref) {
   if (isIE) {
     console.error("EASYBASE — easybasejs does not support Internet Explorer. Please use a different browser.");
   }
-
-  g.options = _extends({}, options);
-  g.integrationID = ebconfig.integration;
-  g.ebconfig = ebconfig;
 
   if (g.ebconfig.tt && g.ebconfig.integration.split("-")[0].toUpperCase() !== "PROJECT") {
     g.mounted = false;

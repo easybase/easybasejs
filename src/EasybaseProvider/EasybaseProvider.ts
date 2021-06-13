@@ -21,6 +21,7 @@ import tableFactory from "./table";
 import dbFactory from './db';
 
 export default function EasybaseProvider({ ebconfig, options }: EasybaseProviderProps): ContextValue {
+
     if (typeof ebconfig !== 'object' || ebconfig === null || ebconfig === undefined) {
         console.error("No ebconfig object passed. do `import ebconfig from \"./ebconfig.js\"` and pass it to the Easybase provider");
         return;
@@ -29,7 +30,7 @@ export default function EasybaseProvider({ ebconfig, options }: EasybaseProvider
         return;
     }
 
-    const g = gFactory(ebconfig.integration, options);
+    const g = gFactory(ebconfig, options);
 
     const {
         tokenPost,
@@ -66,9 +67,6 @@ export default function EasybaseProvider({ ebconfig, options }: EasybaseProvider
         console.error("EASYBASE — easybasejs does not support Internet Explorer. Please use a different browser.");
     }
 
-    g.options = { ...options };
-    g.integrationID = ebconfig.integration;
-    g.ebconfig = ebconfig;
     if (g.ebconfig.tt && g.ebconfig.integration.split("-")[0].toUpperCase() !== "PROJECT") {
         g.mounted = false;
     } else {

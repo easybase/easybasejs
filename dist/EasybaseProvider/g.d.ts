@@ -1,4 +1,4 @@
-import { EasybaseProviderPropsOptions, Globals } from "./types";
+import { Ebconfig, EasybaseProviderPropsOptions, Globals } from "./types";
 declare const _g: Globals;
 export default _g;
-export declare function gFactory(integration: string, options?: EasybaseProviderPropsOptions): Globals;
+export declare function gFactory(ebconfig: Ebconfig, options?: EasybaseProviderPropsOptions): Globals;

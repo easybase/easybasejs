@@ -21,15 +21,21 @@ const _g: Globals = { ...GlobalNamespace };
 
 export default _g;
 
-export function gFactory(integration: string, options?: EasybaseProviderPropsOptions): Globals {
-    if (integration && options && options.googleAnalyticsId) {
+export function gFactory(ebconfig: Ebconfig, options?: EasybaseProviderPropsOptions): Globals {
+    const defaultParams = {
+        options: { ...options },
+        integrationID: ebconfig.integration,
+        ebconfig: ebconfig
+    }
+
+    if (ebconfig.integration && options && options.googleAnalyticsId) {
         if (options.googleAnalyticsId.startsWith("G-")) {
             // TODO: handle GA4 https://github.com/DavidWells/analytics
             console.error("Google Analytics 4 tracking Id detected. This version is not supported, please use Universal Analytics instead – https://support.google.com/analytics/answer/10269537?hl=en")
-            return { ...GlobalNamespace } as Globals;
+            return { ...GlobalNamespace, ...defaultParams } as Globals;
         } else {
             const analytics = Analytics({
-                app: integration,
+                app: ebconfig.integration,
                 plugins: [
                     googleAnalytics({
                         trackingId: options.googleAnalyticsId,
@@ -37,9 +43,9 @@ export function gFactory(integration: string, options?: EasybaseProviderPropsOpt
                     })
                 ]
             })
-            return { ...GlobalNamespace, analytics, GA_AUTH_SALT: "p8YpJmWxF" } as Globals;
+            return { ...GlobalNamespace, ...defaultParams, analytics, GA_AUTH_SALT: "p8YpJmWxF" } as Globals;
         }
     } else {
-        return { ...GlobalNamespace } as Globals;
+        return { ...GlobalNamespace, ...defaultParams } as Globals;
     }
 }
