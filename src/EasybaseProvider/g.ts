@@ -6,7 +6,7 @@ namespace GlobalNamespace {
     export let refreshToken: string;
     export let session: number;
     export let options: EasybaseProviderPropsOptions;
-    export let instance: string;
+    export let instance: "Node" | "React" | "React Native";
     export let mounted: boolean;
     export let newTokenCallback: () => {};
     export let userID: string;

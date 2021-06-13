@@ -364,7 +364,7 @@ export interface Globals {
     refreshToken: string;
     session: number;
     options: EasybaseProviderPropsOptions;
-    instance: string;
+    instance: "Node" | "React" | "React Native";
     mounted: boolean;
     newTokenCallback(): void;
     userID: string | undefined;
