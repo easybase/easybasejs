@@ -362,7 +362,6 @@ export interface Globals {
     ebconfig: Ebconfig;
     token: string;
     refreshToken: string;
-    integrationID: string;
     session: number;
     options: EasybaseProviderPropsOptions;
     instance: string;

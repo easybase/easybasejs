@@ -119,8 +119,14 @@ var GlobalNamespace;
 (function (GlobalNamespace) {})(GlobalNamespace || (GlobalNamespace = {}));
 
 var _g = _extends({}, GlobalNamespace);
-function gFactory() {
-  return _extends({}, GlobalNamespace);
+function gFactory(_ref) {
+  var ebconfig = _ref.ebconfig,
+      options = _ref.options;
+  var defaultG = {
+    options: _extends({}, options),
+    ebconfig: ebconfig
+  };
+  return _extends({}, GlobalNamespace, defaultG);
 }
 
 var _propertiesBluePrint;
@@ -1338,7 +1344,7 @@ function authFactory(globals) {
       g.session = Math.floor(100000000 + Math.random() * 900000000);
       var integrationType = g.ebconfig.integration.split("-")[0].toUpperCase() === "PROJECT" ? "PROJECT" : "REACT";
       return Promise.resolve(_catch(function () {
-        return Promise.resolve(fetch(generateBareUrl(integrationType, g.integrationID), {
+        return Promise.resolve(fetch(generateBareUrl(integrationType, g.ebconfig.integration), {
           method: "POST",
           headers: {
             'Eb-Post-Req': POST_TYPES.HANDSHAKE,
@@ -1452,7 +1458,7 @@ function authFactory(globals) {
       log("Handshaking on" + g.instance + " instance");
       var integrationType = g.ebconfig.integration.split("-")[0].toUpperCase() === "PROJECT" ? "PROJECT" : "REACT";
       return Promise.resolve(_catch(function () {
-        return Promise.resolve(fetch(generateBareUrl(integrationType, g.integrationID), {
+        return Promise.resolve(fetch(generateBareUrl(integrationType, g.ebconfig.integration), {
           method: "POST",
           headers: {
             'Eb-Post-Req': POST_TYPES.HANDSHAKE,
@@ -1498,7 +1504,7 @@ function authFactory(globals) {
     try {
       var _temp7 = function _temp7() {
         var integrationType = g.ebconfig.integration.split("-")[0].toUpperCase() === "PROJECT" ? "PROJECT" : "REACT";
-        return Promise.resolve(fetch(generateBareUrl(integrationType, g.integrationID), {
+        return Promise.resolve(fetch(generateBareUrl(integrationType, g.ebconfig.integration), {
           method: "POST",
           headers: {
             'Eb-Post-Req': postType,
@@ -1586,7 +1592,7 @@ function authFactory(globals) {
           'Eb-now': regularAuthbody.now
         };
         var integrationType = g.ebconfig.integration.split("-")[0].toUpperCase() === "PROJECT" ? "PROJECT" : "REACT";
-        return Promise.resolve(fetch(generateBareUrl(integrationType, g.integrationID), {
+        return Promise.resolve(fetch(generateBareUrl(integrationType, g.ebconfig.integration), {
           method: "POST",
           headers: _extends({
             'Eb-Post-Req': POST_TYPES.UPLOAD_ATTACHMENT
@@ -1885,7 +1891,19 @@ function _catch$2(body, recover) {
 function EasybaseProvider(_ref) {
   var ebconfig = _ref.ebconfig,
       options = _ref.options;
-  var g = gFactory();
+
+  if (typeof ebconfig !== 'object' || ebconfig === null || ebconfig === undefined) {
+    console.error("No ebconfig object passed. do `import ebconfig from \"./ebconfig.js\"` and pass it to the Easybase provider");
+    return;
+  } else if (!ebconfig.integration) {
+    console.error("Invalid ebconfig object passed. Download ebconfig.js from Easybase.io and try again.");
+    return;
+  }
+
+  var g = gFactory({
+    ebconfig: ebconfig,
+    options: options
+  });
 
   var _authFactory = authFactory(g),
       tokenPost = _authFactory.tokenPost,
@@ -1911,15 +1929,7 @@ function EasybaseProvider(_ref) {
       e = _dbFactory.e;
 
   var _utilsFactory = utilsFactory(g),
-      log = _utilsFactory.log;
-
-  if (typeof ebconfig !== 'object' || ebconfig === null || ebconfig === undefined) {
-    console.error("No ebconfig object passed. do `import ebconfig from \"./ebconfig.js\"` and pass it to the Easybase provider");
-    return;
-  } else if (!ebconfig.integration) {
-    console.error("Invalid ebconfig object passed. Download ebconfig.js from Easybase.io and try again.");
-    return;
-  } // eslint-disable-next-line dot-notation
+      log = _utilsFactory.log; // eslint-disable-next-line dot-notation
 
 
   var isIE = typeof document !== 'undefined' && !!document['documentMode'];
@@ -1927,10 +1937,6 @@ function EasybaseProvider(_ref) {
   if (isIE) {
     console.error("EASYBASE — easybasejs does not support Internet Explorer. Please use a different browser.");
   }
-
-  g.options = _extends({}, options);
-  g.integrationID = ebconfig.integration;
-  g.ebconfig = ebconfig;
 
   if (g.ebconfig.tt && g.ebconfig.integration.split("-")[0].toUpperCase() !== "PROJECT") {
     g.mounted = false;

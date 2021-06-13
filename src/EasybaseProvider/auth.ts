@@ -113,7 +113,7 @@ export default function authFactory(globals?: Globals): any {
         const integrationType = g.ebconfig.integration.split("-")[0].toUpperCase() === "PROJECT" ? "PROJECT" : "REACT";
 
         try {
-            const res = await fetch(generateBareUrl(integrationType, g.integrationID), {
+            const res = await fetch(generateBareUrl(integrationType, g.ebconfig.integration), {
                 method: "POST",
                 headers: {
                     'Eb-Post-Req': POST_TYPES.HANDSHAKE,
@@ -215,7 +215,7 @@ export default function authFactory(globals?: Globals): any {
         const integrationType = g.ebconfig.integration.split("-")[0].toUpperCase() === "PROJECT" ? "PROJECT" : "REACT";
 
         try {
-            const res = await fetch(generateBareUrl(integrationType, g.integrationID), {
+            const res = await fetch(generateBareUrl(integrationType, g.ebconfig.integration), {
                 method: "POST",
                 headers: {
                     'Eb-Post-Req': POST_TYPES.HANDSHAKE,
@@ -259,7 +259,7 @@ export default function authFactory(globals?: Globals): any {
 
         const integrationType = g.ebconfig.integration.split("-")[0].toUpperCase() === "PROJECT" ? "PROJECT" : "REACT";
 
-        const res = await fetch(generateBareUrl(integrationType, g.integrationID), {
+        const res = await fetch(generateBareUrl(integrationType, g.ebconfig.integration), {
             method: "POST",
             headers: {
                 'Eb-Post-Req': postType,
@@ -328,7 +328,7 @@ export default function authFactory(globals?: Globals): any {
 
         const integrationType = g.ebconfig.integration.split("-")[0].toUpperCase() === "PROJECT" ? "PROJECT" : "REACT";
 
-        const res = await fetch(generateBareUrl(integrationType, g.integrationID), {
+        const res = await fetch(generateBareUrl(integrationType, g.ebconfig.integration), {
             method: "POST",
             headers: {
                 'Eb-Post-Req': POST_TYPES.UPLOAD_ATTACHMENT,
