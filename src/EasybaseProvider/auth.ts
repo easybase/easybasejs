@@ -149,8 +149,8 @@ export default function authFactory(globals?: Globals): any {
                             hash.update(g.GA_AUTH_SALT + resData.userID);
                             hash.digest().then(hashOut => {
                                 const hexHash = Array.prototype.map.call(hashOut, x => ('00' + x.toString(16)).slice(-2)).join('');
-                                g.analytics?.track('signIn');
                                 g.analytics?.identify(hexHash);
+                                g.analytics?.track('signIn');
                             });
                         })
                     }
