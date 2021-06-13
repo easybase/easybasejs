@@ -21,7 +21,6 @@ import tableFactory from "./table";
 import dbFactory from './db';
 
 export default function EasybaseProvider({ ebconfig, options }: EasybaseProviderProps): ContextValue {
-
     if (typeof ebconfig !== 'object' || ebconfig === null || ebconfig === undefined) {
         console.error("No ebconfig object passed. do `import ebconfig from \"./ebconfig.js\"` and pass it to the Easybase provider");
         return;
@@ -30,7 +29,7 @@ export default function EasybaseProvider({ ebconfig, options }: EasybaseProvider
         return;
     }
 
-    const g = gFactory(ebconfig, options);
+    const g = gFactory(ebconfig, options, "Node");
 
     const {
         tokenPost,
@@ -72,7 +71,6 @@ export default function EasybaseProvider({ ebconfig, options }: EasybaseProvider
     } else {
         g.mounted = true;
     }
-    g.instance = "Node";
 
     let _isFrameInitialized = true;
     let _frameConfiguration: FrameConfiguration = {

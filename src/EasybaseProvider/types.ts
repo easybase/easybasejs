@@ -16,7 +16,7 @@ export interface EasybaseProviderPropsOptions {
     authentication?: string;
     /** Log Easybase react status and events to console. */
     logging?: boolean;
-    /** Universal Google Analytics Tracking/Measurement ID for user activity reporting – Google Analytics 4 is not currently supported */
+    /** Google Analytics 4 Tracking/Measurement ID for user activity reporting */
     googleAnalyticsId?: string;
 }
 
@@ -368,10 +368,12 @@ export interface Globals {
     integrationID: string;
     session: number;
     options: EasybaseProviderPropsOptions;
-    instance: string;
+    instance: "Node" | "React" | "React Native";
     mounted: boolean;
     newTokenCallback(): void;
     userID: string | undefined;
-    analytics: AnalyticsInstance | undefined;
     GA_AUTH_SALT: string | undefined; // https://support.google.com/analytics/answer/6366371?hl=en#hashed
+    analyticsEvent(event: string, params: Record<string, any>): void;
+    analyticsIdentify(userId: string): void;
+    analyticsEnabled: boolean;
 }
