@@ -3,6 +3,8 @@ import _g from "./g";
 import utilsFactory from "./utils";
 import fetch from 'cross-fetch';
 
+const GA_AUTH_HASH = "p8YpJmWxF" // https://support.google.com/analytics/answer/6366371?hl=en#hashed
+
 export default function authFactory(globals?: Globals): any {
     const g = globals || _g;
 
@@ -18,6 +20,7 @@ export default function authFactory(globals?: Globals): any {
     const getUserAttributes = async (): Promise<Record<string, string>> => {
         try {
             const attrsRes = await tokenPost(POST_TYPES.USER_ATTRIBUTES);
+            g.analytics && g.analytics.track('getUserAttributes');
             return attrsRes.data;
         } catch (error) {
             log(error)
@@ -31,7 +34,7 @@ export default function authFactory(globals?: Globals): any {
                 key,
                 value
             });
-
+            g.analytics && g.analytics.track('setUserAttribute');
             return {
                 success: setAttrsRes.success,
                 message: JSON.stringify(setAttrsRes.data)
@@ -51,7 +54,7 @@ export default function authFactory(globals?: Globals): any {
                 username,
                 emailTemplate
             });
-
+            g.analytics && g.analytics.track('forgotPassword');
             return {
                 success: setAttrsRes.success,
                 message: setAttrsRes.data
@@ -72,7 +75,7 @@ export default function authFactory(globals?: Globals): any {
                 code,
                 newPassword
             });
-
+            g.analytics && g.analytics.track('forgotPasswordConfirm');
             return {
                 success: setAttrsRes.success,
                 message: setAttrsRes.data
@@ -93,6 +96,7 @@ export default function authFactory(globals?: Globals): any {
                 password,
                 userAttributes
             });
+            g.analytics && g.analytics.track('signUp');
             return {
                 success: signUpRes.success,
                 message: signUpRes.data
@@ -141,6 +145,18 @@ export default function authFactory(globals?: Globals): any {
                 const elapsed = Date.now() - t1;
                 if (validTokenRes.success) {
                     log("Valid auth initiation in " + elapsed + "ms");
+                    if (g.analytics) {
+                        import('@aws-crypto/sha256-universal').then(c => {
+                            const hash = new c.Sha256;
+                            hash.update(GA_AUTH_HASH + resData.userID);
+                            hash.digest().then(hashOut => {
+                                const hexHash = Array.prototype.map.call(hashOut, x => ('00' + x.toString(16)).slice(-2)).join('');
+                                g.analytics.track('signIn');
+                                g.analytics.identify(hexHash);
+                            });
+                        })
+                    }
+
                     return {
                         success: true,
                         message: "Successfully signed in user"
@@ -184,6 +200,7 @@ export default function authFactory(globals?: Globals): any {
 
         try {
             const setAttrsRes = await tokenPost(POST_TYPES.RESET_PASSWORD, { currentPassword, newPassword });
+            g.analytics && g.analytics.track('resetUserPassword');
 
             return {
                 success: setAttrsRes.success,
@@ -348,14 +365,14 @@ export default function authFactory(globals?: Globals): any {
                             refreshToken: g.refreshToken,
                             token: g.token
                         });
-    
+
                         if (req_res.success) {
                             g.token = req_res.data.token
                             g.newTokenCallback();
                             return tokenPostAttachment(formData, customHeaders);
                         } else {
                             throw new Error(req_res.data || "Error");
-                        }   
+                        }
                     } catch (error) {
                         _clearTokens();
                         return {

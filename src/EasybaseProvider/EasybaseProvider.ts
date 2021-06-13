@@ -21,7 +21,15 @@ import tableFactory from "./table";
 import dbFactory from './db';
 
 export default function EasybaseProvider({ ebconfig, options }: EasybaseProviderProps): ContextValue {
-    const g = gFactory();
+    if (typeof ebconfig !== 'object' || ebconfig === null || ebconfig === undefined) {
+        console.error("No ebconfig object passed. do `import ebconfig from \"./ebconfig.js\"` and pass it to the Easybase provider");
+        return;
+    } else if (!ebconfig.integration) {
+        console.error("Invalid ebconfig object passed. Download ebconfig.js from Easybase.io and try again.");
+        return;
+    }
+
+    const g = gFactory(ebconfig.integration, options);
 
     const {
         tokenPost,
@@ -50,14 +58,6 @@ export default function EasybaseProvider({ ebconfig, options }: EasybaseProvider
     } = dbFactory(g);
 
     const { log } = utilsFactory(g);
-
-    if (typeof ebconfig !== 'object' || ebconfig === null || ebconfig === undefined) {
-        console.error("No ebconfig object passed. do `import ebconfig from \"./ebconfig.js\"` and pass it to the Easybase provider");
-        return;
-    } else if (!ebconfig.integration) {
-        console.error("Invalid ebconfig object passed. Download ebconfig.js from Easybase.io and try again.");
-        return;
-    }
 
     // eslint-disable-next-line dot-notation
     const isIE = typeof document !== 'undefined' && !!document['documentMode'];

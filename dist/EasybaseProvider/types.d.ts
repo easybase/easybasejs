@@ -1,5 +1,6 @@
 import { SQW } from "easyqb/types/sq";
 import { NewExpression } from "easyqb/types/expression";
+import { AnalyticsInstance } from "analytics";
 export interface ConfigureFrameOptions {
     /** Edit starting index from which records will be retrieved from. Useful for paging. */
     offset?: number;
@@ -13,9 +14,11 @@ export interface EasybaseProviderPropsOptions {
     authentication?: string;
     /** Log Easybase react status and events to console. */
     logging?: boolean;
+    /** Universal Google Analytics Tracking/Measurement ID for user activity reporting – Google Analytics 4 is not currently supported */
+    googleAnalyticsId?: string;
 }
 export interface EasybaseProviderProps {
-    /** EasyBase ebconfig object. Can be downloaded in the integration drawer next to 'React Token'. This is automatically generated.  */
+    /** Easybase ebconfig object. Can be downloaded in the integration drawer next to 'React Token'. This is automatically generated.  */
     ebconfig: Ebconfig;
     /** Optional configuration parameters. */
     options?: EasybaseProviderPropsOptions;
@@ -351,4 +354,5 @@ export interface Globals {
     mounted: boolean;
     newTokenCallback(): void;
     userID: string | undefined;
+    analytics: AnalyticsInstance | undefined;
 }

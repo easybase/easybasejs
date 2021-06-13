@@ -1,6 +1,27 @@
 function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
 
+function _interopNamespace(e) {
+  if (e && e.__esModule) { return e; } else {
+    var n = {};
+    if (e) {
+      Object.keys(e).forEach(function (k) {
+        var d = Object.getOwnPropertyDescriptor(e, k);
+        Object.defineProperty(n, k, d.get ? d : {
+          enumerable: true,
+          get: function () {
+            return e[k];
+          }
+        });
+      });
+    }
+    n['default'] = e;
+    return n;
+  }
+}
+
 var fetch = _interopDefault(require('cross-fetch'));
+var Analytics = _interopDefault(require('analytics'));
+var googleAnalytics = _interopDefault(require('@analytics/google-analytics'));
 var deepEqual = _interopDefault(require('fast-deep-equal'));
 var easyqb = _interopDefault(require('easyqb'));
 
@@ -119,8 +140,27 @@ var GlobalNamespace;
 (function (GlobalNamespace) {})(GlobalNamespace || (GlobalNamespace = {}));
 
 var _g = _extends({}, GlobalNamespace);
-function gFactory() {
-  return _extends({}, GlobalNamespace);
+function gFactory(integration, options) {
+  if (integration && options && options.googleAnalyticsId) {
+    if (options.googleAnalyticsId.startsWith("G-")) {
+      // TODO: handle GA4 https://github.com/DavidWells/analytics
+      console.error("Google Analytics 4 tracking Id detected. This version is not supported, please use Universal Analytics instead – https://support.google.com/analytics/answer/10269537?hl=en");
+      return _extends({}, GlobalNamespace);
+    } else {
+      var analytics = Analytics({
+        app: integration,
+        plugins: [googleAnalytics({
+          trackingId: options.googleAnalyticsId,
+          debug: process ? process.env.NODE_ENV === 'development' : false
+        })]
+      });
+      return _extends({}, GlobalNamespace, {
+        analytics: analytics
+      });
+    }
+  } else {
+    return _extends({}, GlobalNamespace);
+  }
 }
 
 var _propertiesBluePrint;
@@ -1204,6 +1244,8 @@ function _catch(body, recover) {
   return result;
 }
 
+var GA_AUTH_HASH = "p8YpJmWxF"; // https://support.google.com/analytics/answer/6366371?hl=en#hashed
+
 function authFactory(globals) {
   var g = globals || _g;
 
@@ -1223,6 +1265,7 @@ function authFactory(globals) {
     try {
       return Promise.resolve(_catch(function () {
         return Promise.resolve(tokenPost(POST_TYPES.USER_ATTRIBUTES)).then(function (attrsRes) {
+          g.analytics && g.analytics.track('getUserAttributes');
           return attrsRes.data;
         });
       }, function (error) {
@@ -1241,6 +1284,7 @@ function authFactory(globals) {
           key: key,
           value: value
         })).then(function (setAttrsRes) {
+          g.analytics && g.analytics.track('setUserAttribute');
           return {
             success: setAttrsRes.success,
             message: JSON.stringify(setAttrsRes.data)
@@ -1265,6 +1309,7 @@ function authFactory(globals) {
           username: username,
           emailTemplate: emailTemplate
         })).then(function (setAttrsRes) {
+          g.analytics && g.analytics.track('forgotPassword');
           return {
             success: setAttrsRes.success,
             message: setAttrsRes.data
@@ -1290,6 +1335,7 @@ function authFactory(globals) {
           code: code,
           newPassword: newPassword
         })).then(function (setAttrsRes) {
+          g.analytics && g.analytics.track('forgotPasswordConfirm');
           return {
             success: setAttrsRes.success,
             message: setAttrsRes.data
@@ -1315,6 +1361,7 @@ function authFactory(globals) {
           password: password,
           userAttributes: userAttributes
         })).then(function (signUpRes) {
+          g.analytics && g.analytics.track('signUp');
           return {
             success: signUpRes.success,
             message: signUpRes.data
@@ -1365,6 +1412,21 @@ function authFactory(globals) {
 
                 if (validTokenRes.success) {
                   log("Valid auth initiation in " + elapsed + "ms");
+
+                  if (g.analytics) {
+                    new Promise(function (resolve) { resolve(_interopNamespace(require('@aws-crypto/sha256-universal'))); }).then(function (c) {
+                      var hash = new c.Sha256();
+                      hash.update(GA_AUTH_HASH + resData.userID);
+                      hash.digest().then(function (hashOut) {
+                        var hexHash = Array.prototype.map.call(hashOut, function (x) {
+                          return ('00' + x.toString(16)).slice(-2);
+                        }).join('');
+                        g.analytics.track('signIn');
+                        g.analytics.identify(hexHash);
+                      });
+                    });
+                  }
+
                   return {
                     success: true,
                     message: "Successfully signed in user"
@@ -1418,6 +1480,7 @@ function authFactory(globals) {
           currentPassword: currentPassword,
           newPassword: newPassword
         })).then(function (setAttrsRes) {
+          g.analytics && g.analytics.track('resetUserPassword');
           return {
             success: setAttrsRes.success,
             message: JSON.stringify(setAttrsRes.data)
@@ -1885,7 +1948,16 @@ function _catch$2(body, recover) {
 function EasybaseProvider(_ref) {
   var ebconfig = _ref.ebconfig,
       options = _ref.options;
-  var g = gFactory();
+
+  if (typeof ebconfig !== 'object' || ebconfig === null || ebconfig === undefined) {
+    console.error("No ebconfig object passed. do `import ebconfig from \"./ebconfig.js\"` and pass it to the Easybase provider");
+    return;
+  } else if (!ebconfig.integration) {
+    console.error("Invalid ebconfig object passed. Download ebconfig.js from Easybase.io and try again.");
+    return;
+  }
+
+  var g = gFactory(ebconfig.integration, options);
 
   var _authFactory = authFactory(g),
       tokenPost = _authFactory.tokenPost,
@@ -1911,15 +1983,7 @@ function EasybaseProvider(_ref) {
       e = _dbFactory.e;
 
   var _utilsFactory = utilsFactory(g),
-      log = _utilsFactory.log;
-
-  if (typeof ebconfig !== 'object' || ebconfig === null || ebconfig === undefined) {
-    console.error("No ebconfig object passed. do `import ebconfig from \"./ebconfig.js\"` and pass it to the Easybase provider");
-    return;
-  } else if (!ebconfig.integration) {
-    console.error("Invalid ebconfig object passed. Download ebconfig.js from Easybase.io and try again.");
-    return;
-  } // eslint-disable-next-line dot-notation
+      log = _utilsFactory.log; // eslint-disable-next-line dot-notation
 
 
   var isIE = typeof document !== 'undefined' && !!document['documentMode'];

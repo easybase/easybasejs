@@ -1,7 +1,6 @@
 import { SQW } from "easyqb/types/sq";
 import { NewExpression } from "easyqb/types/expression";
 import { AnalyticsInstance } from "analytics";
-
 export interface ConfigureFrameOptions {
     /** Edit starting index from which records will be retrieved from. Useful for paging. */
     offset?: number;
@@ -10,7 +9,6 @@ export interface ConfigureFrameOptions {
     /** Table to sync frame with. (Projects only) */
     tableName?: string;
 }
-
 export interface EasybaseProviderPropsOptions {
     /** Custom authentication string. Can be set in integration menu. If it is set, it is required to access integration. This acts as an extra layer of security and extensibility. */
     authentication?: string;
@@ -19,14 +17,12 @@ export interface EasybaseProviderPropsOptions {
     /** Universal Google Analytics Tracking/Measurement ID for user activity reporting – Google Analytics 4 is not currently supported */
     googleAnalyticsId?: string;
 }
-
 export interface EasybaseProviderProps {
     /** Easybase ebconfig object. Can be downloaded in the integration drawer next to 'React Token'. This is automatically generated.  */
     ebconfig: Ebconfig;
     /** Optional configuration parameters. */
-    options?: EasybaseProviderPropsOptions
+    options?: EasybaseProviderPropsOptions;
 }
-
 export interface FrameConfiguration {
     /** Edit starting index from which records will be retrieved from. Useful for paging. */
     offset: number;
@@ -35,13 +31,11 @@ export interface FrameConfiguration {
     /** Table to sync frame with. (Projects only) */
     tableName?: string;
 }
-
 export interface Ebconfig {
-    tt?: string,
-    integration: string,
-    version: string
+    tt?: string;
+    integration: string;
+    version: string;
 }
-
 export interface AddRecordOptions {
     /** If true, record will be inserted at the end of the collection rather than the front. Overwrites absoluteIndex. */
     insertAtEnd?: boolean;
@@ -50,13 +44,11 @@ export interface AddRecordOptions {
     /** Table to post new record to. (Projects only) */
     tableName?: string;
 }
-
 export interface DeleteRecordOptions {
     record: Record<string, any>;
     /** Table to delete record from. (Projects only) */
     tableName?: string;
 }
-
 export interface QueryOptions {
     /** Name of the query saved in Easybase's Visual Query Builder */
     queryName: string;
@@ -73,16 +65,14 @@ export interface QueryOptions {
     /** Table to query. (Projects only) */
     tableName?: string;
 }
-
 export interface FileFromURI {
     /** Path on local device to the attachment. Usually received from react-native-image-picker or react-native-document-picker */
-    uri: string,
+    uri: string;
     /** Name of the file with proper extension */
-    name: string,
+    name: string;
     /** File MIME type */
-    type: string
+    type: string;
 }
-
 export interface UpdateRecordAttachmentOptions {
     /** EasyBase Record to attach this attachment to */
     record: Record<string, any>;
@@ -90,13 +80,12 @@ export interface UpdateRecordAttachmentOptions {
     columnName: string;
     /** Either an HTML File element containing the correct type of attachment or a FileFromURI object for React Native instances.
      * For React Native use libraries such as react-native-image-picker and react-native-document-picker.
-     * The file name must have a proper file extension corresponding to the attachment. 
+     * The file name must have a proper file extension corresponding to the attachment.
      */
     attachment: File | FileFromURI;
     /** Table to post attachment to. (Projects only) */
     tableName?: string;
 }
-
 export interface StatusResponse {
     /** Returns true if the operation was successful */
     success: boolean;
@@ -105,7 +94,6 @@ export interface StatusResponse {
     /** Will represent a corresponding error if an error was thrown during the operation. */
     errorCode?: string;
 }
-
 export interface EmailTemplate {
     /** Optional header of email that will be sent to user with verification code */
     greeting?: string;
@@ -114,8 +102,7 @@ export interface EmailTemplate {
     /** Optional footer of verification email often used for disclaimers. Can be a valid HTML string */
     footer?: string;
 }
-
-export enum POST_TYPES {
+export declare enum POST_TYPES {
     UPLOAD_ATTACHMENT = "upload_attachment",
     HANDSHAKE = "handshake",
     VALID_TOKEN = "valid_token",
@@ -135,23 +122,19 @@ export enum POST_TYPES {
     FORGOT_PASSWORD_SEND = "forgot_password_send",
     FORGOT_PASSWORD_CONFIRM = "forgot_password_confirm"
 }
-
-export enum DB_STATUS {
+export declare enum DB_STATUS {
     ERROR = "error",
     PENDING = "pending",
     SUCCESS = "success"
 }
-
-export enum EXECUTE_COUNT {
+export declare enum EXECUTE_COUNT {
     ALL = "all",
     ONE = "one"
 }
-
 export interface AuthPostResponse {
     success: boolean;
     data: any;
 }
-
 export interface ContextValue {
     /**
      * Signs out the current user.
@@ -219,12 +202,12 @@ export interface ContextValue {
      * Manually delete a record from your collection regardless of your current frame. You must call sync() after this to see updated response.
      * @abstract
      * @async
-     * @param {Record<string, any>} record 
+     * @param {Record<string, any>} record
      * @return {Promise<StatusResponse>} Promise<StatusResponse>
      */
     deleteRecord(options: DeleteRecordOptions): Promise<StatusResponse>;
     /**
-     * Call this method to syncronize your current changes with your database. Delections, additions, and changes will all be reflected by your 
+     * Call this method to syncronize your current changes with your database. Delections, additions, and changes will all be reflected by your
      * backend after calling this method. Call Frame() after this to get a normalized array of the freshest data.
      * @abstract
      * @async
@@ -233,7 +216,7 @@ export interface ContextValue {
     sync(): Promise<StatusResponse>;
     /**
      * Upload an image to your backend and attach it to a specific record. columnName must reference a column of type 'image'.
-     * The file must have an extension of an image. 
+     * The file must have an extension of an image.
      * Call sync() for fresh data with propery attachment links to cloud hosting.
      * @abstract
      * @async
@@ -242,7 +225,7 @@ export interface ContextValue {
      */
     updateRecordImage(options: UpdateRecordAttachmentOptions): Promise<StatusResponse>;
     /**
-     * Upload a video to your backend and attach it to a specific record. columnName must reference a column of type 'video'. 
+     * Upload a video to your backend and attach it to a specific record. columnName must reference a column of type 'video'.
      * The file must have an extension of a video.
      * Call sync() for fresh data with propery attachment links to cloud hosting.
      * @abstract
@@ -252,7 +235,7 @@ export interface ContextValue {
      */
     updateRecordVideo(options: UpdateRecordAttachmentOptions): Promise<StatusResponse>;
     /**
-     * Upload a file to your backend and attach it to a specific record. columnName must reference a column of type 'file'. 
+     * Upload a file to your backend and attach it to a specific record. columnName must reference a column of type 'file'.
      * Call sync() for fresh data with propery attachment links to cloud hosting.
      * @abstract
      * @async
@@ -261,20 +244,20 @@ export interface ContextValue {
      */
     updateRecordFile(options: UpdateRecordAttachmentOptions): Promise<StatusResponse>;
     /**
-     * This function is how you access your current frame. This function does not get new data or push changes to EasyBase. If you 
+     * This function is how you access your current frame. This function does not get new data or push changes to EasyBase. If you
      * want to syncronize your frame and EasyBase, call sync() then Frame().
      * @abstract
      * @return {Record<string, any>[]} Array of records corresponding to the current frame. Call sync() to push changes that you have made to this array.
-     * 
+     *
      */
     Frame(): Record<string, any>[];
     /**
-     * This function is how you access a single object your current frame. This function does not get new data or push changes to EasyBase. If you 
+     * This function is how you access a single object your current frame. This function does not get new data or push changes to EasyBase. If you
      * want to syncronize your frame and EasyBase, call sync() then Frame().
      * @abstract
      * @param {number} [index] Passing an index will only return the object at that index in your Frame, rather than the entire array. This is useful for editing single objects based on an index.
      * @return {Record<string, any>} Single record corresponding to that object within the current frame. Call sync() to push changes that you have made to this object.
-     * 
+     *
      */
     Frame(index: number): Record<string, any>;
     /**
@@ -310,8 +293,8 @@ export interface ContextValue {
     currentConfiguration(): FrameConfiguration;
     /**
      * @async
-     * View a query by name. This returns an isolated array that has no effect on your frame or frame configuration. sync() and Frame() have no 
-     * relationship with a Query(). An edited Query cannot be synced with your database, use Frame() for realtime 
+     * View a query by name. This returns an isolated array that has no effect on your frame or frame configuration. sync() and Frame() have no
+     * relationship with a Query(). An edited Query cannot be synced with your database, use Frame() for realtime
      * database array features.
      * @param {QueryOptions} options QueryOptions
      * @return {Promise<Record<string, any>[]>} Isolated array of records in the same form as Frame(). Editing this array has no effect and cannot be synced with your database. Use Frame() for realtime database features.
@@ -336,31 +319,30 @@ export interface ContextValue {
     e: NewExpression;
     /**
      * @async
-     * Trigger an email to the given username with a verification code to reset the user's password. This verification 
+     * Trigger an email to the given username with a verification code to reset the user's password. This verification
      * code is used in the `forgotPasswordConfirm` function, along with a new password. **The username must be the user's email address**.
      * @param {string} username A username which must also be a valid email address
      * @param {EmailTemplate} emailTemplate Optional details for the formatting & content of the verification email
      * @return {Promise<StatusResponse>} A StatusResponse corresponding to the successful sending of a verification code email
      */
-    forgotPassword(username: string, emailTemplate?: EmailTemplate): Promise<StatusResponse>
+    forgotPassword(username: string, emailTemplate?: EmailTemplate): Promise<StatusResponse>;
     /**
      * @async
      * Confirm the resetting of an unauthenticated users password. This function is invoked after `forgotpassword` is used to trigger
      * an email containing a verification code to the given username [*which must also be an email*]. The user's randomly generated
-     * verification code from their email is passed in the first parameter. 
+     * verification code from their email is passed in the first parameter.
      * @param {string} code Verification code found in the email sent from the `forgotPassword` function
      * @param {string} username The same username (email) used in the `forgotPassword` function
      * @param {string} newPassword The new password for the corresponding verified user
      * @return {Promise<StatusResponse>} A StatusResponse corresponding to the successful setting of a new password
      */
-    forgotPasswordConfirm(code: string, username: string, newPassword: string): Promise<StatusResponse>
+    forgotPasswordConfirm(code: string, username: string, newPassword: string): Promise<StatusResponse>;
     /**
      * Retrieve the currently signed-in user's ID.
      * @return {string | undefined} The currently signed-in user's ID (username), otherwise undefined.
      */
     userID(): string | undefined;
 }
-
 export interface Globals {
     ebconfig: Ebconfig;
     token: string;
