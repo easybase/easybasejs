@@ -18,6 +18,7 @@ export default function authFactory(globals?: Globals): any {
     const getUserAttributes = async (): Promise<Record<string, string>> => {
         try {
             const attrsRes = await tokenPost(POST_TYPES.USER_ATTRIBUTES);
+            g.analyticsEnabled && g.analyticsEvent('get_user_attributes');
             return attrsRes.data;
         } catch (error) {
             log(error)
@@ -31,7 +32,7 @@ export default function authFactory(globals?: Globals): any {
                 key,
                 value
             });
-
+            g.analyticsEnabled && g.analyticsEvent('set_user_attribute');
             return {
                 success: setAttrsRes.success,
                 message: JSON.stringify(setAttrsRes.data)
@@ -51,7 +52,7 @@ export default function authFactory(globals?: Globals): any {
                 username,
                 emailTemplate
             });
-
+            g.analyticsEnabled && g.analyticsEvent('forgot_password');
             return {
                 success: setAttrsRes.success,
                 message: setAttrsRes.data
@@ -72,7 +73,7 @@ export default function authFactory(globals?: Globals): any {
                 code,
                 newPassword
             });
-
+            g.analyticsEnabled && g.analyticsEvent('forgot_password_confirm');
             return {
                 success: setAttrsRes.success,
                 message: setAttrsRes.data
@@ -93,6 +94,7 @@ export default function authFactory(globals?: Globals): any {
                 password,
                 userAttributes
             });
+            g.analyticsEnabled && g.analyticsEvent('sign_up', { method: "Easybase" });
             return {
                 success: signUpRes.success,
                 message: signUpRes.data
@@ -113,7 +115,7 @@ export default function authFactory(globals?: Globals): any {
         const integrationType = g.ebconfig.integration.split("-")[0].toUpperCase() === "PROJECT" ? "PROJECT" : "REACT";
 
         try {
-            const res = await fetch(generateBareUrl(integrationType, g.integrationID), {
+            const res = await fetch(generateBareUrl(integrationType, g.ebconfig.integration), {
                 method: "POST",
                 headers: {
                     'Eb-Post-Req': POST_TYPES.HANDSHAKE,
@@ -137,10 +139,16 @@ export default function authFactory(globals?: Globals): any {
                 g.newTokenCallback();
                 g.userID = resData.userID;
                 g.mounted = true;
-                const validTokenRes = await tokenPost(POST_TYPES.VALID_TOKEN);
+                const [validTokenRes, { hash }, { fromUtf8 }] = await Promise.all([tokenPost(POST_TYPES.VALID_TOKEN), import('fast-sha256'), import('@aws-sdk/util-utf8-browser')])
                 const elapsed = Date.now() - t1;
                 if (validTokenRes.success) {
                     log("Valid auth initiation in " + elapsed + "ms");
+                    if (g.analyticsEnabled) {
+                        const hashOut = hash(fromUtf8(g.GA_USER_ID_SALT + resData.userID));
+                        const hexHash = Array.prototype.map.call(hashOut, x => ('00' + x.toString(16)).slice(-2)).join('');
+                        g.analyticsIdentify(hexHash);
+                        g.analyticsEvent('login', { method: "Easybase" });
+                    }
                     return {
                         success: true,
                         message: "Successfully signed in user"
@@ -184,7 +192,7 @@ export default function authFactory(globals?: Globals): any {
 
         try {
             const setAttrsRes = await tokenPost(POST_TYPES.RESET_PASSWORD, { currentPassword, newPassword });
-
+            g.analyticsEnabled && g.analyticsEvent('reset_user_password');
             return {
                 success: setAttrsRes.success,
                 message: JSON.stringify(setAttrsRes.data)
@@ -215,7 +223,7 @@ export default function authFactory(globals?: Globals): any {
         const integrationType = g.ebconfig.integration.split("-")[0].toUpperCase() === "PROJECT" ? "PROJECT" : "REACT";
 
         try {
-            const res = await fetch(generateBareUrl(integrationType, g.integrationID), {
+            const res = await fetch(generateBareUrl(integrationType, g.ebconfig.integration), {
                 method: "POST",
                 headers: {
                     'Eb-Post-Req': POST_TYPES.HANDSHAKE,
@@ -259,7 +267,7 @@ export default function authFactory(globals?: Globals): any {
 
         const integrationType = g.ebconfig.integration.split("-")[0].toUpperCase() === "PROJECT" ? "PROJECT" : "REACT";
 
-        const res = await fetch(generateBareUrl(integrationType, g.integrationID), {
+        const res = await fetch(generateBareUrl(integrationType, g.ebconfig.integration), {
             method: "POST",
             headers: {
                 'Eb-Post-Req': postType,
@@ -328,7 +336,7 @@ export default function authFactory(globals?: Globals): any {
 
         const integrationType = g.ebconfig.integration.split("-")[0].toUpperCase() === "PROJECT" ? "PROJECT" : "REACT";
 
-        const res = await fetch(generateBareUrl(integrationType, g.integrationID), {
+        const res = await fetch(generateBareUrl(integrationType, g.ebconfig.integration), {
             method: "POST",
             headers: {
                 'Eb-Post-Req': POST_TYPES.UPLOAD_ATTACHMENT,
@@ -348,14 +356,14 @@ export default function authFactory(globals?: Globals): any {
                             refreshToken: g.refreshToken,
                             token: g.token
                         });
-    
+
                         if (req_res.success) {
                             g.token = req_res.data.token
                             g.newTokenCallback();
                             return tokenPostAttachment(formData, customHeaders);
                         } else {
                             throw new Error(req_res.data || "Error");
-                        }   
+                        }
                     } catch (error) {
                         _clearTokens();
                         return {
