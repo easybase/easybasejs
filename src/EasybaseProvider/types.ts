@@ -15,9 +15,9 @@ export interface EasybaseProviderPropsOptions {
     authentication?: string;
     /** Log Easybase react status and events to console. */
     logging?: boolean;
-    /** Google Analytics 4 Measurement ID for user activity reporting */
+    /** Google Analytics 4 Measurement ID for activity reporting */
     googleAnalyticsId?: string;
-    /** **Only Required for React Native** – Google Analytics 4 Measurement Protocol Secret ID for user activity reporting. To create a new secret, navigate in the Google Analytics UI to: Admin > Data Streams > choose your stream > Measurement Protocol > Create */
+    /** **Only Required for React Native** – Google Analytics 4 Measurement Protocol Secret ID for activity reporting. To create a new secret, navigate in the Google Analytics UI to: Admin > Data Streams > choose your stream > Measurement Protocol > Create */
     googleAnalyticsSecret?: string;
 }
 
