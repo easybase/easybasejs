@@ -67,10 +67,20 @@ function gFactory({
   ebconfig,
   options
 }) {
+  const optionsObj = _extends({}, options); // Forces undefined to empty object
+
+
   const defaultG = {
-    options: _extends({}, options),
+    options: optionsObj,
     ebconfig: ebconfig,
-    GA_USER_ID_SALT: "m83WnAPrq"
+    GA_USER_ID_SALT: "m83WnAPrq",
+    analyticsEventsToTrack: _extends({
+      login: true,
+      sign_up: true,
+      forgot_password: true,
+      forgot_password_confirm: true,
+      reset_user_password: true
+    }, optionsObj.googleAnalyticsEventTracking)
   };
   return _extends({}, GlobalNamespace, defaultG);
 }
@@ -1121,7 +1131,7 @@ function authFactory(globals) {
   const getUserAttributes = async () => {
     try {
       const attrsRes = await tokenPost(POST_TYPES.USER_ATTRIBUTES);
-      g.analyticsEnabled && g.analyticsEvent('get_user_attributes');
+      g.analyticsEnabled && g.analyticsEventsToTrack.get_user_attributes && g.analyticsEvent('get_user_attributes');
       return attrsRes.data;
     } catch (error) {
       log(error);
@@ -1135,7 +1145,9 @@ function authFactory(globals) {
         key,
         value
       });
-      g.analyticsEnabled && g.analyticsEvent('set_user_attribute');
+      g.analyticsEnabled && g.analyticsEventsToTrack.set_user_attribute && g.analyticsEvent('set_user_attribute', {
+        key
+      });
       return {
         success: setAttrsRes.success,
         message: JSON.stringify(setAttrsRes.data)
@@ -1155,7 +1167,7 @@ function authFactory(globals) {
         username,
         emailTemplate
       });
-      g.analyticsEnabled && g.analyticsEvent('forgot_password');
+      g.analyticsEnabled && g.analyticsEventsToTrack.forgot_password && g.analyticsEvent('forgot_password');
       return {
         success: setAttrsRes.success,
         message: setAttrsRes.data
@@ -1176,7 +1188,7 @@ function authFactory(globals) {
         code,
         newPassword
       });
-      g.analyticsEnabled && g.analyticsEvent('forgot_password_confirm');
+      g.analyticsEnabled && g.analyticsEventsToTrack.forgot_password_confirm && g.analyticsEvent('forgot_password_confirm');
       return {
         success: setAttrsRes.success,
         message: setAttrsRes.data
@@ -1197,7 +1209,7 @@ function authFactory(globals) {
         password,
         userAttributes
       });
-      g.analyticsEnabled && g.analyticsEvent('sign_up', {
+      g.analyticsEnabled && g.analyticsEventsToTrack.sign_up && g.analyticsEvent('sign_up', {
         method: "Easybase"
       });
       return {
@@ -1252,7 +1264,7 @@ function authFactory(globals) {
         if (validTokenRes.success) {
           log("Valid auth initiation in " + elapsed + "ms");
 
-          if (g.analyticsEnabled) {
+          if (g.analyticsEnabled && g.analyticsEventsToTrack.login) {
             const hashOut = hash(fromUtf8(g.GA_USER_ID_SALT + resData.userID));
             const hexHash = Array.prototype.map.call(hashOut, x => ('00' + x.toString(16)).slice(-2)).join('');
             g.analyticsIdentify(hexHash);
@@ -1307,7 +1319,7 @@ function authFactory(globals) {
         currentPassword,
         newPassword
       });
-      g.analyticsEnabled && g.analyticsEvent('reset_user_password');
+      g.analyticsEnabled && g.analyticsEventsToTrack.reset_user_password && g.analyticsEvent('reset_user_password');
       return {
         success: setAttrsRes.success,
         message: JSON.stringify(setAttrsRes.data)
@@ -1529,6 +1541,10 @@ function tableFactory(globals) {
     const res = await tokenPost(POST_TYPES.GET_QUERY, fullOptions);
 
     if (res.success) {
+      g.analyticsEnabled && g.analyticsEventsToTrack.query && g.analyticsEvent('query', {
+        queryName: fullOptions.queryName,
+        tableName: fullOptions.tableName || undefined
+      });
       return res.data;
     } else {
       return [];
@@ -1541,6 +1557,9 @@ function tableFactory(globals) {
     } : {});
 
     if (res.success) {
+      g.analyticsEnabled && g.analyticsEventsToTrack.full_table_size && g.analyticsEvent('full_table_size', {
+        tableName: tableName || undefined
+      });
       return res.data;
     } else {
       return 0;
@@ -1553,6 +1572,9 @@ function tableFactory(globals) {
     } : {});
 
     if (res.success) {
+      g.analyticsEnabled && g.analyticsEventsToTrack.table_types && g.analyticsEvent('table_types', {
+        tableName: tableName || undefined
+      });
       return res.data;
     } else {
       return {};
@@ -1599,6 +1621,11 @@ function dbFactory(globals) {
       const res = await tokenPost(POST_TYPES.EASY_QB, trx);
 
       if (res.success) {
+        g.analyticsEnabled && g.analyticsEventsToTrack.db_all && g.analyticsEvent('db_all', {
+          tableName: tableName !== "untable" ? tableName : undefined,
+          type: trx.type
+        });
+
         _runListeners(DB_STATUS.SUCCESS, trx.type, EXECUTE_COUNT.ALL, tableName !== "untable" ? tableName : null, res.data);
 
         return res.data;
@@ -1627,6 +1654,11 @@ function dbFactory(globals) {
       const res = await tokenPost(POST_TYPES.EASY_QB, trx);
 
       if (res.success) {
+        g.analyticsEnabled && g.analyticsEventsToTrack.db_one && g.analyticsEvent('db_one', {
+          tableName: tableName !== "untable" ? tableName : undefined,
+          type: trx.type
+        });
+
         _runListeners(DB_STATUS.SUCCESS, trx.type, EXECUTE_COUNT.ONE, tableName !== "untable" ? tableName : null, res.data);
 
         return res.data;

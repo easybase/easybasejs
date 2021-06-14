@@ -141,10 +141,21 @@ var _g = _extends({}, GlobalNamespace);
 function gFactory(_ref) {
   var ebconfig = _ref.ebconfig,
       options = _ref.options;
+
+  var optionsObj = _extends({}, options); // Forces undefined to empty object
+
+
   var defaultG = {
-    options: _extends({}, options),
+    options: optionsObj,
     ebconfig: ebconfig,
-    GA_USER_ID_SALT: "m83WnAPrq"
+    GA_USER_ID_SALT: "m83WnAPrq",
+    analyticsEventsToTrack: _extends({
+      login: true,
+      sign_up: true,
+      forgot_password: true,
+      forgot_password_confirm: true,
+      reset_user_password: true
+    }, optionsObj.googleAnalyticsEventTracking)
   };
   return _extends({}, GlobalNamespace, defaultG);
 }
@@ -1249,7 +1260,7 @@ function authFactory(globals) {
     try {
       return Promise.resolve(_catch(function () {
         return Promise.resolve(tokenPost(POST_TYPES.USER_ATTRIBUTES)).then(function (attrsRes) {
-          g.analyticsEnabled && g.analyticsEvent('get_user_attributes');
+          g.analyticsEnabled && g.analyticsEventsToTrack.get_user_attributes && g.analyticsEvent('get_user_attributes');
           return attrsRes.data;
         });
       }, function (error) {
@@ -1268,7 +1279,9 @@ function authFactory(globals) {
           key: key,
           value: value
         })).then(function (setAttrsRes) {
-          g.analyticsEnabled && g.analyticsEvent('set_user_attribute');
+          g.analyticsEnabled && g.analyticsEventsToTrack.set_user_attribute && g.analyticsEvent('set_user_attribute', {
+            key: key
+          });
           return {
             success: setAttrsRes.success,
             message: JSON.stringify(setAttrsRes.data)
@@ -1293,7 +1306,7 @@ function authFactory(globals) {
           username: username,
           emailTemplate: emailTemplate
         })).then(function (setAttrsRes) {
-          g.analyticsEnabled && g.analyticsEvent('forgot_password');
+          g.analyticsEnabled && g.analyticsEventsToTrack.forgot_password && g.analyticsEvent('forgot_password');
           return {
             success: setAttrsRes.success,
             message: setAttrsRes.data
@@ -1319,7 +1332,7 @@ function authFactory(globals) {
           code: code,
           newPassword: newPassword
         })).then(function (setAttrsRes) {
-          g.analyticsEnabled && g.analyticsEvent('forgot_password_confirm');
+          g.analyticsEnabled && g.analyticsEventsToTrack.forgot_password_confirm && g.analyticsEvent('forgot_password_confirm');
           return {
             success: setAttrsRes.success,
             message: setAttrsRes.data
@@ -1345,7 +1358,7 @@ function authFactory(globals) {
           password: password,
           userAttributes: userAttributes
         })).then(function (signUpRes) {
-          g.analyticsEnabled && g.analyticsEvent('sign_up', {
+          g.analyticsEnabled && g.analyticsEventsToTrack.sign_up && g.analyticsEvent('sign_up', {
             method: "Easybase"
           });
           return {
@@ -1402,7 +1415,7 @@ function authFactory(globals) {
                 if (validTokenRes.success) {
                   log("Valid auth initiation in " + elapsed + "ms");
 
-                  if (g.analyticsEnabled) {
+                  if (g.analyticsEnabled && g.analyticsEventsToTrack.login) {
                     var hashOut = hash(fromUtf8(g.GA_USER_ID_SALT + resData.userID));
                     var hexHash = Array.prototype.map.call(hashOut, function (x) {
                       return ('00' + x.toString(16)).slice(-2);
@@ -1466,7 +1479,7 @@ function authFactory(globals) {
           currentPassword: currentPassword,
           newPassword: newPassword
         })).then(function (setAttrsRes) {
-          g.analyticsEnabled && g.analyticsEvent('reset_user_password');
+          g.analyticsEnabled && g.analyticsEventsToTrack.reset_user_password && g.analyticsEvent('reset_user_password');
           return {
             success: setAttrsRes.success,
             message: JSON.stringify(setAttrsRes.data)
@@ -1732,6 +1745,9 @@ function tableFactory(globals) {
         tableName: tableName
       } : {})).then(function (res) {
         if (res.success) {
+          g.analyticsEnabled && g.analyticsEventsToTrack.table_types && g.analyticsEvent('table_types', {
+            tableName: tableName || undefined
+          });
           return res.data;
         } else {
           return {};
@@ -1748,6 +1764,9 @@ function tableFactory(globals) {
         tableName: tableName
       } : {})).then(function (res) {
         if (res.success) {
+          g.analyticsEnabled && g.analyticsEventsToTrack.full_table_size && g.analyticsEvent('full_table_size', {
+            tableName: tableName || undefined
+          });
           return res.data;
         } else {
           return 0;
@@ -1773,6 +1792,10 @@ function tableFactory(globals) {
 
       return Promise.resolve(tokenPost(POST_TYPES.GET_QUERY, fullOptions)).then(function (res) {
         if (res.success) {
+          g.analyticsEnabled && g.analyticsEventsToTrack.query && g.analyticsEvent('query', {
+            queryName: fullOptions.queryName,
+            tableName: fullOptions.tableName || undefined
+          });
           return res.data;
         } else {
           return [];
@@ -1839,6 +1862,11 @@ function dbFactory(globals) {
       return Promise.resolve(_catch$1(function () {
         return Promise.resolve(tokenPost(POST_TYPES.EASY_QB, trx)).then(function (res) {
           if (res.success) {
+            g.analyticsEnabled && g.analyticsEventsToTrack.db_all && g.analyticsEvent('db_all', {
+              tableName: tableName !== "untable" ? tableName : undefined,
+              type: trx.type
+            });
+
             _runListeners(DB_STATUS.SUCCESS, trx.type, EXECUTE_COUNT.ALL, tableName !== "untable" ? tableName : null, res.data);
 
             return res.data;
@@ -1871,6 +1899,11 @@ function dbFactory(globals) {
       return Promise.resolve(_catch$1(function () {
         return Promise.resolve(tokenPost(POST_TYPES.EASY_QB, trx)).then(function (res) {
           if (res.success) {
+            g.analyticsEnabled && g.analyticsEventsToTrack.db_one && g.analyticsEvent('db_one', {
+              tableName: tableName !== "untable" ? tableName : undefined,
+              type: trx.type
+            });
+
             _runListeners(DB_STATUS.SUCCESS, trx.type, EXECUTE_COUNT.ONE, tableName !== "untable" ? tableName : null, res.data);
 
             return res.data;

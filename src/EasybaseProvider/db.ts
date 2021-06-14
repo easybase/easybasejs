@@ -40,6 +40,7 @@ export default function dbFactory(globals?: Globals): IdbFactory {
         try {
             const res = await tokenPost(POST_TYPES.EASY_QB, trx);
             if (res.success) {
+                g.analyticsEnabled && g.analyticsEventsToTrack.db_all && g.analyticsEvent('db_all', { tableName: tableName !== "untable" ? tableName : undefined, type: trx.type });
                 _runListeners(DB_STATUS.SUCCESS, trx.type, EXECUTE_COUNT.ALL, tableName !== "untable" ? tableName : null, res.data);
                 return res.data;
             } else {
@@ -61,6 +62,7 @@ export default function dbFactory(globals?: Globals): IdbFactory {
         try {
             const res = await tokenPost(POST_TYPES.EASY_QB, trx);
             if (res.success) {
+                g.analyticsEnabled && g.analyticsEventsToTrack.db_one && g.analyticsEvent('db_one', { tableName: tableName !== "untable" ? tableName : undefined, type: trx.type });
                 _runListeners(DB_STATUS.SUCCESS, trx.type, EXECUTE_COUNT.ONE, tableName !== "untable" ? tableName : null, res.data);
                 return res.data;
             } else {

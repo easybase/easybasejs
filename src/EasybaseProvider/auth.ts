@@ -18,7 +18,7 @@ export default function authFactory(globals?: Globals): any {
     const getUserAttributes = async (): Promise<Record<string, string>> => {
         try {
             const attrsRes = await tokenPost(POST_TYPES.USER_ATTRIBUTES);
-            g.analyticsEnabled && g.analyticsEvent('get_user_attributes');
+            g.analyticsEnabled && g.analyticsEventsToTrack.get_user_attributes && g.analyticsEvent('get_user_attributes');
             return attrsRes.data;
         } catch (error) {
             log(error)
@@ -32,7 +32,7 @@ export default function authFactory(globals?: Globals): any {
                 key,
                 value
             });
-            g.analyticsEnabled && g.analyticsEvent('set_user_attribute');
+            g.analyticsEnabled && g.analyticsEventsToTrack.set_user_attribute && g.analyticsEvent('set_user_attribute', { key });
             return {
                 success: setAttrsRes.success,
                 message: JSON.stringify(setAttrsRes.data)
@@ -52,7 +52,7 @@ export default function authFactory(globals?: Globals): any {
                 username,
                 emailTemplate
             });
-            g.analyticsEnabled && g.analyticsEvent('forgot_password');
+            g.analyticsEnabled && g.analyticsEventsToTrack.forgot_password && g.analyticsEvent('forgot_password');
             return {
                 success: setAttrsRes.success,
                 message: setAttrsRes.data
@@ -73,7 +73,7 @@ export default function authFactory(globals?: Globals): any {
                 code,
                 newPassword
             });
-            g.analyticsEnabled && g.analyticsEvent('forgot_password_confirm');
+            g.analyticsEnabled && g.analyticsEventsToTrack.forgot_password_confirm && g.analyticsEvent('forgot_password_confirm');
             return {
                 success: setAttrsRes.success,
                 message: setAttrsRes.data
@@ -94,7 +94,7 @@ export default function authFactory(globals?: Globals): any {
                 password,
                 userAttributes
             });
-            g.analyticsEnabled && g.analyticsEvent('sign_up', { method: "Easybase" });
+            g.analyticsEnabled && g.analyticsEventsToTrack.sign_up && g.analyticsEvent('sign_up', { method: "Easybase" });
             return {
                 success: signUpRes.success,
                 message: signUpRes.data
@@ -143,7 +143,7 @@ export default function authFactory(globals?: Globals): any {
                 const elapsed = Date.now() - t1;
                 if (validTokenRes.success) {
                     log("Valid auth initiation in " + elapsed + "ms");
-                    if (g.analyticsEnabled) {
+                    if (g.analyticsEnabled && g.analyticsEventsToTrack.login) {
                         const hashOut = hash(fromUtf8(g.GA_USER_ID_SALT + resData.userID));
                         const hexHash = Array.prototype.map.call(hashOut, x => ('00' + x.toString(16)).slice(-2)).join('');
                         g.analyticsIdentify(hexHash);
@@ -192,7 +192,7 @@ export default function authFactory(globals?: Globals): any {
 
         try {
             const setAttrsRes = await tokenPost(POST_TYPES.RESET_PASSWORD, { currentPassword, newPassword });
-            g.analyticsEnabled && g.analyticsEvent('reset_user_password');
+            g.analyticsEnabled && g.analyticsEventsToTrack.reset_user_password && g.analyticsEvent('reset_user_password');
             return {
                 success: setAttrsRes.success,
                 message: JSON.stringify(setAttrsRes.data)
