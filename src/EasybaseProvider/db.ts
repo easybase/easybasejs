@@ -98,7 +98,7 @@ export default function dbFactory(globals?: Globals): IdbFactory {
     }
 
     const _setAttachment = async ({ recordKey, columnName, attachment, tableName, type }: IUploadFile) => {
-        const ext: string = attachment.name.split(".").pop().toLowerCase();
+        const ext: string = attachment.name.split(".").pop()!.toLowerCase();
 
         if (type === "image" && !imageExtensions.includes(ext)) {
             return {

@@ -227,37 +227,37 @@ export interface ContextValue {
      */
     signUp(newUserID: string, password: string, userAttributes?: Record<string, string>): Promise<StatusResponse>;
     /**
-     * Configure the current frame size. Set the offset and amount of records to retreive assume you don't want to receive
-     * your entire collection. This is useful for paging.
+     * **DEPRECATED**: Use `db` instead - https://easybase.github.io/EasyQB/
+     * @deprecated Use `db` instead - https://easybase.github.io/EasyQB/
      * @param {ConfigureFrameOptions} options ConfigureFrameOptions
      * @return {StatusResponse} StatusResponse
      */
     configureFrame(options: ConfigureFrameOptions): StatusResponse;
     /**
-     * Manually add a record to your collection regardless of your current frame. You must call sync() after this to see updated response.
+     * **DEPRECATED**: Use `db().insert()` instead - https://easybase.github.io/EasyQB/docs/insert_queries.html
+     * @deprecated Use `db().insert()` instead - https://easybase.github.io/EasyQB/docs/insert_queries.html
      * @async
      * @param {AddRecordOptions} options AddRecordOptions
      * @return {Promise<StatusResponse>} Promise<StatusResponse>
      */
     addRecord(options: AddRecordOptions): Promise<StatusResponse>;
     /**
-     * Manually delete a record from your collection regardless of your current frame. You must call sync() after this to see updated response.
+     * **DEPRECATED**: Use `db().delete()` instead - https://easybase.github.io/EasyQB/docs/delete_queries.html
+     * @deprecated Use `db().delete()` instead - https://easybase.github.io/EasyQB/docs/delete_queries.html
      * @async
      * @param {Record<string, any>} record 
      * @return {Promise<StatusResponse>} Promise<StatusResponse>
      */
     deleteRecord(options: DeleteRecordOptions): Promise<StatusResponse>;
     /**
-     * Call this method to syncronize your current changes with your database. Delections, additions, and changes will all be reflected by your 
-     * backend after calling this method. Call Frame() after this to get a normalized array of the freshest data.
+     * **DEPRECATED**: Use `db` instead - https://easybase.github.io/EasyQB/
+     * @deprecated Use `db` instead - https://easybase.github.io/EasyQB/
      * @async
      * @return {Promise<StatusResponse>} Promise<StatusResponse>
      */
     sync(): Promise<StatusResponse>;
     /**
-     * Upload an image to your backend and attach it to a specific record. columnName must reference a column of type 'image'.
-     * The file must have an extension of an image. 
-     * Call sync() for fresh data with property attachment links to cloud hosting.
+     * **DEPRECATED**: Use the `setImage` function instead.
      * @deprecated Use the `setImage` function instead.
      * @async
      * @param {UpdateRecordAttachmentOptions} options UpdateRecordAttachmentOptions
@@ -265,9 +265,7 @@ export interface ContextValue {
      */
     updateRecordImage(options: UpdateRecordAttachmentOptions): Promise<StatusResponse>;
     /**
-     * Upload a video to your backend and attach it to a specific record. columnName must reference a column of type 'video'. 
-     * The file must have an extension of a video.
-     * Call sync() for fresh data with property attachment links to cloud hosting.
+     * **DEPRECATED**: Use the `setVideo` function instead.
      * @deprecated Use the `setVideo` function instead.
      * @async
      * @param {UpdateRecordAttachmentOptions} options UpdateRecordAttachmentOptions
@@ -275,8 +273,7 @@ export interface ContextValue {
      */
     updateRecordVideo(options: UpdateRecordAttachmentOptions): Promise<StatusResponse>;
     /**
-     * Upload a file to your backend and attach it to a specific record. columnName must reference a column of type 'file'. 
-     * Call sync() for fresh data with property attachment links to cloud hosting.
+     * **DEPRECATED**: Use the `setFile` function instead.
      * @deprecated Use the `setFile` function instead.
      * @async
      * @param {UpdateRecordAttachmentOptions} options UpdateRecordAttachmentOptions
@@ -316,18 +313,16 @@ export interface ContextValue {
      */
     setFile(recordKey: string, columnName: string, file: File | FileFromURI, tableName?: string): Promise<StatusResponse>;
     /**
-     * This function is how you access your current frame. This function does not get new data or push changes to Easybase. If you 
-     * want to syncronize your frame and Easybase, call sync() then Frame().
+     * **DEPRECATED**: Use `db` instead - https://easybase.github.io/EasyQB/
+     * @deprecated Use `db` instead - https://easybase.github.io/EasyQB/
      * @return {Record<string, any>[]} Array of records corresponding to the current frame. Call sync() to push changes that you have made to this array.
-     * 
      */
     Frame(): Record<string, any>[];
     /**
-     * This function is how you access a single object your current frame. This function does not get new data or push changes to Easybase. If you 
-     * want to syncronize your frame and Easybase, call sync() then Frame().
+     * **DEPRECATED**: Use `db` instead - https://easybase.github.io/EasyQB/
+     * @deprecated Use `db` instead - https://easybase.github.io/EasyQB/
      * @param {number} [index] Passing an index will only return the object at that index in your Frame, rather than the entire array. This is useful for editing single objects based on an index.
      * @return {Record<string, any>} Single record corresponding to that object within the current frame. Call sync() to push changes that you have made to this object.
-     * 
      */
     Frame(index: number): Record<string, any>;
     /**
@@ -398,7 +393,7 @@ export interface ContextValue {
     forgotPassword(username: string, emailTemplate?: EmailTemplate): Promise<StatusResponse>
     /**
      * @async
-     * Confirm the resetting of an unauthenticated users password. This function is invoked after `forgotpassword` is used to trigger
+     * Confirm the resetting of an unauthenticated users password. This function is invoked after `forgotPassword` is used to trigger
      * an email containing a verification code to the given username [*which must also be an email*]. The user's randomly generated
      * verification code from their email is passed in the first parameter. 
      * @param {string} code Verification code found in the email sent from the `forgotPassword` function

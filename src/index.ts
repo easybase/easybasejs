@@ -96,7 +96,7 @@ export function post(options: PostOptions): Promise<string> {
 
     const defaultValues: PostOptions = {
         integrationID: "",
-        newRecord: undefined,
+        newRecord: {},
         authentication: undefined,
         insertAtEnd: undefined
     }
@@ -152,7 +152,7 @@ interface UpdateOptions {
 export function update(options: UpdateOptions): Promise<string> {
     const defaultValues: UpdateOptions = {
         integrationID: "",
-        updateValues: undefined,
+        updateValues: {},
         authentication: undefined,
         customQuery: undefined
     }

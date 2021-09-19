@@ -23,6 +23,7 @@ export default _g;
 
 export function gFactory({ ebconfig, options }: EasybaseProviderProps): Globals {
     const optionsObj = { ...options }; // Forces undefined to empty object
+    const gaTrackingObj = options ? options.googleAnalyticsEventTracking : {};
     const defaultG = {
         options: optionsObj,
         ebconfig: ebconfig,
@@ -33,7 +34,7 @@ export function gFactory({ ebconfig, options }: EasybaseProviderProps): Globals 
             forgot_password: true,
             forgot_password_confirm: true,
             reset_user_password: true,
-            ...optionsObj.googleAnalyticsEventTracking
+            ...gaTrackingObj
         }
     }
     return { ...GlobalNamespace, ...defaultG } as Globals;

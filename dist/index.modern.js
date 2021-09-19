@@ -70,6 +70,7 @@ function gFactory({
   const optionsObj = _extends({}, options); // Forces undefined to empty object
 
 
+  const gaTrackingObj = options ? options.googleAnalyticsEventTracking : {};
   const defaultG = {
     options: optionsObj,
     ebconfig: ebconfig,
@@ -80,7 +81,7 @@ function gFactory({
       forgot_password: true,
       forgot_password_confirm: true,
       reset_user_password: true
-    }, optionsObj.googleAnalyticsEventTracking)
+    }, gaTrackingObj)
   };
   return _extends({}, GlobalNamespace, defaultG);
 }
@@ -1775,10 +1776,10 @@ function EasybaseProvider({
 }) {
   if (typeof ebconfig !== 'object' || ebconfig === null || ebconfig === undefined) {
     console.error("No ebconfig object passed. do `import ebconfig from \"./ebconfig.js\"` and pass it to the Easybase provider");
-    return;
+    return false;
   } else if (!ebconfig.integration) {
     console.error("Invalid ebconfig object passed. Download ebconfig.js from Easybase.io and try again.");
-    return;
+    return false;
   }
 
   const g = gFactory({
@@ -2226,7 +2227,7 @@ function get(options) {
 function post(options) {
   const defaultValues = {
     integrationID: "",
-    newRecord: undefined,
+    newRecord: {},
     authentication: undefined,
     insertAtEnd: undefined
   };
@@ -2273,7 +2274,7 @@ function post(options) {
 function update(options) {
   const defaultValues = {
     integrationID: "",
-    updateValues: undefined,
+    updateValues: {},
     authentication: undefined,
     customQuery: undefined
   };
