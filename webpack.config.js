@@ -2,7 +2,7 @@
 module.exports = {
     entry: './src/index.ts',
     output: {
-        library: 'EasybBase',
+        library: 'Easybase',
         libraryTarget: 'umd',
         filename: 'bundle.js',
     },
