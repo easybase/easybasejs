@@ -3,17 +3,30 @@ import easyqb from 'easyqb';
 import { SQW } from "easyqb/types/sq";
 import { NewExpression } from "easyqb/types/expression";
 import authFactory from "./auth";
-import { POST_TYPES, DB_STATUS, Globals, EXECUTE_COUNT } from "./types";
+import { POST_TYPES, DB_STATUS, Globals, EXECUTE_COUNT, FileFromURI, StatusResponse } from "./types";
+import imageExtensions from "./assets/image-extensions.json";
+import videoExtensions from "./assets/video-extensions.json";
 
 interface IdbFactory {
     db: (tableName?: string, userAssociatedRecordsOnly?: boolean) => SQW;
     dbEventListener: (callback: (status?: DB_STATUS, queryType?: string, executeCount?: EXECUTE_COUNT, tableName?: string | null, returned?: any) => void) => () => void;
     e: NewExpression;
+    setImage(recordKey: string, columnName: string, image: File | FileFromURI, tableName?: string): Promise<StatusResponse>;
+    setVideo(recordKey: string, columnName: string, video: File | FileFromURI, tableName?: string): Promise<StatusResponse>;
+    setFile(recordKey: string, columnName: string, file: File | FileFromURI, tableName?: string): Promise<StatusResponse>;
+}
+
+interface IUploadFile {
+    recordKey: string;
+    columnName: string;
+    attachment: File | FileFromURI;
+    type: "image" | "video" | "file"
+    tableName?: string;
 }
 
 export default function dbFactory(globals?: Globals): IdbFactory {
     const g = globals || _g;
-    const { tokenPost } = authFactory(g);
+    const { tokenPost, tokenPostAttachment } = authFactory(g);
     let _listenerIndex = 0;
 
     const _listeners: Record<string, (status?: DB_STATUS, queryType?: string, executeCount?: EXECUTE_COUNT, tableName?: string | null, returned?: any) => void> = {};
@@ -83,10 +96,74 @@ export default function dbFactory(globals?: Globals): IdbFactory {
             return easyqb({ allCallback, oneCallback, userAssociatedRecordsOnly, tableName: "untable" })("untable");
         }
     }
+
+    const _setAttachment = async ({ recordKey, columnName, attachment, tableName, type }: IUploadFile) => {
+        const ext: string = attachment.name.split(".").pop().toLowerCase();
+
+        if (type === "image" && !imageExtensions.includes(ext)) {
+            return {
+                success: false,
+                message: "Image files must have a proper image extension in the file name"
+            };
+        }
+
+        if (type === "video" && !videoExtensions.includes(ext)) {
+            return {
+                success: false,
+                message: "Video files must have a proper video extension in the file name"
+            };
+        }
+
+        const formData = new FormData();
+
+        formData.append("file", attachment as Blob);
+        formData.append("name", attachment.name);
+
+        const customHeaders = {
+            'Eb-upload-type': type,
+            'Eb-column-name': columnName,
+            'Eb-record-id': recordKey,
+            'Eb-table-name': tableName
+        }
+
+        const res = await tokenPostAttachment(formData, customHeaders);
+
+        return {
+            message: res.data,
+            success: res.success
+        };
+    }
+
+    const setImage = async (recordKey: string, columnName: string, image: File | FileFromURI, tableName?: string) => _setAttachment({
+        recordKey,
+        columnName,
+        tableName,
+        attachment: image,
+        type: "image"
+    });
+
+    const setVideo = async (recordKey: string, columnName: string, video: File | FileFromURI, tableName?: string) => _setAttachment({
+        recordKey,
+        columnName,
+        tableName,
+        attachment: video,
+        type: "video"
+    });
     
+    const setFile = async (recordKey: string, columnName: string, file: File | FileFromURI, tableName?: string) => _setAttachment({
+        recordKey,
+        columnName,
+        tableName,
+        attachment: file,
+        type: "file"
+    });
+
     return {
         db,
         dbEventListener,
-        e: easyqb().e
+        e: easyqb().e,
+        setImage,
+        setFile,
+        setVideo
     }
 }

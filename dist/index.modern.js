@@ -946,6 +946,7 @@ var imageExtensions = [
 	"gpl",
 	"grf",
 	"icns",
+	"heic",
 	"ico",
 	"iff",
 	"jng",
@@ -1591,7 +1592,8 @@ function tableFactory(globals) {
 function dbFactory(globals) {
   const g = globals || _g;
   const {
-    tokenPost
+    tokenPost,
+    tokenPostAttachment
   } = authFactory(g);
   let _listenerIndex = 0;
   const _listeners = {};
@@ -1694,10 +1696,76 @@ function dbFactory(globals) {
     }
   };
 
+  const _setAttachment = async ({
+    recordKey,
+    columnName,
+    attachment,
+    tableName,
+    type
+  }) => {
+    const ext = attachment.name.split(".").pop().toLowerCase();
+
+    if (type === "image" && !imageExtensions.includes(ext)) {
+      return {
+        success: false,
+        message: "Image files must have a proper image extension in the file name"
+      };
+    }
+
+    if (type === "video" && !videoExtensions.includes(ext)) {
+      return {
+        success: false,
+        message: "Video files must have a proper video extension in the file name"
+      };
+    }
+
+    const formData = new FormData();
+    formData.append("file", attachment);
+    formData.append("name", attachment.name);
+    const customHeaders = {
+      'Eb-upload-type': type,
+      'Eb-column-name': columnName,
+      'Eb-record-id': recordKey,
+      'Eb-table-name': tableName
+    };
+    const res = await tokenPostAttachment(formData, customHeaders);
+    return {
+      message: res.data,
+      success: res.success
+    };
+  };
+
+  const setImage = async (recordKey, columnName, image, tableName) => _setAttachment({
+    recordKey,
+    columnName,
+    tableName,
+    attachment: image,
+    type: "image"
+  });
+
+  const setVideo = async (recordKey, columnName, video, tableName) => _setAttachment({
+    recordKey,
+    columnName,
+    tableName,
+    attachment: video,
+    type: "video"
+  });
+
+  const setFile = async (recordKey, columnName, file, tableName) => _setAttachment({
+    recordKey,
+    columnName,
+    tableName,
+    attachment: file,
+    type: "file"
+  });
+
   return {
     db,
     dbEventListener,
-    e: easyqb().e
+    e: easyqb().e,
+    setImage,
+    setFile,
+    setVideo
   };
 }
 
@@ -1738,7 +1806,10 @@ function EasybaseProvider({
   const {
     db,
     dbEventListener,
-    e
+    e,
+    setFile,
+    setImage,
+    setVideo
   } = dbFactory(g);
   const {
     log
@@ -2069,6 +2140,9 @@ function EasybaseProvider({
     db,
     dbEventListener,
     e,
+    setFile,
+    setImage,
+    setVideo,
     forgotPassword,
     forgotPasswordConfirm,
     userID

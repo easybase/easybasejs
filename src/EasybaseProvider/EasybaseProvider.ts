@@ -54,7 +54,10 @@ export default function EasybaseProvider({ ebconfig, options }: EasybaseProvider
     const {
         db,
         dbEventListener,
-        e
+        e,
+        setFile,
+        setImage,
+        setVideo
     } = dbFactory(g);
 
     const { log } = utilsFactory(g);
@@ -381,6 +384,9 @@ export default function EasybaseProvider({ ebconfig, options }: EasybaseProvider
         db,
         dbEventListener,
         e,
+        setFile,
+        setImage,
+        setVideo,
         forgotPassword,
         forgotPasswordConfirm,
         userID

@@ -1056,6 +1056,7 @@ var imageExtensions = [
 	"gpl",
 	"grf",
 	"icns",
+	"heic",
 	"ico",
 	"iff",
 	"jng",
@@ -1831,7 +1832,8 @@ function dbFactory(globals) {
   var g = globals || _g;
 
   var _authFactory = authFactory(g),
-      tokenPost = _authFactory.tokenPost;
+      tokenPost = _authFactory.tokenPost,
+      tokenPostAttachment = _authFactory.tokenPostAttachment;
 
   var _listenerIndex = 0;
   var _listeners = {};
@@ -1943,10 +1945,99 @@ function dbFactory(globals) {
     }
   };
 
+  var _setAttachment = function _setAttachment(_ref) {
+    var recordKey = _ref.recordKey,
+        columnName = _ref.columnName,
+        attachment = _ref.attachment,
+        tableName = _ref.tableName,
+        type = _ref.type;
+
+    try {
+      var ext = attachment.name.split(".").pop().toLowerCase();
+
+      if (type === "image" && !imageExtensions.includes(ext)) {
+        return Promise.resolve({
+          success: false,
+          message: "Image files must have a proper image extension in the file name"
+        });
+      }
+
+      if (type === "video" && !videoExtensions.includes(ext)) {
+        return Promise.resolve({
+          success: false,
+          message: "Video files must have a proper video extension in the file name"
+        });
+      }
+
+      var formData = new FormData();
+      formData.append("file", attachment);
+      formData.append("name", attachment.name);
+      var customHeaders = {
+        'Eb-upload-type': type,
+        'Eb-column-name': columnName,
+        'Eb-record-id': recordKey,
+        'Eb-table-name': tableName
+      };
+      return Promise.resolve(tokenPostAttachment(formData, customHeaders)).then(function (res) {
+        return {
+          message: res.data,
+          success: res.success
+        };
+      });
+    } catch (e) {
+      return Promise.reject(e);
+    }
+  };
+
+  var setImage = function setImage(recordKey, columnName, image, tableName) {
+    try {
+      return _setAttachment({
+        recordKey: recordKey,
+        columnName: columnName,
+        tableName: tableName,
+        attachment: image,
+        type: "image"
+      });
+    } catch (e) {
+      return Promise.reject(e);
+    }
+  };
+
+  var setVideo = function setVideo(recordKey, columnName, video, tableName) {
+    try {
+      return _setAttachment({
+        recordKey: recordKey,
+        columnName: columnName,
+        tableName: tableName,
+        attachment: video,
+        type: "video"
+      });
+    } catch (e) {
+      return Promise.reject(e);
+    }
+  };
+
+  var setFile = function setFile(recordKey, columnName, file, tableName) {
+    try {
+      return _setAttachment({
+        recordKey: recordKey,
+        columnName: columnName,
+        tableName: tableName,
+        attachment: file,
+        type: "file"
+      });
+    } catch (e) {
+      return Promise.reject(e);
+    }
+  };
+
   return {
     db: db,
     dbEventListener: dbEventListener,
-    e: easyqb().e
+    e: easyqb().e,
+    setImage: setImage,
+    setFile: setFile,
+    setVideo: setVideo
   };
 }
 
@@ -2002,7 +2093,10 @@ function EasybaseProvider(_ref) {
   var _dbFactory = dbFactory(g),
       db = _dbFactory.db,
       dbEventListener = _dbFactory.dbEventListener,
-      e = _dbFactory.e;
+      e = _dbFactory.e,
+      setFile = _dbFactory.setFile,
+      setImage = _dbFactory.setImage,
+      setVideo = _dbFactory.setVideo;
 
   var _utilsFactory = utilsFactory(g),
       log = _utilsFactory.log; // eslint-disable-next-line dot-notation
@@ -2369,6 +2463,9 @@ function EasybaseProvider(_ref) {
     db: db,
     dbEventListener: dbEventListener,
     e: e,
+    setFile: setFile,
+    setImage: setImage,
+    setVideo: setVideo,
     forgotPassword: forgotPassword,
     forgotPasswordConfirm: forgotPasswordConfirm,
     userID: userID

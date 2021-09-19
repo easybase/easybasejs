@@ -1,5 +1,5 @@
 export interface GetOptions {
-    /** EasyBase integration ID. Can be found by expanding the integration menu. This id is automatically generated.  */
+    /** Easybase integration ID. Can be found by expanding the integration menu. This id is automatically generated.  */
     integrationID: string;
     /** Edit starting index from which records will be retrieved from. Useful for paging. */
     offset?: number;
@@ -12,9 +12,9 @@ export interface GetOptions {
 }
 
 export interface PostOptions {
-    /** EasyBase integration ID. Can be found by expanding the integration menu. This id is automatically generated.  */
+    /** Easybase integration ID. Can be found by expanding the integration menu. This id is automatically generated.  */
     integrationID: string;
-    /** Values to post to EasyBase collection. Format is { column name: value } */
+    /** Values to post to Easybase collection. Format is { column name: value } */
     newRecord: Record<string, unknown>;
     /** Custom authentication string. Can be set in integration menu. If it is set, it is required to access integration. This acts as an extra layer of security and extensibility. */
     authentication?: string;
@@ -23,7 +23,7 @@ export interface PostOptions {
 }
 
 export interface UpdateOptions {
-    /** EasyBase integration ID. Can be found by expanding the integration menu. This id is automatically generated.  */
+    /** Easybase integration ID. Can be found by expanding the integration menu. This id is automatically generated.  */
     integrationID: string;
     /** Values to update records with. Format is { column_name: new value } */
     updateValues: Record<string, unknown>;
@@ -34,7 +34,7 @@ export interface UpdateOptions {
 }
 
 export interface DeleteOptions {
-    /** EasyBase integration ID. Can be found by expanding the integration menu. This id is automatically generated.  */
+    /** Easybase integration ID. Can be found by expanding the integration menu. This id is automatically generated.  */
     integrationID: string;
     /** Custom authentication string. Can be set in integration menu. If it is set, it is required to access integration. This acts as an extra layer of security and extensibility. */
     authentication?: string;
