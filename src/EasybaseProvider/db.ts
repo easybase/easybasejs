@@ -100,6 +100,7 @@ export default function dbFactory(globals?: Globals): IdbFactory {
     const _setAttachment = async ({ recordKey, columnName, attachment, tableName, type }: IUploadFile): Promise<StatusResponse> => {
         const ext: string = attachment.name.split(".").pop()!.toLowerCase();
 
+        // Similar pattern as db() naming
         let fixedTableName: string;
         if (tableName && typeof tableName === "string") {
             fixedTableName = tableName.toUpperCase();
