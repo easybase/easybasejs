@@ -100,6 +100,13 @@ export default function dbFactory(globals?: Globals): IdbFactory {
     const _setAttachment = async ({ recordKey, columnName, attachment, tableName, type }: IUploadFile): Promise<StatusResponse> => {
         const ext: string = attachment.name.split(".").pop()!.toLowerCase();
 
+        let fixedTableName: string;
+        if (tableName && typeof tableName === "string") {
+            fixedTableName = tableName.toUpperCase();
+        } else {
+            fixedTableName = "untable";
+        }
+
         if (type === "image" && !imageExtensions.includes(ext)) {
             return {
                 success: false,
@@ -123,16 +130,16 @@ export default function dbFactory(globals?: Globals): IdbFactory {
             'Eb-upload-type': type,
             'Eb-column-name': columnName,
             'Eb-record-id': recordKey,
-            'Eb-table-name': tableName
+            'Eb-table-name': fixedTableName
         }
 
         try {
             const res = await tokenPostAttachment(formData, customHeaders);
             if (res.success) {
-                g.analyticsEnabled && g.analyticsEventsToTrack.db_one && g.analyticsEvent('db_one', { tableName: tableName !== "untable" ? tableName : undefined, type: "update" });
-                _runListeners(DB_STATUS.SUCCESS, "update", EXECUTE_COUNT.ONE, tableName !== "untable" ? tableName : null, res.data);
+                g.analyticsEnabled && g.analyticsEventsToTrack.db_one && g.analyticsEvent('db_one', { tableName: fixedTableName !== "untable" ? fixedTableName : undefined, type: "update" });
+                _runListeners(DB_STATUS.SUCCESS, "update", EXECUTE_COUNT.ONE, fixedTableName !== "untable" ? fixedTableName : null, res.data);
             } else {
-                _runListeners(DB_STATUS.ERROR, "update", EXECUTE_COUNT.ONE, tableName !== "untable" ? tableName : null);
+                _runListeners(DB_STATUS.ERROR, "update", EXECUTE_COUNT.ONE, fixedTableName !== "untable" ? fixedTableName : null);
             }
             return {
                 message: res.data,
@@ -140,7 +147,7 @@ export default function dbFactory(globals?: Globals): IdbFactory {
             };
         } catch (error) {
             console.warn(error)
-            _runListeners(DB_STATUS.ERROR, "update", EXECUTE_COUNT.ONE, tableName !== "untable" ? tableName : null);
+            _runListeners(DB_STATUS.ERROR, "update", EXECUTE_COUNT.ONE, fixedTableName !== "untable" ? fixedTableName : null);
             return {
                 message: "",
                 success: false,
