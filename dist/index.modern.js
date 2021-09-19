@@ -1729,11 +1729,35 @@ function dbFactory(globals) {
       'Eb-record-id': recordKey,
       'Eb-table-name': tableName
     };
-    const res = await tokenPostAttachment(formData, customHeaders);
-    return {
-      message: res.data,
-      success: res.success
-    };
+
+    try {
+      const res = await tokenPostAttachment(formData, customHeaders);
+
+      if (res.success) {
+        g.analyticsEnabled && g.analyticsEventsToTrack.db_one && g.analyticsEvent('db_one', {
+          tableName: tableName !== "untable" ? tableName : undefined,
+          type: "update"
+        });
+
+        _runListeners(DB_STATUS.SUCCESS, "update", EXECUTE_COUNT.ONE, tableName !== "untable" ? tableName : null, res.data);
+      } else {
+        _runListeners(DB_STATUS.ERROR, "update", EXECUTE_COUNT.ONE, tableName !== "untable" ? tableName : null);
+      }
+
+      return {
+        message: res.data,
+        success: res.success
+      };
+    } catch (error) {
+      console.warn(error);
+
+      _runListeners(DB_STATUS.ERROR, "update", EXECUTE_COUNT.ONE, tableName !== "untable" ? tableName : null);
+
+      return {
+        message: "",
+        success: false
+      };
+    }
   };
 
   const setImage = async (recordKey, columnName, image, tableName) => _setAttachment({

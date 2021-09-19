@@ -1979,12 +1979,34 @@ function dbFactory(globals) {
         'Eb-record-id': recordKey,
         'Eb-table-name': tableName
       };
-      return Promise.resolve(tokenPostAttachment(formData, customHeaders)).then(function (res) {
+      return Promise.resolve(_catch$1(function () {
+        return Promise.resolve(tokenPostAttachment(formData, customHeaders)).then(function (res) {
+          if (res.success) {
+            g.analyticsEnabled && g.analyticsEventsToTrack.db_one && g.analyticsEvent('db_one', {
+              tableName: tableName !== "untable" ? tableName : undefined,
+              type: "update"
+            });
+
+            _runListeners(DB_STATUS.SUCCESS, "update", EXECUTE_COUNT.ONE, tableName !== "untable" ? tableName : null, res.data);
+          } else {
+            _runListeners(DB_STATUS.ERROR, "update", EXECUTE_COUNT.ONE, tableName !== "untable" ? tableName : null);
+          }
+
+          return {
+            message: res.data,
+            success: res.success
+          };
+        });
+      }, function (error) {
+        console.warn(error);
+
+        _runListeners(DB_STATUS.ERROR, "update", EXECUTE_COUNT.ONE, tableName !== "untable" ? tableName : null);
+
         return {
-          message: res.data,
-          success: res.success
+          message: "",
+          success: false
         };
-      });
+      }));
     } catch (e) {
       return Promise.reject(e);
     }
